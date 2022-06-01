@@ -1,6 +1,6 @@
 package mechanicalarms.common.block;
 
-import mechanicalarms.common.tile.TileArmBase;
+import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDirectional;
 import net.minecraft.block.ITileEntityProvider;
@@ -23,7 +23,7 @@ public class BlockArm extends Block implements ITileEntityProvider
 	public BlockArm()
 	{
 		super( Material.IRON );
-		setRegistryName( "arm_base" );
+		setRegistryName( "arm_basic" );
 	}
 
 	@Override
@@ -90,6 +90,6 @@ public class BlockArm extends Block implements ITileEntityProvider
 	@Override
 	public TileEntity createNewTileEntity( World worldIn, int meta )
 	{
-		return new TileArmBase();
+		return new TileArmBasic();
 	}
 }

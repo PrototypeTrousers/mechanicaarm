@@ -1,32 +1,35 @@
 package mechanicalarms.client.model;
 
 import mechanicalarms.MechanicalArms;
-import mechanicalarms.common.tile.TileArmBase;
+import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.util.ResourceLocation;
-import software.bernie.geckolib3.GeckoLib;
+import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
+import software.bernie.geckolib3.core.processor.IBone;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 
-public class ArmModel extends AnimatedGeoModel<TileArmBase>
+import javax.annotation.Nullable;
+
+public class ArmModel extends AnimatedGeoModel<TileArmBasic>
 {
 	public ArmModel()
 	{
 	}
 
 	@Override
-	public ResourceLocation getModelLocation( TileArmBase object )
+	public ResourceLocation getModelLocation( TileArmBasic object )
 	{
 		return new ResourceLocation( MechanicalArms.MODID, "geo/arm.geo.json");
 	}
 
 	@Override
-	public ResourceLocation getTextureLocation( TileArmBase object )
+	public ResourceLocation getTextureLocation( TileArmBasic object )
 	{
-		return new ResourceLocation(GeckoLib.ModID, "textures/block/arm.png");
+		return new ResourceLocation(MechanicalArms.MODID, "textures/block/arm.png");
 	}
 
 	@Override
-	public ResourceLocation getAnimationFileLocation( TileArmBase animatable )
+	public ResourceLocation getAnimationFileLocation( TileArmBasic animatable )
 	{
-		return new ResourceLocation( GeckoLib.ModID, "animations/jackinthebox.animation.json");
+		return new ResourceLocation( MechanicalArms.MODID, "animations/nothing.json");
 	}
 }

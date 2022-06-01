@@ -3,7 +3,7 @@ package mechanicalarms.common.proxy;
 import mechanicalarms.MechanicalArms;
 import mechanicalarms.common.block.Blocks;
 import mechanicalarms.common.item.Items;
-import mechanicalarms.common.tile.TileArmBase;
+import mechanicalarms.common.tile.TileArmBasic;
 import mechanicalarms.common.tile.Tiles;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -32,7 +32,7 @@ public class CommonProxy
 	@SubscribeEvent
 	public static void onRegisterEntities(RegistryEvent.Register<EntityEntry> event)
 	{
-		GameRegistry.registerTileEntity( TileArmBase.class, new ResourceLocation( MechanicalArms.MODID, "tilearm") );
+		GameRegistry.registerTileEntity( TileArmBasic.class, new ResourceLocation( MechanicalArms.MODID, "tilearm") );
 	}
 
 	public void preInit()

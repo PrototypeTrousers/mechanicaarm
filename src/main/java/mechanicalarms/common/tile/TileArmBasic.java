@@ -6,21 +6,42 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.PlayState;
+import software.bernie.geckolib3.core.builder.AnimationBuilder;
 import software.bernie.geckolib3.core.controller.AnimationController;
+import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
-public class TileArmBase extends TileEntity implements IAnimatable
+public class TileArmBasic extends TileEntity implements IAnimatable
 {
-	private final AnimationFactory factory = new AnimationFactory(this);
+	private final AnimationFactory factory = new AnimationFactory( this);
+	private final AnimationBuilder builder = new AnimationBuilder().addAnimation( "nothing", true );
+	private AnimationController<TileArmBasic> animationController;
 
-	public TileArmBase(){
+	public TileArmBasic(){
 		super();
+	}
+	float[][] rotation = new float[3][3];
+
+	private <E extends TileEntity & IAnimatable> PlayState predicate( AnimationEvent<E> event )
+	{
+		AnimationController controller = event.getController();
+		controller.transitionLengthTicks = 0;
+		controller.setAnimation( builder );
+		controller.markNeedsReload();
+
+		return PlayState.CONTINUE;
 	}
 	@Override
 	public void registerControllers( AnimationData data )
 	{
-		data.addAnimationController( new AnimationController( this, "controller", 0, animationEvent -> PlayState.STOP ) );
+		animationController = new AnimationController<>( this, "controller", 0, this::predicate );
+		data.addAnimationController( animationController );
+	}
+
+	public float[] getRotation( int idx )
+	{
+		return rotation[idx];
 	}
 
 	@Override

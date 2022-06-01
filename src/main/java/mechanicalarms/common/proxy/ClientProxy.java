@@ -3,7 +3,7 @@ package mechanicalarms.common.proxy;
 import mechanicalarms.MechanicalArms;
 import mechanicalarms.client.renderer.TileArmRenderer;
 import mechanicalarms.common.item.Items;
-import mechanicalarms.common.tile.TileArmBase;
+import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
@@ -25,6 +25,6 @@ public class ClientProxy extends CommonProxy
 	public void preInit()
 	{
 		super.preInit();
-		ClientRegistry.bindTileEntitySpecialRenderer( TileArmBase.class, new TileArmRenderer() );
+		ClientRegistry.bindTileEntitySpecialRenderer( TileArmBasic.class, new TileArmRenderer() );
 	}
 }

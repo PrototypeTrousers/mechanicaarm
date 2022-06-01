@@ -9,7 +9,7 @@ public class ItemArm extends ItemBlock
     public ItemArm( Block armBase )
     {
         super( armBase );
-        setRegistryName( MechanicalArms.MODID, "arm_base" );
+        setRegistryName( MechanicalArms.MODID, "arm_basic" );
     }
 
 

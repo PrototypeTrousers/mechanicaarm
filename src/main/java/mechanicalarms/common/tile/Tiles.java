@@ -2,8 +2,8 @@ package mechanicalarms.common.tile;
 
 public class Tiles
 {
-	public static TileArmBase tileArmBase;
+	public static TileArmBasic tileArmBasic;
 	public static void init() {
-		tileArmBase = new TileArmBase();
+		tileArmBasic = new TileArmBasic();
 	}
 }
