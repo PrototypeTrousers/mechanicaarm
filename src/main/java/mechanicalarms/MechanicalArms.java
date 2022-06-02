@@ -1,9 +1,6 @@
 package mechanicalarms;
 
-import mechanicalarms.common.block.Blocks;
-import mechanicalarms.common.item.Items;
 import mechanicalarms.common.proxy.CommonProxy;
-import mechanicalarms.common.tile.Tiles;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;

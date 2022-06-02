@@ -6,9 +6,9 @@
 				"identifier": "geometry.1",
 				"texture_width": 64,
 				"texture_height": 64,
-				"visible_bounds_width": 2,
-				"visible_bounds_height": 2.5,
-				"visible_bounds_offset": [0, 0.75, 0]
+				"visible_bounds_width": 4,
+				"visible_bounds_height": 3.5,
+				"visible_bounds_offset": [0, 1.25, 0]
 			},
 			"bones": [
 				{
@@ -34,15 +34,31 @@
 					"pivot": [0, 17, 0],
 					"cubes": [
 						{"origin": [-4, 13, -4], "size": [8, 8, 8], "uv": [0, 16]},
-						{"origin": [-2, 15, -10], "size": [4, 4, 6], "uv": [34, 19]}
+						{"origin": [-2, 15, -10], "size": [4, 4, 6], "uv": [34, 19]},
+						{"origin": [-4, 13, -18], "size": [4, 8, 8], "uv": [0, 0]},
+						{"origin": [-4, 21, -17], "size": [4, 1, 6], "uv": [0, 0]},
+						{"origin": [-4, 22, -17], "size": [8, 1, 6], "uv": [0, 0]}
 					]
 				},
 				{
 					"name": "bone2",
 					"parent": "bone",
-					"pivot": [0, 17, -15],
+					"pivot": [0, 17, -14],
 					"cubes": [
-						{"origin": [-4, 13, -18], "size": [8, 8, 8], "uv": [0, 0]}
+						{"origin": [-4, -1, -18], "size": [8, 8, 8], "uv": [0, 16]},
+						{"origin": [0, 7, -16], "size": [4, 6, 4], "uv": [34, 19]}
+					]
+				},
+				{
+					"name": "gear",
+					"parent": "bone2",
+					"pivot": [2, 17, -14],
+					"cubes": [
+						{"origin": [0, 14, -17], "size": [4, 6, 6], "uv": [0, 0]},
+						{"origin": [0, 20, -16], "size": [4, 1, 4], "uv": [0, 0]},
+						{"origin": [0, 13, -16], "size": [4, 1, 4], "uv": [0, 0]},
+						{"origin": [0, 15, -11], "size": [4, 4, 1], "uv": [0, 0]},
+						{"origin": [0, 15, -18], "size": [4, 4, 1], "uv": [0, 0]}
 					]
 				}
 			]

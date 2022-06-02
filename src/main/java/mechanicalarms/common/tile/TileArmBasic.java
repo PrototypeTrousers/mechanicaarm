@@ -18,6 +18,7 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable
 	private final AnimationFactory factory = new AnimationFactory( this);
 	private final AnimationBuilder builder = new AnimationBuilder().addAnimation( "nothing", true );
 	private AnimationController<TileArmBasic> animationController;
+	private boolean extend = true;
 
 
 	public TileArmBasic(){
@@ -92,6 +93,34 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable
 	@Override
 	public void update()
 	{
+		float currentX=rotation[1][0];
+		float currentX2=rotation[0][0];
+		if (extend) {
+			float futureX = currentX + 0.314f;
+			if (futureX >= Math.PI / 2) {
+				float futureX2 = currentX2 + 0.314f;
+				if (futureX2 >= Math.PI / 2) {
+					extend = false;
+				} else {
+					rotation[0][0] = futureX2;
+				}
+			} else {
+				rotation[1][0] = futureX;
+			}
+		}
+		else {
+			float futureX = currentX - 0.314f;
+			if (futureX <= 0.001) {
+				float futureX2 = currentX2 - 0.314f;
+				if (futureX2 <= 0.001) {
+					extend = true;
+				} else {
+					rotation[0][0] = futureX2;
+				}
+			} else {
+				rotation[1][0] = futureX;
+			}
+		}
 
 	}
 }
