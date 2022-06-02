@@ -93,32 +93,51 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable
 	@Override
 	public void update()
 	{
-		float currentX=rotation[1][0];
-		float currentX2=rotation[0][0];
+		float currentXn=rotation[0][0];
+		float currentXm=rotation[1][0];
+		float currentXd=rotation[2][0];
+		float futureX = currentXd + 0.314f;
 		if (extend) {
-			float futureX = currentX + 0.314f;
-			if (futureX >= Math.PI / 2) {
-				float futureX2 = currentX2 + 0.314f;
-				if (futureX2 >= Math.PI / 2) {
-					extend = false;
+			if (futureX >= Math.PI) {
+				futureX = currentXm + 0.314f;
+				if (futureX >= Math.PI) {
+					futureX = currentXn + 0.314f;
+					if (futureX >= Math.PI) {
+						rotation[0][0] = (float) Math.PI;
+						extend = false;
+					}
+					else {
+						rotation[0][0] = futureX;
+					}
 				} else {
-					rotation[0][0] = futureX2;
+					rotation[1][0] = futureX;
 				}
 			} else {
-				rotation[1][0] = futureX;
+				rotation[2][0] = futureX;
 			}
 		}
 		else {
-			float futureX = currentX - 0.314f;
-			if (futureX <= 0.001) {
-				float futureX2 = currentX2 - 0.314f;
-				if (futureX2 <= 0.001) {
-					extend = true;
+			futureX = currentXn - 0.314f;
+			if (futureX < Math.PI/2) {
+				rotation[0][0] = (float) Math.PI/2;
+				futureX = currentXm - 0.314f;
+				if (futureX < Math.PI/2) {
+					rotation[1][0] = (float) Math.PI/2;
+
+					futureX = currentXd - 0.314f;
+					if (futureX < Math.PI/2) {
+						rotation[2][0] = (float) Math.PI/2;
+
+						extend = true;
+					}
+					else {
+						rotation[2][0] = futureX;
+					}
 				} else {
-					rotation[0][0] = futureX2;
+					rotation[1][0] = futureX;
 				}
 			} else {
-				rotation[1][0] = futureX;
+				rotation[0][0] = futureX;
 			}
 		}
 
