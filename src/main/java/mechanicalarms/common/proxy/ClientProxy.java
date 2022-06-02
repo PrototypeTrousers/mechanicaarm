@@ -5,6 +5,7 @@ import mechanicalarms.client.renderer.TileArmRenderer;
 import mechanicalarms.common.item.Items;
 import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -18,7 +19,7 @@ public class ClientProxy extends CommonProxy
 	@SubscribeEvent
 	public static void registerModels( ModelRegistryEvent event )
 	{
-		ModelLoader.setCustomModelResourceLocation( Items.ARM_BASE, 0, new ModelResourceLocation( MechanicalArms.MODID + ":arm_base", "inventory") );
+		ModelLoader.setCustomModelResourceLocation( Items.ARM_BASE, 0, new ModelResourceLocation( new ResourceLocation( MechanicalArms.MODID, "models/block/arm_basic" ), "inventory" ) );
 	}
 
 	@Override

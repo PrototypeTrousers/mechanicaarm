@@ -4,6 +4,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ITickable;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.PlayState;
 import software.bernie.geckolib3.core.builder.AnimationBuilder;
@@ -12,11 +13,12 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
-public class TileArmBasic extends TileEntity implements IAnimatable
+public class TileArmBasic extends TileEntity implements IAnimatable, ITickable
 {
 	private final AnimationFactory factory = new AnimationFactory( this);
 	private final AnimationBuilder builder = new AnimationBuilder().addAnimation( "nothing", true );
 	private AnimationController<TileArmBasic> animationController;
+
 
 	public TileArmBasic(){
 		super();
@@ -87,4 +89,9 @@ public class TileArmBasic extends TileEntity implements IAnimatable
 		return compound;
 	}
 
+	@Override
+	public void update()
+	{
+
+	}
 }

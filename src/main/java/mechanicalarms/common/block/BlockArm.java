@@ -1,5 +1,6 @@
 package mechanicalarms.common.block;
 
+import mechanicalarms.MechanicalArms;
 import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDirectional;
@@ -23,7 +24,7 @@ public class BlockArm extends Block implements ITileEntityProvider
 	public BlockArm()
 	{
 		super( Material.IRON );
-		setRegistryName( "arm_basic" );
+		setRegistryName( MechanicalArms.MODID, "arm_basic" );
 	}
 
 	@Override
