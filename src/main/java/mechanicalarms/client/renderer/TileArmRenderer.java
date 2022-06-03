@@ -23,6 +23,7 @@ public class TileArmRenderer extends GeoBlockRenderer<TileArmBasic>
 
 		IBone b = getGeoModelProvider().getBone( "baseXYZ" );
 		b.setRotationX( animatable.getRotation( 0 )[0]);
+		b.setRotationY( animatable.getRotation( 0 )[1]);
 
 
 		super.renderEarly( animatable, ticks, red, green, blue, partialTicks );
