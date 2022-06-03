@@ -104,7 +104,8 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
 
     @Override
     public void update() {
-        BlockPos inPos = pos.offset(EnumFacing.SOUTH, 3);
+        BlockPos inPos = pos.offset(EnumFacing.SOUTH, 1);
+
         TileEntity teIn = this.world.getTileEntity(inPos);
         if (teIn != null) {
             IItemHandler handler = teIn.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
@@ -118,7 +119,7 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
             this.hasInput = false;
         }
 
-        BlockPos outPos = pos.offset(EnumFacing.NORTH, 1);
+        BlockPos outPos = pos.offset(EnumFacing.NORTH, 2);
         outPos = outPos.offset(EnumFacing.UP, 2);
         TileEntity teOut = this.world.getTileEntity(outPos);
         if (teOut != null) {
@@ -132,10 +133,10 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         } else {
             this.hasOutput = false;
         }
+        Vec3d vec1 = new Vec3d(pos.getX() + 0.5, pos.getY() + 1.2025, pos.getZ() + 0.5);
 
-        if (hasInput && hasOutput && !carrying) {
-            Vec3d vec1 = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-            Vec3d vec2 = new Vec3d(sourcePos.getX() + 0.5, sourcePos.getY() + 0.5, sourcePos.getZ() + 0.5);
+        if (hasInput && !carrying) {
+            Vec3d vec2 = new Vec3d(sourcePos.getX() + 0.5, sourcePos.getY() + 1, sourcePos.getZ() + 0.5);
             Vec3d combinedVec = vec2.subtract(vec1);
 
             if (sucess(combinedVec)) {
@@ -143,8 +144,7 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
                 this.carrying = true;
             }
         } else if (hasOutput && carrying) {
-            Vec3d vec1 = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-            Vec3d vec2 = new Vec3d(targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5);
+            Vec3d vec2 = new Vec3d(targetPos.getX() + 0.5, targetPos.getY() + 1, targetPos.getZ() + 0.5);
             Vec3d combinedVec = vec2.subtract(vec1);
             if (sucess(combinedVec)) {
                 this.isOnOnput = true;
@@ -188,36 +188,41 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
 
         float rotPitch = rotateX(rotation[0][0], 0.1f, (float) pitch);
         boolean pitchReached = false;
-        if (rotPitch != 0) {
+        if (rotPitch != rotation[0][0]) {
             rotation[0][0] = rotPitch;
-        } else {
+        }
+        if (pitch > 0 && rotPitch >= pitch) {
+            pitchReached = true;
+        } else if (pitch < 0 && rotPitch <= pitch) {
             pitchReached = true;
         }
 
         float rotYaw = rotateX(rotation[0][1], 0.1f, (float) yaw);
         boolean yawReached = false;
-        if (rotYaw != 0) {
+        if (rotYaw != rotation[0][1]) {
             rotation[0][1] = rotYaw;
-        } else {
+        } if (yaw > 0 && rotYaw >= yaw) {
+            yawReached = true;
+        } else if (yaw < 0 && rotYaw <= yaw) {
             yawReached = true;
         }
 
         float dist = (float) combinedVec.length();
-        float currentArmLenght = 0.875f + 0.875f * rotation[1][0];
+        float currentArmLength = (float) (1 + (Math.abs(2 * rotation[1][0] / Math.PI)));
 
         boolean distReached = false;
-        double distWalked = distX(rotation[1][0], 0.1f, currentArmLenght, dist);
-        if (distWalked != rotation[1][0]) {
-            rotation[1][0] = (float) distWalked;
-        } else if (currentArmLenght >= dist){
+        double rotationAmount = rotateToReach(rotation[1][0], 0.1f, currentArmLength, dist);
+        if (rotationAmount != rotation[1][0]) {
+            rotation[1][0] = (float) rotationAmount;
+        } if (currentArmLength >= dist){
             distReached = true;
         }
 
-        float currentHandLenght = 0.875f + 0.875f * rotation[1][0];
-        double handWalked = distX(rotation[2][0], 0.1f, currentHandLenght, dist - currentArmLenght);
+        float currentHandLength = (float) (0.500f + (2 * rotation[2][0] / Math.PI));
+        double handWalked = rotateToReach(rotation[2][0], 0.1f, currentHandLength, dist - currentArmLength);
         if (handWalked != rotation[2][0]) {
             rotation[2][0] = (float) handWalked;
-        } else if (currentHandLenght >= dist - currentArmLenght){
+        } if (currentHandLength >= dist - currentArmLength){
             distReached = true;
         }
 
@@ -233,55 +238,65 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
     float rotateX(float source, float walkSpeed, float target) {
         float diff = target - source;
         if (diff < -0.1D) {
-            return source - walkSpeed;
+            float result = source - walkSpeed;
+            return Math.max(result, target);
+
         } else if (diff > 0.1D) {
-            return source + walkSpeed;
+            float result = source + walkSpeed;
+            return Math.min(result, target);
         }
-        return 0;
+        return target;
     }
 
-    float distX(float source, float walkSpeed,float current, float target) {
-        float currentArmLenght = 0.875f * source;
-        float diff = (Math.abs(target)) - currentArmLenght;
-        if (diff <= 0.1F && diff >= -0.1F) {
-            return source;
+    float rotateToReach(float currentRotation, float angularSpeed, float currentReach, float targetedReach) {
+        float diff = (Math.abs(targetedReach)) - currentReach;
+        if (diff <= 0.5F && diff >= -0.5F) {
+            return currentRotation;
         }
         if (diff > 0) {
-            if (source + walkSpeed > Math.PI /2) {
+            if (currentRotation + angularSpeed > Math.PI /2) {
                 return (float) (Math.PI / 2);
             }
-            return source + walkSpeed;
+            return currentRotation + angularSpeed;
         } else {
-            if (source - walkSpeed < -Math.PI /2) {
+            if (currentRotation - angularSpeed < -Math.PI /2) {
                 return (float) (-Math.PI / 2);
             }
-            return source - walkSpeed;
+            return currentRotation - angularSpeed;
         }
     }
 
     void walkToIdlePosition() {
-        if (rotation[0][1] > 0.1F) {
+        if (rotation[0][1] >= 0.099F) {
             rotation[0][1] = rotation[0][1] - 0.1F;
-        } else if (rotation[0][1] < -0.1F) {
+        } else if (rotation[0][1] <= -0.099F) {
             rotation[0][1] = rotation[0][1] + 0.1F;
+        } else {
+            rotation[0][1] = 0;
         }
 
-        if (rotation[0][0] >= 0.1F) {
+        if (rotation[0][0] >= 0.099F) {
             rotation[0][0] = rotation[0][0] - 0.1F;
-        } else if (rotation[0][0] <= -0.1F) {
+        } else if (rotation[0][0] <= -0.099F) {
             rotation[0][0] = rotation[0][0] + 0.1F;
+        } else {
+            rotation[0][0] = 0;
         }
 
-        if (rotation[1][0] >= 0.1F) {
+        if (rotation[1][0] >= 0.099F) {
             rotation[1][0] = rotation[1][0] - 0.1F;
-        } else if (rotation[0][0] <= -0.1F) {
+        } else if (rotation[0][0] <= -0.099F) {
             rotation[1][0] = rotation[1][0] + 0.1F;
+        } else {
+            rotation[1][0] = 0;
         }
 
-        if (rotation[2][0] >= 0.1F) {
+        if (rotation[2][0] >= 0.099F) {
             rotation[2][0] = rotation[2][0] - 0.1F;
-        } else if (rotation[0][0] <= -0.1F) {
+        } else if (rotation[0][0] <= -0.099F) {
             rotation[2][0] = rotation[2][0] + 0.1F;
+        } else {
+            rotation[2][0] = 0;
         }
     }
 
