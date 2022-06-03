@@ -104,7 +104,7 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
 
     @Override
     public void update() {
-        BlockPos inPos = pos.offset(EnumFacing.SOUTH, 1);
+        BlockPos inPos = pos.offset(EnumFacing.SOUTH, 3);
         TileEntity teIn = this.world.getTileEntity(inPos);
         if (teIn != null) {
             IItemHandler handler = teIn.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
@@ -144,7 +144,7 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
             }
         } else if (hasOutput && carrying) {
             Vec3d vec1 = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-            Vec3d vec2 = new Vec3d(targetPos.getX() + 0.5, targetPos.getY() + 1.5, targetPos.getZ() + 0.5);
+            Vec3d vec2 = new Vec3d(targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5);
             Vec3d combinedVec = vec2.subtract(vec1);
             if (sucess(combinedVec)) {
                 this.isOnOnput = true;
@@ -169,9 +169,8 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         double yaw = Math.acos(projectionYaw);
 
         if (combinedVec.x == 0 && combinedVec.z > 0) {
-            yaw -=  Math.PI;
-        }
-        else if (combinedVec.x < 0 ) {
+            yaw -= Math.PI;
+        } else if (combinedVec.x < 0) {
             if (combinedVec.z == 0) {
                 yaw += Math.PI;
             } else if (combinedVec.z < 0) {
@@ -179,8 +178,7 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
             } else if (combinedVec.z > 0) {
                 yaw -= 3 * Math.PI / 4;
             }
-        }
-        else if (combinedVec.x > 0 ) {
+        } else if (combinedVec.x > 0) {
             if (combinedVec.z > 0) {
                 yaw -= Math.PI / 4;
             } else if (combinedVec.z < 0) {
@@ -205,13 +203,24 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         }
 
         float dist = (float) combinedVec.length();
+        float currentArmLenght = 0.875f + 0.875f * rotation[1][0];
+
         boolean distReached = false;
-        double distWalked = distX(rotation[1][0], 0.1f, dist);
+        double distWalked = distX(rotation[1][0], 0.1f, currentArmLenght, dist);
         if (distWalked != rotation[1][0]) {
             rotation[1][0] = (float) distWalked;
-        } else {
+        } else if (currentArmLenght >= dist){
             distReached = true;
         }
+
+        float currentHandLenght = 0.875f + 0.875f * rotation[1][0];
+        double handWalked = distX(rotation[2][0], 0.1f, currentHandLenght, dist - currentArmLenght);
+        if (handWalked != rotation[2][0]) {
+            rotation[2][0] = (float) handWalked;
+        } else if (currentHandLenght >= dist - currentArmLenght){
+            distReached = true;
+        }
+
 
         if (yawReached && pitchReached && distReached) {
             this.isOnInput = true;
@@ -231,19 +240,22 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         return 0;
     }
 
-    float distX(float source, float walkSpeed, float target) {
-        float currentArmLenght = 0.875f + 0.125f * source;
-        if (Math.abs(currentArmLenght - target) <= 0.1F) {
+    float distX(float source, float walkSpeed,float current, float target) {
+        float currentArmLenght = 0.875f * source;
+        float diff = (Math.abs(target)) - currentArmLenght;
+        if (diff <= 0.1F && diff >= -0.1F) {
             return source;
         }
-        if (source + walkSpeed >= Math.PI / 2) {
-            return source;
-        }
-        float diff = target - currentArmLenght;
-        if (diff < -0) {
-            return source - walkSpeed;
-        } else {
+        if (diff > 0) {
+            if (source + walkSpeed > Math.PI /2) {
+                return (float) (Math.PI / 2);
+            }
             return source + walkSpeed;
+        } else {
+            if (source - walkSpeed < -Math.PI /2) {
+                return (float) (-Math.PI / 2);
+            }
+            return source - walkSpeed;
         }
     }
 
@@ -264,6 +276,12 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
             rotation[1][0] = rotation[1][0] - 0.1F;
         } else if (rotation[0][0] <= -0.1F) {
             rotation[1][0] = rotation[1][0] + 0.1F;
+        }
+
+        if (rotation[2][0] >= 0.1F) {
+            rotation[2][0] = rotation[2][0] - 0.1F;
+        } else if (rotation[0][0] <= -0.1F) {
+            rotation[2][0] = rotation[2][0] + 0.1F;
         }
     }
 
