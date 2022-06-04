@@ -164,7 +164,7 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         }
 
         float dist = (float) combinedVec.length();
-        float currentArmLength = (float) (1 + (Math.abs(2 * rotation[1][0] / Math.PI)));
+        float currentArmLength = (float) (1 +  (Math.abs(2 * rotation[1][0] / Math.PI)));
 
         boolean distReached = false;
         double rotationAmount = rotateToReach(rotation[1][0], 0.1f, currentArmLength > dist ? 1 : -1);

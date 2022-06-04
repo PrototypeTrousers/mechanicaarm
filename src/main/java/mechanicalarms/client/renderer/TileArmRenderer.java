@@ -2,6 +2,8 @@ package mechanicalarms.client.renderer;
 
 import mechanicalarms.client.model.ArmModel;
 import mechanicalarms.common.tile.TileArmBasic;
+import net.minecraftforge.client.model.animation.AnimationTESR;
+import net.minecraftforge.client.model.animation.FastTESR;
 import software.bernie.geckolib3.core.processor.IBone;
 import software.bernie.geckolib3.renderers.geo.GeoBlockRenderer;
 
@@ -27,6 +29,8 @@ public class TileArmRenderer extends GeoBlockRenderer<TileArmBasic>
 		b.setRotationX( baseRotation[0] );
 		baseRotation[1] = baseRotation[1] + partialTicks * (animatable.getRotation( 0 )[1] - baseRotation[1]);
 		b.setRotationY( baseRotation[1] );
+		AnimationTESR;
+				FastTESR;
 
 		super.renderEarly( animatable, partialTicks, red, green, blue, alpha );
 	}
