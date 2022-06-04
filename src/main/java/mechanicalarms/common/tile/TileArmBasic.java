@@ -4,12 +4,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandler;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.PlayState;
 import software.bernie.geckolib3.core.builder.AnimationBuilder;
@@ -21,25 +18,25 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
     private final AnimationFactory factory = new AnimationFactory(this);
     private final AnimationBuilder builder = new AnimationBuilder().addAnimation("nothing", true);
-    private AnimationController<TileArmBasic> animationController;
     private final boolean extend = true;
-
-    static float HARD_LIMIT = (float) (3 * Math.PI / 4);
-    static float MINUS_HARD_LIMIT = (float) (-Math.PI / 4);
+    boolean isOnInput;
+    float[][] rotation = new float[3][3];
+    float[][] animationRotation = new float[3][3];
+    private AnimationController<TileArmBasic> animationController;
     private boolean hasInput;
     private BlockPos sourcePos;
     private boolean hasOutput;
     private BlockPos targetPos;
-    boolean isOnInput;
     private boolean carrying = false;
     private boolean isOnOnput;
-
 
     public TileArmBasic() {
         super();
     }
 
-    float[][] rotation = new float[3][3];
+    public float[][] getAnimationRotation() {
+        return animationRotation;
+    }
 
     private <E extends TileEntity & IAnimatable> PlayState predicate(AnimationEvent<E> event) {
         AnimationController controller = event.getController();
