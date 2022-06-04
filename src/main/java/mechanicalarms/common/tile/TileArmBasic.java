@@ -104,39 +104,13 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
 
     @Override
     public void update() {
-        BlockPos inPos = pos.offset(EnumFacing.SOUTH, 1);
+        hasInput = sourcePos != null;
+        hasOutput = targetPos != null;
 
-        TileEntity teIn = this.world.getTileEntity(inPos);
-        if (teIn != null) {
-            IItemHandler handler = teIn.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
-            if (handler != null) {
-                this.hasInput = true;
-                this.sourcePos = inPos;
-            } else {
-                this.hasInput = false;
-            }
-        } else {
-            this.hasInput = false;
-        }
-
-        BlockPos outPos = pos.offset(EnumFacing.NORTH, 2);
-        outPos = outPos.offset(EnumFacing.UP, 2);
-        TileEntity teOut = this.world.getTileEntity(outPos);
-        if (teOut != null) {
-            IItemHandler handler = teOut.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
-            if (handler != null) {
-                this.hasOutput = true;
-                this.targetPos = outPos;
-            } else {
-                this.hasOutput = false;
-            }
-        } else {
-            this.hasOutput = false;
-        }
-        Vec3d vec1 = new Vec3d(pos.getX() + 0.5, pos.getY() + 1.2025, pos.getZ() + 0.5);
+        Vec3d vec1 = new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5);
 
         if (hasInput && !carrying) {
-            Vec3d vec2 = new Vec3d(sourcePos.getX() + 0.5, sourcePos.getY() + 1.5, sourcePos.getZ() + 0.5);
+            Vec3d vec2 = new Vec3d(sourcePos.getX() + 0.5, sourcePos.getY() + 1, sourcePos.getZ() + 0.5);
             Vec3d combinedVec = vec2.subtract(vec1);
 
             if (sucess(combinedVec)) {
@@ -144,7 +118,7 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
                 this.carrying = true;
             }
         } else if (hasOutput && carrying) {
-            Vec3d vec2 = new Vec3d(targetPos.getX() + 0.5, targetPos.getY() + 1.5, targetPos.getZ() + 0.5);
+            Vec3d vec2 = new Vec3d(targetPos.getX() + 0.5, targetPos.getY() + 1, targetPos.getZ() + 0.5);
             Vec3d combinedVec = vec2.subtract(vec1);
             if (sucess(combinedVec)) {
                 this.isOnOnput = true;
@@ -157,54 +131,39 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
     }
 
     private boolean sucess(Vec3d combinedVec) {
-        Vec3d vPitch = new Vec3d(combinedVec.x, 0, combinedVec.z);
-        double projectionPitch = combinedVec.normalize().dotProduct(vPitch.normalize());
-        double pitch = Math.acos(projectionPitch);
-        if (combinedVec.y < 0) {
-            pitch *= -1;
-        }
-
-        Vec3d vYaw = new Vec3d(combinedVec.x, 0, 0);
-        double projectionYaw = combinedVec.dotProduct(vYaw);
-        double yaw = Math.acos(projectionYaw);
-
-        if (combinedVec.x == 0 && combinedVec.z > 0) {
-            yaw -= Math.PI;
-        } else if (combinedVec.x < 0) {
-            if (combinedVec.z == 0) {
-                yaw += Math.PI;
-            } else if (combinedVec.z < 0) {
-                yaw += 3 * Math.PI / 4;
-            } else if (combinedVec.z > 0) {
-                yaw -= 3 * Math.PI / 4;
-            }
-        } else if (combinedVec.x > 0) {
-            if (combinedVec.z > 0) {
-                yaw -= Math.PI / 4;
-            } else if (combinedVec.z < 0) {
-                yaw += Math.PI / 4;
-            }
-        }
+        double pitch = Math.atan2(combinedVec.y, Math.sqrt(combinedVec.x * combinedVec.x + combinedVec.z * combinedVec.z));
+        double yaw = Math.atan2(-combinedVec.z, combinedVec.x);
 
         float rotPitch = rotateX(rotation[0][0], 0.1f, (float) pitch);
         boolean pitchReached = false;
         if (rotPitch != rotation[0][0]) {
             rotation[0][0] = rotPitch;
         }
-        if (pitch > 0 && rotPitch >= (pitch - 0.01f)) {
-            pitchReached = true;
-        } else if (pitch < 0 && rotPitch <= (pitch + 0.01f)) {
-            pitchReached = true;
+
+        if (rotPitch >= 0 && pitch >= 0) {
+            if (rotPitch <= (pitch + 0.1f) && rotPitch >= (pitch - 0.1f)) {
+                pitchReached = true;
+            }
+        } else if (rotPitch < 0 && pitch < 0) {
+            if (rotPitch <= (pitch + 0.1f) && rotPitch >= (pitch - 0.1f)) {
+                pitchReached = true;
+            }
         }
 
         float rotYaw = rotateX(rotation[0][1], 0.1f, (float) yaw);
         boolean yawReached = false;
         if (rotYaw != rotation[0][1]) {
             rotation[0][1] = rotYaw;
-        } if (yaw > 0 && rotYaw >= (yaw - 0.01f)) {
-            yawReached = true;
-        } else if (yaw < 0 && rotYaw <= (yaw + 0.01f)) {
-            yawReached = true;
+        }
+
+        if (rotYaw >= 0 && yaw >= 0) {
+            if (rotYaw <= (yaw + 0.1f) && rotYaw >= (yaw - 0.1f)) {
+                yawReached = true;
+            }
+        } else if (rotYaw < 0 && yaw < 0) {
+            if (rotYaw <= (yaw + 0.1f) && rotYaw >= (yaw - 0.1f)) {
+                yawReached = true;
+            }
         }
 
         float dist = (float) combinedVec.length();
@@ -214,9 +173,11 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         double rotationAmount = rotateToReach(rotation[1][0], 0.1f, currentArmLength > dist ? 1 : -1);
         if (rotationAmount != rotation[1][0]) {
             rotation[1][0] = (float) rotationAmount;
-        } if (currentArmLength >= (dist - 0.1f) && currentArmLength <= (dist + 0.1f)) {
+        }
+        if (currentArmLength >= (dist - 0.3f) && currentArmLength <= (dist + 0.3f)) {
             distReached = true;
         }
+
         /*
         float currentHandLength = (float) (0.500f + (2 * rotation[2][0] / Math.PI));
         double handWalked = rotateToReach(rotation[2][0], 0.25f, currentHandLength, dist - currentArmLength);
@@ -294,75 +255,11 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         }
     }
 
-	/*
-	 public void update()
-	 {
-		 float currentXd = rotation[2][0];
-		 float currentXm = rotation[1][0];
-		 float currentXn = rotation[0][0];
-		 float futureXd = currentXd + 0.314f;
-		 if( extend )
-		 {
-			 if( futureXd >= HARD_LIMIT )
-			 {
-				 rotation[2][0] = HARD_LIMIT;
-				 float futureXm = currentXm + 0.314f;
-				 if( futureXm >= HARD_LIMIT )
-				 {
-					 rotation[1][0] = HARD_LIMIT;
-					 float futureXn = currentXn + 0.314f;
-					 if( futureXn >= HARD_LIMIT )
-					 {
-						 rotation[0][0] = HARD_LIMIT;
-						 extend = false;
-					 }
-					 else
-					 {
-						 rotation[0][0] = futureXn;
-					 }
-				 }
-				 else
-				 {
-					 rotation[1][0] = futureXm;
-				 }
-			 }
-			 else
-			 {
-				 rotation[2][0] = futureXd;
-			 }
-		 }
-		 else
-		 {
-			 futureXd = currentXd - 0.314f;
-			 if( futureXd <= MINUS_HARD_LIMIT )
-			 {
-				 rotation[2][0] = MINUS_HARD_LIMIT;
-				 float futureXm = currentXm - 0.314f;
-				 if( futureXm <= MINUS_HARD_LIMIT )
-				 {
-					 rotation[1][0] = MINUS_HARD_LIMIT;
-					 float futureXn = currentXn - 0.314f;
-					 if( futureXn <= MINUS_HARD_LIMIT )
-					 {
-						 rotation[0][0] = MINUS_HARD_LIMIT;
-						 extend = true;
-					 }
-					 else
-					 {
-						 rotation[0][0] = futureXn;
-					 }
-				 }
-				 else
-				 {
-					 rotation[1][0] = futureXm;
-				 }
-			 }
-			 else
-			 {
-				 rotation[2][0] = futureXd;
-			 }
-		 }
-	 }
-	 */
+    public void setSource(BlockPos sourcePos) {
+        this.sourcePos = sourcePos;
+    }
 
+    public void setTarget(BlockPos targetPos) {
+        this.targetPos = targetPos;
+    }
 }
