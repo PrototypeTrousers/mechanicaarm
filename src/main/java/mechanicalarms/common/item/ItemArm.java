@@ -32,7 +32,7 @@ public class ItemArm extends ItemBlock
 
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        TileEntity tileEntity = worldIn.getTileEntity(pos);
+      /*  TileEntity tileEntity = worldIn.getTileEntity(pos);
         if (tileEntity != null) {
             IItemHandler handler = tileEntity.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
             if (handler != null) {
@@ -50,17 +50,20 @@ public class ItemArm extends ItemBlock
             if (this.sourcePos != null && this.targetPos != null) {
                 return super.onItemUse(player, worldIn, pos, hand, facing, hitX, hitY, hitZ);
             }
-        return EnumActionResult.FAIL;
+        return EnumActionResult.FAIL;*/
+        return super.onItemUse(player, worldIn, pos, hand, facing, hitX, hitY, hitZ);
     }
 
     @Override
     public boolean placeBlockAt(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, IBlockState newState) {
-        if (super.placeBlockAt(stack, player, world, pos, side, hitX, hitY, hitZ, newState)) {
+       /* if (super.placeBlockAt(stack, player, world, pos, side, hitX, hitY, hitZ, newState)) {
             TileEntity tileEntity1 = world.getTileEntity( pos );
             ((TileArmBasic) tileEntity1).setSource(sourcePos);
             ((TileArmBasic) tileEntity1).setTarget(targetPos);
             return true;
         }
         return false;
+    }*/
+        return super.placeBlockAt(stack, player, world, pos, side, hitX, hitY, hitZ, newState);
     }
 }

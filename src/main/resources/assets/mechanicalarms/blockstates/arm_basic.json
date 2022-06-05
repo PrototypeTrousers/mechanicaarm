@@ -5,6 +5,10 @@
   },
   "variants": {
     "normal": [{}],
-    "inventory": [{}]
+    "inventory": [{}],
+    "facing": {
+      "up": {"x": -90},
+      "down": {"x": 90}
+    }
   }
 }

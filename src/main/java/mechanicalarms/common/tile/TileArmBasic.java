@@ -15,14 +15,11 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
-public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
-    private final AnimationFactory factory = new AnimationFactory(this);
-    private final AnimationBuilder builder = new AnimationBuilder().addAnimation("nothing", true);
+public class TileArmBasic extends TileEntity implements ITickable {
     private final boolean extend = true;
     boolean isOnInput;
     float[][] rotation = new float[3][3];
     float[][] animationRotation = new float[3][3];
-    private AnimationController<TileArmBasic> animationController;
     private boolean hasInput;
     private BlockPos sourcePos;
     private boolean hasOutput;
@@ -38,28 +35,14 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         return animationRotation;
     }
 
-    private <E extends TileEntity & IAnimatable> PlayState predicate(AnimationEvent<E> event) {
-        AnimationController controller = event.getController();
-        controller.transitionLengthTicks = 0;
-        controller.setAnimation(builder);
-        controller.markNeedsReload();
-
-        return PlayState.CONTINUE;
-    }
-
-    @Override
-    public void registerControllers(AnimationData data) {
-        animationController = new AnimationController<>(this, "controller", 0, this::predicate);
-        data.addAnimationController(animationController);
-    }
-
     public float[] getRotation(int idx) {
         return rotation[idx];
     }
 
     @Override
-    public AnimationFactory getFactory() {
-        return factory;
+    public boolean hasFastRenderer()
+    {
+        return true;
     }
 
     @Override

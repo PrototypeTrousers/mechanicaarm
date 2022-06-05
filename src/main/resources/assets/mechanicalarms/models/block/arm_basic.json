@@ -1,8 +1,86 @@
 {
-  "credit": "Made with Blockbench",
-  "parent": "builtin/entity",
-  "texture_size": [
-    64,
-    64
-  ]
+	"credit": "Made with Blockbench",
+	"texture_size": [32, 32],
+	"elements": [
+		{
+			"from": [1, 17, 1],
+			"to": [15, 31, 15],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 24, 8]},
+			"color": 0,
+			"faces": {
+				"north": {"uv": [0, 0, 7, 7], "texture": "#missing"},
+				"east": {"uv": [0, 0, 7, 7], "texture": "#missing"},
+				"south": {"uv": [0, 0, 7, 7], "texture": "#missing"},
+				"west": {"uv": [0, 0, 7, 7], "texture": "#missing"},
+				"up": {"uv": [0, 0, 7, 7], "texture": "#missing"},
+				"down": {"uv": [0, 0, 7, 7], "texture": "#missing"}
+			}
+		},
+		{
+			"from": [5, 21, 15],
+			"to": [11, 27, 29],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 25, 8]},
+			"color": 0,
+			"faces": {
+				"north": {"uv": [0, 0, 3, 3], "texture": "#missing"},
+				"east": {"uv": [0, 0, 7, 3], "texture": "#missing"},
+				"south": {"uv": [0, 0, 3, 3], "texture": "#missing"},
+				"west": {"uv": [0, 0, 7, 3], "texture": "#missing"},
+				"up": {"uv": [0, 0, 3, 7], "texture": "#missing"},
+				"down": {"uv": [0, 0, 3, 7], "texture": "#missing"}
+			}
+		},
+		{
+			"from": [11, 8, 23],
+			"to": [17, 27, 29],
+			"rotation": {"angle": 0, "axis": "y", "origin": [14, 24, 26]},
+			"faces": {
+				"north": {"uv": [0, 0, 3, 9.5], "texture": "#missing"},
+				"east": {"uv": [3, 0, 6, 9.5], "texture": "#missing"},
+				"south": {"uv": [6, 0, 9, 9.5], "texture": "#missing"},
+				"west": {"uv": [9, 0, 12, 9.5], "texture": "#missing"},
+				"up": {"uv": [3, 12.5, 6, 15.5], "texture": "#missing"},
+				"down": {"uv": [6, 9.5, 9, 12.5], "texture": "#missing"}
+			}
+		},
+		{
+			"from": [5, 8, 9],
+			"to": [11, 14, 29],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 11, 26]},
+			"color": 0,
+			"faces": {
+				"north": {"uv": [0, 0, 3, 3], "texture": "#missing"},
+				"east": {"uv": [0, 0, 10, 3], "texture": "#missing"},
+				"south": {"uv": [0, 0, 3, 3], "texture": "#missing"},
+				"west": {"uv": [0, 0, 10, 3], "texture": "#missing"},
+				"up": {"uv": [0, 0, 3, 10], "texture": "#missing"},
+				"down": {"uv": [0, 0, 3, 10], "texture": "#missing"}
+			}
+		}
+	],
+	"groups": [
+		{
+			"name": "baseXYZ",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [
+				0,
+				1,
+				{
+					"name": "firstX",
+					"origin": [8, 8, 8],
+					"color": 0,
+					"children": [
+						2,
+						{
+							"name": "secondX",
+							"origin": [8, 8, 8],
+							"color": 0,
+							"children": [3]
+						}
+					]
+				}
+			]
+		}
+	]
 }
