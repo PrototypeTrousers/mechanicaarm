@@ -18,9 +18,9 @@ public class ClientProxy extends CommonProxy {
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
         ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 0, new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic"), "inventory"));
-        ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 1, new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic"), "core"));
-        ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 2, new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic"), "firstarm"));
-        ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 3, new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic"), "hand"));
+        ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 1, new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic_core"), "normal"));
+        ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 2, new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic_firstarm"), "normal"));
+        ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 3, new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic_secondarm"), "normal"));
     }
 
     @Override

@@ -1,0 +1,41 @@
+{
+	"credit": "Made with Blockbench",
+	"elements": [
+		{
+			"from": [5, 0, 9],
+			"to": [11, 6, 29],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, 3, 18]},
+			"color": 0,
+			"faces": {
+				"north": {"uv": [20, 40, 26, 46], "texture": "#missing"},
+				"east": {"uv": [0, 40, 20, 46], "texture": "#missing"},
+				"south": {"uv": [46, 40, 52, 46], "texture": "#missing"},
+				"west": {"uv": [26, 40, 46, 46], "texture": "#missing"},
+				"up": {"uv": [26, 40, 20, 20], "texture": "#missing"},
+				"down": {"uv": [32, 20, 26, 40], "texture": "#missing"}
+			}
+		}
+	],
+	"groups": [
+		{
+			"name": "baseXYZ",
+			"origin": [0, 16, 0],
+			"color": 0,
+			"children": [
+				{
+					"name": "firstX",
+					"origin": [6, 16, 18],
+					"color": 0,
+					"children": [
+						{
+							"name": "secondX",
+							"origin": [0, 3, 18],
+							"color": 0,
+							"children": [0]
+						}
+					]
+				}
+			]
+		}
+	]
+}

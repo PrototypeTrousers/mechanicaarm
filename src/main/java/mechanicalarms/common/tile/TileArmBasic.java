@@ -7,13 +7,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import software.bernie.geckolib3.core.IAnimatable;
-import software.bernie.geckolib3.core.PlayState;
-import software.bernie.geckolib3.core.builder.AnimationBuilder;
-import software.bernie.geckolib3.core.controller.AnimationController;
-import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
-import software.bernie.geckolib3.core.manager.AnimationData;
-import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 public class TileArmBasic extends TileEntity implements ITickable {
     private final boolean extend = true;
@@ -40,8 +33,7 @@ public class TileArmBasic extends TileEntity implements ITickable {
     }
 
     @Override
-    public boolean hasFastRenderer()
-    {
+    public boolean hasFastRenderer() {
         return true;
     }
 
@@ -147,7 +139,7 @@ public class TileArmBasic extends TileEntity implements ITickable {
         }
 
         float dist = (float) combinedVec.length();
-        float currentArmLength = (float) (1 +  (Math.abs(2 * rotation[1][0] / Math.PI)));
+        float currentArmLength = (float) (1 + (Math.abs(2 * rotation[1][0] / Math.PI)));
 
         boolean distReached = false;
         double rotationAmount = rotateToReach(rotation[1][0], 0.1f, currentArmLength > dist ? 1 : -1);

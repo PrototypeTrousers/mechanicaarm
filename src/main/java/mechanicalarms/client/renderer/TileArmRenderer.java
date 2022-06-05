@@ -7,6 +7,7 @@ import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.model.animation.FastTESR;
@@ -59,13 +60,18 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
         IBlockState blockState = tileArmBasic.getWorld().getBlockState(tileArmBasic.getPos());
 
+        TextureAtlasSprite textureAtlasSprite = blockRendererDispatcher.getBlockModelShapes().getTexture(Blocks.CACTUS.getDefaultState());
         renderQuads(blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, null, 0),
-                new Vector3f((float) x, (float) y, (float) z),
+                new Vector3f((float) x, (float) y + 10, (float) z + 10),
                 new VertexBufferConsumer(buffer),
                 buffer,
                 new Matrix4f().rotate((float) (Math.PI / 2), new Vector3f(1, 0, 0)),
                 240,
                 color(0xFF, 0xFF, 0xFF));
+        renderSimpleQuad(new Vector3f((float) x, (float) y + 10, (float) z + 10),
+                buffer,
+                new Matrix4f().rotate((float) (Math.PI / 2), new Vector3f(1, 0, 0)),
+                color(0xFF, 0xFF, 0xFF), textureAtlasSprite, 240);
     }
 
     // Below are some helper methods to upload data to the buffer

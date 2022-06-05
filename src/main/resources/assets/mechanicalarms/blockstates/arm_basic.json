@@ -1,14 +1,16 @@
 {
   "forge_marker": 1,
   "defaults": {
-    "model": "mechanicalarms:arm_basic"
+    "model": "mechanicalarms:arm_basic_core"
   },
   "variants": {
     "normal": [{}],
     "inventory": [{}],
-    "facing": {
-      "up": {"x": -90},
-      "down": {"x": 90}
-    }
+    "damage=0,facing=up" : { "model" : "mechanicalarms:arm_basic_core"},
+    "damage=0,facing=down" : { "model" : "mechanicalarms:arm_basic_core"},
+    "damage=1,facing=up" : { "model" : "mechanicalarms:arm_basic_core"},
+    "damage=1,facing=down" : { "model" : "mechanicalarms:arm_basic_core"},
+    "damage=2,facing=up" : { "model" : "mechanicalarms:arm_basic_core"},
+    "damage=2,facing=down" : { "model" : "mechanicalarms:arm_basic_core"}
   }
 }

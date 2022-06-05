@@ -1,8 +1,6 @@
 package mechanicalarms.client.model;
 
-public class ArmModel
-{
-	public ArmModel()
-	{
-	}
+public class ArmModel {
+    public ArmModel() {
+    }
 }
