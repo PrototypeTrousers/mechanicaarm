@@ -13,19 +13,19 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
-@Mod.EventBusSubscriber( Side.CLIENT )
-public class ClientProxy extends CommonProxy
-{
-	@SubscribeEvent
-	public static void registerModels( ModelRegistryEvent event )
-	{
-		ModelLoader.setCustomModelResourceLocation( Items.ARM_BASE, 0, new ModelResourceLocation( new ResourceLocation( MechanicalArms.MODID, "models/block/arm_basic" ), "inventory" ) );
-	}
+@Mod.EventBusSubscriber(Side.CLIENT)
+public class ClientProxy extends CommonProxy {
+    @SubscribeEvent
+    public static void registerModels(ModelRegistryEvent event) {
+        ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 0, new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic"), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 1, new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic"), "core"));
+        ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 2, new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic"), "firstarm"));
+        ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 3, new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic"), "hand"));
+    }
 
-	@Override
-	public void preInit()
-	{
-		super.preInit();
-		ClientRegistry.bindTileEntitySpecialRenderer( TileArmBasic.class, new TileArmRenderer() );
-	}
+    @Override
+    public void preInit() {
+        super.preInit();
+        ClientRegistry.bindTileEntitySpecialRenderer(TileArmBasic.class, new TileArmRenderer());
+    }
 }
