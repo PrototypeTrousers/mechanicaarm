@@ -164,27 +164,19 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         }
 
         float dist = (float) combinedVec.length();
-        float currentArmLength = (float) (1 +  (Math.abs(2 * rotation[1][0] / Math.PI)));
-
         boolean distReached = false;
-        double rotationAmount = rotateToReach(rotation[1][0], 0.1f, currentArmLength > dist ? 1 : -1);
-        if (rotationAmount != rotation[1][0]) {
-            rotation[1][0] = (float) rotationAmount;
-        }
+
+        float currentArmLength = (float) (1 + (Math.abs(2 * rotation[1][0] / Math.PI)));
+        rotation[1][0] = rotateToReach(rotation[1][0], 0.1f, currentArmLength > dist ? 1 : -1);
         if (currentArmLength >= (dist - 0.3f) && currentArmLength <= (dist + 0.3f)) {
             distReached = true;
         }
 
-        /*
-        float currentHandLength = (float) (0.500f + (2 * rotation[2][0] / Math.PI));
-        double handWalked = rotateToReach(rotation[2][0], 0.25f, currentHandLength, dist - currentArmLength);
-        if (handWalked != rotation[2][0]) {
-            rotation[2][0] = (float) handWalked;
-        }
-        if (currentHandLength >= (dist - currentArmLength - 0.01f) && currentHandLength <= (dist - currentArmLength + 0.01f)) {
+        float currentHandLength = (float) (0.500f + (Math.abs(2 * rotation[2][0] / Math.PI)));
+        rotation[2][0] = rotateToReach(rotation[2][0], 0.1f, currentHandLength + currentArmLength >= dist ? 1 : -1);
+        if (currentHandLength >= (dist - currentArmLength - 0.3f)) {
             distReached = true;
         }
-        */
 
         if (yawReached && pitchReached && distReached) {
             this.isOnInput = true;
@@ -209,11 +201,11 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
 
     float rotateToReach(float currentRotation, float angularSpeed, float targetedRotation) {
         if (targetedRotation < -0) {
-            float result = currentRotation + angularSpeed;
-            return Math.min(result, (float) (Math.PI / 2));
-        } else if (targetedRotation > 0) {
             float result = currentRotation - angularSpeed;
-            return Math.max(result, (float) (-Math.PI / 2));
+            return Math.max(result, (float) (Math.PI / 2));
+        } else if (targetedRotation > 0) {
+            float result = currentRotation + angularSpeed;
+            return Math.min(result, (float) (-Math.PI / 2));
         }
         return currentRotation;
     }
