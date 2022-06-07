@@ -4,6 +4,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -76,6 +77,8 @@ public class TileArmBasic extends TileEntity implements ITickable {
 
     @Override
     public void update() {
+        sourcePos = pos.offset(EnumFacing.NORTH, 1);
+        targetPos = pos.offset(EnumFacing.SOUTH, 2);
         hasInput = sourcePos != null;
         hasOutput = targetPos != null;
 

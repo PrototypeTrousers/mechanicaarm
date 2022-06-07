@@ -6,20 +6,21 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.model.animation.FastTESR;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector3f;
-import org.lwjgl.util.vector.Vector4f;
 
+import javax.vecmath.Matrix4f;
+import javax.vecmath.Tuple4f;
+import javax.vecmath.Vector3f;
+import javax.vecmath.Vector4f;
 import java.lang.reflect.Field;
 import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class TileArmRenderer extends FastTESR<TileArmBasic> {
@@ -27,6 +28,9 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
     public TileArmRenderer() {
         super();
     }
+
+    private Matrix4f tempModelMatrix = new Matrix4f();
+
 
     /**
      * A field reference to the rawIntBuffer of the BufferBuilder class. Need reflection since the field is private.
@@ -57,13 +61,73 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
         BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
         IBlockState blockState = tileArmBasic.getWorld().getBlockState(tileArmBasic.getPos());
+        List<BakedQuad> quadList = blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, null, 0);
 
-        renderQuads(blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, null, 0),
+        Matrix4f transformMatrix = new Matrix4f();
+        transformMatrix.setIdentity();
+        //cage
+        renderQuads(quadList.subList(0, 72),
                 new Vector3f((float) x, (float) y, (float) z),
                 buffer,
-                new Matrix4f().rotate((float) (Math.PI/4), new Vector3f(0,1,0)),
-                16,
-                color(255,255,255));
+                transformMatrix,
+                240,
+                color(0xFF, 0xFF, 0xFF));
+        //base
+
+        //move to the correct position
+        this.tempModelMatrix.setIdentity();
+        this.tempModelMatrix.setTranslation(new Vector3f((float) (-x / 16), (float) (y / 16F), (float) (z / 16)));
+        transformMatrix.mul(this.tempModelMatrix);
+        //move to pivot
+        this.tempModelMatrix.setIdentity();
+        this.tempModelMatrix.setTranslation(new Vector3f(.5F, (float) (20 / 16), (.5F)));
+        transformMatrix.mul(this.tempModelMatrix);
+
+        this.tempModelMatrix.setIdentity();
+        this.tempModelMatrix.rotY(baseRotation[1]);
+        transformMatrix.mul(this.tempModelMatrix);
+
+        //this.tempModelMatrix.setIdentity();
+        //this.tempModelMatrix.rotX(baseRotation[0]);
+        //transformMatrix.mul(this.tempModelMatrix);
+
+        //move back from pivoting
+        this.tempModelMatrix.setIdentity();
+        this.tempModelMatrix.setTranslation(new Vector3f(-.5F, -20 / 16F, -.5F));
+        transformMatrix.mul(this.tempModelMatrix);
+
+        //Matrix4f.translate(new Vector3f(-.5F, -20 / 16F, -.5F), matrixCopy, transformMatrix);
+
+        renderQuads(quadList.subList(72, 102),
+                new Vector3f((float) (x), (float) (y), (float) (z)),
+                buffer,
+                transformMatrix,
+                240,
+                color(0xFF, 0xFF, 0xFF));
+        //firstArm
+/*
+
+        //transformMatrix.rotate((float) (Math.PI / 2), new Vector3f(1, 0, 0));
+        //transformMatrix.translate(new Vector3f(-.5F, -.5F, -.5F));
+
+
+        renderQuads(quadList.subList(102, 156),
+                new Vector3f((float) (x), (float) (y), (float) (z)),
+                new VertexBufferConsumer(buffer),
+                buffer,
+                transformMatrix,
+                240,
+                color(0xFF, 0xFF, 0xFF));
+        //hand
+
+        transformMatrix.rotate(hand[0], new Vector3f(1, 0, 0));
+        renderQuads(quadList.subList(156, 192),
+                new Vector3f((float) (x + 0.5F), (float) (y + 0.5F), (float) (z + 0.5F)),
+                new VertexBufferConsumer(buffer),
+                buffer,
+                transformMatrix,
+                240,
+                color(0xFF, 0xFF, 0xFF));*/
     }
 
     /**
@@ -91,7 +155,6 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
             // Push the quad to the consumer so it can be uploaded onto the buffer.
             buffer.addVertexData(quad.getVertexData());
 
-
             // After the quad has been uploaded the buffer contains enough info to apply the model matrix transformation.
             // Getting the vertex size for the given format.
             int vertexSize = buffer.getVertexFormat().getIntegerSize();
@@ -108,23 +171,22 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                 float vertX = Float.intBitsToFloat(intBuf.get(vertexIndex));
                 float vertY = Float.intBitsToFloat(intBuf.get(vertexIndex + 1));
                 float vertZ = Float.intBitsToFloat(intBuf.get(vertexIndex + 2));
-                Vector4f vert = new Vector4f(vertX, vertY, vertZ, 1);
+                Tuple4f vert = new Vector4f(vertX, vertY, vertZ, 1);
 
                 // Transforming it by the model matrix.
-                vert = Matrix4f.transform(transform, vert, new Vector4f());
+                transform.transform(vert);
 
                 // Uploading the difference back to the buffer. Have to use the helper function since the provided putX methods upload the data for a quad, not a vertex and this data is vertex-dependent.
                 putPositionForVertex(buffer, intBuf, vertexIndex, new Vector3f(vert.x - vertX, vert.y - vertY, vert.z - vertZ));
-
             }
 
             // Uploading the origin position to the buffer. This is an addition operation.
             buffer.putPosition(baseOffset.x, baseOffset.y, baseOffset.z);
 
             // Constructing the most basic packed lightmap data with a mask of 0x00FF0000.
-            int bVal = ((byte) (brightness * 255)) << 16;
+            int bVal = ((byte) (brightness * 255));
 
-            buffer.putBrightness4(bVal, bVal, bVal, bVal);
+            buffer.putBrightness4(64, 64, 64, 64);
 
             // Uploading the color multiplier to the buffer
             buffer.putColor4(color);

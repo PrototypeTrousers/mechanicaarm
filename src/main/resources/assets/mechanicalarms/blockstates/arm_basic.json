@@ -4,7 +4,7 @@
     "model": "mechanicalarms:arm_basic"
   },
     "textures": {
-    "particle": "block/arm_basic"
+    "all": "blocks/arm_basic"
     },
 
   "variants": {
