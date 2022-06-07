@@ -66,68 +66,17 @@ public class ArmsVertexBufferConsumer implements IVertexConsumer {
         VertexFormatElement fromElement = formatFrom.getElement(e);
         int vertexStartFrom = v * formatFrom.getSize() + formatFrom.getOffset(e);
         int countFrom = fromElement.getElementCount();
-        VertexFormatElement.EnumType typeFrom = fromElement.getType();
-        int sizeFrom = typeFrom.getSize();
-        int maskFrom = (256 << (8 * (sizeFrom - 1))) - 1;
-
 
         VertexFormat formatTo = renderer.getVertexFormat();
         VertexFormatElement elementTo = formatTo.getElement(e);
-        int vertexStartTo = v * formatTo.getSize() + formatTo.getOffset(e);
-        int countTo = elementTo.getElementCount();
         VertexFormatElement.EnumType typeTo = elementTo.getType();
         int sizeTo = typeTo.getSize();
-        int maskTo = (256 << (8 * (sizeTo - 1))) - 1;
-
 
         for (int i = 0; i < length; i++) {
             if (i < countFrom) {
-                int pos = vertexStartFrom + sizeFrom * i;
+                int pos = vertexStartFrom + sizeTo * i;
                 int index = pos >> 2;
-                int offset = pos & 3;
-                int bits = from[index];
-                bits = bits >>> (offset * 8);
-                if ((pos + sizeFrom - 1) / 4 != index) {
-                    bits |= from[index + 1] << ((4 - offset) * 8);
-                }
-                bits &= maskFrom;
-                if (typeFrom == VertexFormatElement.EnumType.FLOAT) {
-                    middleStep[i] = Float.intBitsToFloat(bits);
-                } else if (typeFrom == VertexFormatElement.EnumType.UBYTE || typeFrom == VertexFormatElement.EnumType.USHORT) {
-                    middleStep[i] = (float) bits / maskFrom;
-                } else if (typeFrom == VertexFormatElement.EnumType.UINT) {
-                    middleStep[i] = (float) ((double) (bits & 0xFFFFFFFFL) / 0xFFFFFFFFL);
-                } else if (typeFrom == VertexFormatElement.EnumType.BYTE) {
-                    middleStep[i] = ((float) (byte) bits) / (maskFrom >> 1);
-                } else if (typeFrom == VertexFormatElement.EnumType.SHORT) {
-                    middleStep[i] = ((float) (short) bits) / (maskFrom >> 1);
-                } else if (typeFrom == VertexFormatElement.EnumType.INT) {
-                    middleStep[i] = (float) ((double) (bits & 0xFFFFFFFFL) / (0xFFFFFFFFL >> 1));
-                }
-            } else {
-                middleStep[i] = 0;
-            }
-
-            if (i < countTo) {
-                int pos = vertexStartTo + sizeTo * i;
-                int index = pos >> 2;
-                int offset = pos & 3;
-                int bits = 0;
-                float f = i < middleStep.length ? middleStep[i] : 0;
-                if (typeTo == VertexFormatElement.EnumType.FLOAT) {
-                    bits = Float.floatToRawIntBits(f);
-                } else if (
-                        typeTo == VertexFormatElement.EnumType.UBYTE ||
-                                typeTo == VertexFormatElement.EnumType.USHORT ||
-                                typeTo == VertexFormatElement.EnumType.UINT
-                ) {
-                    bits = Math.round(f * maskTo);
-                } else {
-                    bits = Math.round(f * (maskTo >> 1));
-                }
-                to[index] &= ~(maskTo << (offset * 8));
-                to[index] |= (((bits & maskTo) << (offset * 8)));
-                // TODO handle overflow into to[index + 1]
+                to[index] = from[index];
             }
         }
     }
