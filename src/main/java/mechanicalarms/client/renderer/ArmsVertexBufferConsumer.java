@@ -66,7 +66,10 @@ public class ArmsVertexBufferConsumer implements IVertexConsumer {
         int count = element.getElementCount();
         VertexFormatElement.EnumType fromType = element.getType();
 
+
         VertexFormatElement elementTo = formatTo.getElement(e);
+        int vertexStartTo = v * formatTo.getSize() + formatTo.getOffset(e);
+        int countTo = element.getElementCount();
         VertexFormatElement.EnumType toType = elementTo.getType();
 
         int fromSize = fromType.getSize();
@@ -80,7 +83,7 @@ public class ArmsVertexBufferConsumer implements IVertexConsumer {
                 int index = pos >> 2;
                 int offset = pos & 3;
 
-                int posTo = vertexStart + toSize * i;
+                int posTo = vertexStartTo + toSize * i;
                 int indexTo = posTo >> 2;
                 int offsetTo = posTo & 3;
 
@@ -93,7 +96,7 @@ public class ArmsVertexBufferConsumer implements IVertexConsumer {
 
                 to[indexTo] &= ~(toMask << (offsetTo * 8));
                 to[indexTo] |= (((bits & toMask) << (offsetTo * 8)));
-            } else {
+            } else if (countTo >= i) {
                 to[i] = 0;
             }
         }
@@ -108,11 +111,15 @@ public class ArmsVertexBufferConsumer implements IVertexConsumer {
         this.setApplyDiffuseLighting(quad.shouldApplyDiffuseLighting());
         VertexFormat formatFrom = quad.getFormat();
         int[] eMap = LightUtil.mapFormats(formatFrom, this.format);
+
+        int countFrom = formatFrom.getElementCount();
+        int countTo = format.getElementCount();
+
         for (int v = 0; v < 4; v++) {
-            for (int e = 0; e < 4; e++) {
-                if (eMap[e] != 5) {
+            for (int e = 0; e < countFrom; e++) {
+                if (eMap[e] != countTo) {
                     repack(quad.getVertexData(), quadData, formatFrom, this.format, this.v, eMap[e]);
-                    if (eMap[e] == 3) {
+                    if (eMap[e] == format.getElementCount() - 1) {
                         this.v++;
                         if (this.v == 4) {
                             this.put(e, quadData);
