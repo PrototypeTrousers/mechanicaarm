@@ -16,7 +16,6 @@ public class ArmsVertexBufferConsumer implements IVertexConsumer {
     private final int[] quadData = new int[28];
     private int v = 0;
     private final BlockPos offset = BlockPos.ORIGIN;
-    VertexFormat format = DefaultVertexFormats.BLOCK;
 
 
     ArmsVertexBufferConsumer(BufferBuilder bufferBuilder) {
@@ -25,7 +24,7 @@ public class ArmsVertexBufferConsumer implements IVertexConsumer {
 
     @Override
     public VertexFormat getVertexFormat() {
-        return DefaultVertexFormats.BLOCK;
+        return renderer.getVertexFormat();
     }
 
     @Override
@@ -49,55 +48,86 @@ public class ArmsVertexBufferConsumer implements IVertexConsumer {
     }
 
     @Override
-    public void put(int element, float... data) {
-
+    public void put(int e, float... data) {
+        VertexFormat format = getVertexFormat();
+        if (e == format.getElementCount() - 1) {
+            v++;
+            if (v == 4) {
+                renderer.addVertexData(quadData);
+                renderer.putPosition(offset.getX(), offset.getY(), offset.getZ());
+                v = 0;
+            }
+        }
     }
 
-    public void put(int e, int... data) {
-        renderer.addVertexData(quadData);
-        renderer.putPosition(offset.getX(), offset.getY(), offset.getZ());
-    }
 
-    public void repack(int[] from, int[] to, VertexFormat formatFrom, VertexFormat formatTo, int v, int e) {
-        int length = Math.min(to.length, 4);
-
-        VertexFormatElement element = formatFrom.getElement(e);
-        int vertexStart = v * formatFrom.getSize() + formatFrom.getOffset(e);
-        int count = element.getElementCount();
-        VertexFormatElement.EnumType fromType = element.getType();
+    public void repack(int[] from, float[] middleStep, int[] to, VertexFormat formatFrom, int v, int e) {
+        int length = Math.min(4, middleStep.length);
+        VertexFormatElement fromElement = formatFrom.getElement(e);
+        int vertexStartFrom = v * formatFrom.getSize() + formatFrom.getOffset(e);
+        int countFrom = fromElement.getElementCount();
+        VertexFormatElement.EnumType typeFrom = fromElement.getType();
+        int sizeFrom = typeFrom.getSize();
+        int maskFrom = (256 << (8 * (sizeFrom - 1))) - 1;
 
 
+        VertexFormat formatTo = renderer.getVertexFormat();
         VertexFormatElement elementTo = formatTo.getElement(e);
         int vertexStartTo = v * formatTo.getSize() + formatTo.getOffset(e);
-        int countTo = element.getElementCount();
-        VertexFormatElement.EnumType toType = elementTo.getType();
+        int countTo = elementTo.getElementCount();
+        VertexFormatElement.EnumType typeTo = elementTo.getType();
+        int sizeTo = typeTo.getSize();
+        int maskTo = (256 << (8 * (sizeTo - 1))) - 1;
 
-        int fromSize = fromType.getSize();
-
-        int toSize = toType.getSize();
-        int toMask = (256 << (8 * (toSize - 1))) - 1;
 
         for (int i = 0; i < length; i++) {
-            if (i < count) {
-                int pos = vertexStart + fromSize * i;
+            if (i < countFrom) {
+                int pos = vertexStartFrom + sizeFrom * i;
                 int index = pos >> 2;
                 int offset = pos & 3;
-
-                int posTo = vertexStartTo + toSize * i;
-                int indexTo = posTo >> 2;
-                int offsetTo = posTo & 3;
-
                 int bits = from[index];
                 bits = bits >>> (offset * 8);
-                if ((pos + fromSize - 1) / 4 != index) {
+                if ((pos + sizeFrom - 1) / 4 != index) {
                     bits |= from[index + 1] << ((4 - offset) * 8);
                 }
-                bits &= -1;
+                bits &= maskFrom;
+                if (typeFrom == VertexFormatElement.EnumType.FLOAT) {
+                    middleStep[i] = Float.intBitsToFloat(bits);
+                } else if (typeFrom == VertexFormatElement.EnumType.UBYTE || typeFrom == VertexFormatElement.EnumType.USHORT) {
+                    middleStep[i] = (float) bits / maskFrom;
+                } else if (typeFrom == VertexFormatElement.EnumType.UINT) {
+                    middleStep[i] = (float) ((double) (bits & 0xFFFFFFFFL) / 0xFFFFFFFFL);
+                } else if (typeFrom == VertexFormatElement.EnumType.BYTE) {
+                    middleStep[i] = ((float) (byte) bits) / (maskFrom >> 1);
+                } else if (typeFrom == VertexFormatElement.EnumType.SHORT) {
+                    middleStep[i] = ((float) (short) bits) / (maskFrom >> 1);
+                } else if (typeFrom == VertexFormatElement.EnumType.INT) {
+                    middleStep[i] = (float) ((double) (bits & 0xFFFFFFFFL) / (0xFFFFFFFFL >> 1));
+                }
+            } else {
+                middleStep[i] = 0;
+            }
 
-                to[indexTo] &= ~(toMask << (offsetTo * 8));
-                to[indexTo] |= (((bits & toMask) << (offsetTo * 8)));
-            } else if (countTo >= i) {
-                to[i] = 0;
+            if (i < countTo) {
+                int pos = vertexStartTo + sizeTo * i;
+                int index = pos >> 2;
+                int offset = pos & 3;
+                int bits = 0;
+                float f = i < middleStep.length ? middleStep[i] : 0;
+                if (typeTo == VertexFormatElement.EnumType.FLOAT) {
+                    bits = Float.floatToRawIntBits(f);
+                } else if (
+                        typeTo == VertexFormatElement.EnumType.UBYTE ||
+                                typeTo == VertexFormatElement.EnumType.USHORT ||
+                                typeTo == VertexFormatElement.EnumType.UINT
+                ) {
+                    bits = Math.round(f * maskTo);
+                } else {
+                    bits = Math.round(f * (maskTo >> 1));
+                }
+                to[index] &= ~(maskTo << (offset * 8));
+                to[index] |= (((bits & maskTo) << (offset * 8)));
+                // TODO handle overflow into to[index + 1]
             }
         }
     }
@@ -109,23 +139,20 @@ public class ArmsVertexBufferConsumer implements IVertexConsumer {
             this.setQuadTint(quad.getTintIndex());
         }
         this.setApplyDiffuseLighting(quad.shouldApplyDiffuseLighting());
-        VertexFormat formatFrom = quad.getFormat();
-        int[] eMap = LightUtil.mapFormats(formatFrom, this.format);
+        VertexFormat formatFrom = renderer.getVertexFormat();
+        VertexFormat formatTo = quad.getFormat();
+        int[] eMap = LightUtil.mapFormats(formatFrom, formatTo);
+
+        float[] data = new float[4];
 
         int countFrom = formatFrom.getElementCount();
-        int countTo = format.getElementCount();
+        int countTo = formatTo.getElementCount();
 
         for (int v = 0; v < 4; v++) {
             for (int e = 0; e < countFrom; e++) {
                 if (eMap[e] != countTo) {
-                    repack(quad.getVertexData(), quadData, formatFrom, this.format, this.v, eMap[e]);
-                    if (eMap[e] == format.getElementCount() - 1) {
-                        this.v++;
-                        if (this.v == 4) {
-                            this.put(e, quadData);
-                            this.v = 0;
-                        }
-                    }
+                    repack(quad.getVertexData(), data, quadData, formatFrom, v, eMap[e]);
+                    this.put(e);
                 } else {
                     this.put(e);
                 }
