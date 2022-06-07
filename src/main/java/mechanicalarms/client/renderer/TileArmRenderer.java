@@ -60,13 +60,10 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
         renderQuads(blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, null, 0),
                 new Vector3f((float) x, (float) y, (float) z),
-                new ArmsVertexBufferConsumer(buffer),
                 buffer,
-                new Matrix4f(),
-                255,
-                color(0xFF, 0xFF, 0xFF));
-
-
+                new Matrix4f().rotate((float) (Math.PI/4), new Vector3f(0,1,0)),
+                16,
+                color(255,255,255));
     }
 
     /**
@@ -76,15 +73,16 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
      *
      * @param quads      the iterable of BakedQuads. This may be any iterable object.
      * @param baseOffset the base position offset for the rendering. This position will not be transformed by the model matrix.
-     * @param pipeline   the vertex consumer object. It is a parameter for optimization reasons. It may simply be constructed as new VertexBufferConsumer(buffer) and may be reused indefinately in the scope of the render pass.
      * @param buffer     the buffer to upload vertices to.
      * @param transform  the model matrix that is used to transform quad vertices.
      * @param brightness the brightness of the model. The packed lightmap coordinate system is pretty complex and a lot of parameters are not necessary here so only the dominant one is implemented.
      * @param color      the color of the quad. This is a color multiplier in the ARGB format.
      */
-    public void renderQuads(Iterable<BakedQuad> quads, Vector3f baseOffset, ArmsVertexBufferConsumer pipeline, BufferBuilder buffer, Matrix4f transform, float brightness, int color) {
+    public void renderQuads(Iterable<BakedQuad> quads, Vector3f baseOffset, BufferBuilder buffer, Matrix4f transform, float brightness, int color) {
         // Get the raw int buffer of the buffer builder object.
         IntBuffer intBuf = getIntBuffer(buffer);
+
+        // Uploading the brightness to the buffer.
 
         // Iterate the iterable
         int i = 0;
@@ -92,6 +90,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
             if (i > 71) break;
             // Push the quad to the consumer so it can be uploaded onto the buffer.
             buffer.addVertexData(quad.getVertexData());
+
 
             // After the quad has been uploaded the buffer contains enough info to apply the model matrix transformation.
             // Getting the vertex size for the given format.
@@ -116,6 +115,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
                 // Uploading the difference back to the buffer. Have to use the helper function since the provided putX methods upload the data for a quad, not a vertex and this data is vertex-dependent.
                 putPositionForVertex(buffer, intBuf, vertexIndex, new Vector3f(vert.x - vertX, vert.y - vertY, vert.z - vertZ));
+
             }
 
             // Uploading the origin position to the buffer. This is an addition operation.
@@ -124,11 +124,10 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
             // Constructing the most basic packed lightmap data with a mask of 0x00FF0000.
             int bVal = ((byte) (brightness * 255)) << 16;
 
-            // Uploading the brightness to the buffer.
             buffer.putBrightness4(bVal, bVal, bVal, bVal);
 
             // Uploading the color multiplier to the buffer
-            //buffer.putColor4(color);
+            buffer.putColor4(color);
             i++;
         }
     }
