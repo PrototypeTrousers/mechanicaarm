@@ -10,8 +10,6 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.model.animation.FastTESR;
-import net.minecraftforge.client.model.pipeline.LightUtil;
-import net.minecraftforge.client.model.pipeline.VertexBufferConsumer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.lwjgl.util.vector.Matrix4f;
@@ -25,6 +23,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 public class TileArmRenderer extends FastTESR<TileArmBasic> {
+
     public TileArmRenderer() {
         super();
     }
@@ -61,7 +60,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
         renderQuads(blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, null, 0),
                 new Vector3f((float) x, (float) y, (float) z),
-                new VertexBufferConsumer(buffer),
+                new ArmsVertexBufferConsumer(buffer),
                 buffer,
                 new Matrix4f(),
                 240,
@@ -121,7 +120,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
      * @param brightness the brightness of the model. The packed lightmap coordinate system is pretty complex and a lot of parameters are not necessary here so only the dominant one is implemented.
      * @param color      the color of the quad. This is a color multiplier in the ARGB format.
      */
-    public void renderQuads(Iterable<BakedQuad> quads, Vector3f baseOffset, VertexBufferConsumer pipeline, BufferBuilder buffer, Matrix4f transform, float brightness, int color) {
+    public void renderQuads(Iterable<BakedQuad> quads, Vector3f baseOffset, ArmsVertexBufferConsumer pipeline, BufferBuilder buffer, Matrix4f transform, float brightness, int color) {
         // Get the raw int buffer of the buffer builder object.
         IntBuffer intBuf = getIntBuffer(buffer);
 
@@ -130,7 +129,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         for (BakedQuad quad : quads) {
             if (i > 71) break;
             // Push the quad to the consumer so it can be uploaded onto the buffer.
-            LightUtil.putBakedQuad(pipeline, quad);
+            pipeline.putBakedQuad(quad);
 
             // After the quad has been uploaded the buffer contains enough info to apply the model matrix transformation.
             // Getting the vertex size for the given format.
@@ -171,6 +170,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
             i++;
         }
     }
+
 
     /**
      * A helper method that grabs all BakedQuads of a given model of a given IBlockState and joins them onto a single iterable.
