@@ -52,8 +52,8 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
      */
     @Override
     public void renderTileEntityFast(final TileArmBasic tileArmBasic, final double x, final double y, final double z, final float partialTicks, final int destroyStage, final float partial, final BufferBuilder buffer) {
-        float[] baseRotation = tileArmBasic.getAnimationRotation()[0];
-        float[] firstXRRotation = tileArmBasic.getAnimationRotation()[1];
+        float[] baseRotation = tileArmBasic.getRotation(0);
+        float[] firstXRRotation = tileArmBasic.getRotation(0);
 
         BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
         IBlockState blockState = tileArmBasic.getWorld().getBlockState(tileArmBasic.getPos());
@@ -63,48 +63,10 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                 new ArmsVertexBufferConsumer(buffer),
                 buffer,
                 new Matrix4f(),
-                240,
+                255,
                 color(0xFF, 0xFF, 0xFF));
 
 
-    }
-
-    // Below are some helper methods to upload data to the buffer
-
-    /**
-     * Renders a simple 2 dimensional quad at a given position to a given buffer with the given transforms, color, texture and lightmap values.
-     *
-     * @param baseOffset the base offset. This will be untouched by the model matrix transformations.
-     * @param buffer     the buffer to upload the quads to. Vertex format of BLOCK is assumed.
-     * @param transform  the model matrix to use as the transform matrix.
-     * @param color      the color of the quad. The format is ARGB where each component is represented by a byte.
-     * @param texture    the TextureAtlasSprite object to gain the UV data from.
-     * @param lightmap   the lightmap coordinates for the quad.
-     */
-    public void renderSimpleQuad(Vector3f baseOffset, BufferBuilder buffer, Matrix4f transform, int color, TextureAtlasSprite texture, int... lightmap) {
-        // A quad consists of 4 vertices so the loop is executed 4 times.
-        for (int i = 0; i < 4; ++i) {
-            // Getting the vertex position from a set of predefined positions for a basic quad.
-            Vector4f quadPos = simpleQuad[i];
-
-            // Transforming the position vector by the transform matrix.
-            quadPos = Matrix4f.transform(transform, quadPos, new Vector4f());
-
-            // Getting the RGBA values from the color. To put it another way unpacking an int representation of a color to a 4-component float vector representation.
-            float r = ((color & 0xFF0000) >> 16) / 255F;
-            float g = ((color & 0xFF00) >> 8) / 255F;
-            float b = (color & 0xFF) / 255F;
-            float a = ((color & 0xFF000000) >> 24) / 255F;
-
-            // Getting the texture UV coordinates from an index. The quad looks like this
-			/*0 3
-			  1 2*/
-            float u = i < 2 ? texture.getMaxU() : texture.getMinU();
-            float v = i == 1 || i == 2 ? texture.getMaxV() : texture.getMinV();
-
-            // Uploading the quad data to the buffer.
-            buffer.pos(quadPos.x + baseOffset.x, quadPos.y + baseOffset.y, quadPos.z + baseOffset.z).color(r, g, b, a).tex(u, v).lightmap(lightmap[0], lightmap[1]).endVertex();
-        }
     }
 
     /**
@@ -129,7 +91,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         for (BakedQuad quad : quads) {
             if (i > 71) break;
             // Push the quad to the consumer so it can be uploaded onto the buffer.
-            pipeline.putBakedQuad(quad);
+            buffer.addVertexData(quad.getVertexData());
 
             // After the quad has been uploaded the buffer contains enough info to apply the model matrix transformation.
             // Getting the vertex size for the given format.
@@ -166,7 +128,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
             buffer.putBrightness4(bVal, bVal, bVal, bVal);
 
             // Uploading the color multiplier to the buffer
-            buffer.putColor4(color);
+            //buffer.putColor4(color);
             i++;
         }
     }

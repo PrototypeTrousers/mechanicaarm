@@ -54,7 +54,7 @@ public class ArmsVertexBufferConsumer implements IVertexConsumer {
             v++;
             if (v == 4) {
                 renderer.addVertexData(quadData);
-                renderer.putPosition(offset.getX(), offset.getY(), offset.getZ());
+                //renderer.putPosition(offset.getX(), offset.getY(), offset.getZ());
                 v = 0;
             }
         }
