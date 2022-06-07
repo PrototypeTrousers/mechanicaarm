@@ -74,4 +74,9 @@ public class BlockArm extends Block implements ITileEntityProvider {
     public TileEntity createNewTileEntity(World worldIn, int meta) {
         return new TileArmBasic();
     }
+
+    @Override
+    public boolean hasTileEntity() {
+        return true;
+    }
 }

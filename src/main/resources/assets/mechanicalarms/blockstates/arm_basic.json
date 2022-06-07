@@ -3,6 +3,10 @@
   "defaults": {
     "model": "mechanicalarms:arm_basic"
   },
+    "textures": {
+    "particle": "block/arm_basic"
+    },
+
   "variants": {
     "normal": [{}],
     "inventory": [{}],
