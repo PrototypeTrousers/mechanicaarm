@@ -6,7 +6,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.model.animation.FastTESR;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -18,10 +17,6 @@ import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 import java.lang.reflect.Field;
 import java.nio.IntBuffer;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
@@ -30,7 +25,13 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
     }
 
     private Matrix4f tempModelMatrix = new Matrix4f();
+    private static final Vector3f V3F_ZERO = new Vector3f();
+    private static final Vector3f PIVOT_1 = new Vector3f(8 / 16F, (float) (18 / 16), (8 / 16F));
+    private static final Vector3f ANTI_PIVOT_1 = new Vector3f(-8 / 16F, (float) (-18 / 16), (-8 / 16F));
 
+    private static final Vector3f PIVOT_2 = new Vector3f(8 / 16F, (float) (18 / 16), (-6 / 16F));
+    private static final Vector3f ANTI_PIVOT_2 = new Vector3f(-8 / 16F, (float) (-18 / 16), (6 / 16F));
+    private static BakedQuad[] quads = null;
 
     /**
      * A field reference to the rawIntBuffer of the BufferBuilder class. Need reflection since the field is private.
@@ -61,12 +62,14 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
         BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
         IBlockState blockState = tileArmBasic.getWorld().getBlockState(tileArmBasic.getPos());
-        List<BakedQuad> quadList = blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, null, 0);
+        if (quads == null) {
+            quads = blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, null, 0).toArray(new BakedQuad[0]);
+        }
 
         Matrix4f transformMatrix = new Matrix4f();
         transformMatrix.setIdentity();
         //cage
-        renderQuads(quadList.subList(0, 72),
+        renderQuads(quads, 0, 72,
                 new Vector3f((float) x, (float) y, (float) z),
                 buffer,
                 transformMatrix,
@@ -75,59 +78,78 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         //base
 
         //move to the correct position
-        this.tempModelMatrix.setIdentity();
-        this.tempModelMatrix.setTranslation(new Vector3f((float) (-x / 16), (float) (y / 16F), (float) (z / 16)));
+        //this.tempModelMatrix.setIdentity();
+        this.tempModelMatrix.setTranslation(new Vector3f(0, 2 / 16F, 0));
         transformMatrix.mul(this.tempModelMatrix);
         //move to pivot
-        this.tempModelMatrix.setIdentity();
-        this.tempModelMatrix.setTranslation(new Vector3f(.5F, (float) (20 / 16), (.5F)));
-        transformMatrix.mul(this.tempModelMatrix);
+        moveToPivot(transformMatrix, PIVOT_1);
 
-        this.tempModelMatrix.setIdentity();
-        this.tempModelMatrix.rotY(baseRotation[1]);
-        transformMatrix.mul(this.tempModelMatrix);
+        //rotate
+        rotateX(transformMatrix, baseRotation[0]);
+        rotateY(transformMatrix, baseRotation[1]);
 
-        //this.tempModelMatrix.setIdentity();
-        //this.tempModelMatrix.rotX(baseRotation[0]);
-        //transformMatrix.mul(this.tempModelMatrix);
+        //scale back
+        restoreScale(transformMatrix);
 
         //move back from pivoting
-        this.tempModelMatrix.setIdentity();
-        this.tempModelMatrix.setTranslation(new Vector3f(-.5F, -20 / 16F, -.5F));
-        transformMatrix.mul(this.tempModelMatrix);
+        moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
-        //Matrix4f.translate(new Vector3f(-.5F, -20 / 16F, -.5F), matrixCopy, transformMatrix);
-
-        renderQuads(quadList.subList(72, 102),
+        renderQuads(quads, 72, 102,
                 new Vector3f((float) (x), (float) (y), (float) (z)),
                 buffer,
                 transformMatrix,
                 240,
                 color(0xFF, 0xFF, 0xFF));
         //firstArm
-/*
 
-        //transformMatrix.rotate((float) (Math.PI / 2), new Vector3f(1, 0, 0));
-        //transformMatrix.translate(new Vector3f(-.5F, -.5F, -.5F));
+        moveToPivot(transformMatrix, PIVOT_2);
+        //rotate
+        rotateX(transformMatrix, firstXRRotation[0]);
+        //scale back
+        restoreScale(transformMatrix);
+        //move back from pivoting
+        moveToPivot(transformMatrix, ANTI_PIVOT_2);
 
-
-        renderQuads(quadList.subList(102, 156),
+        renderQuads(quads, 102, 156,
                 new Vector3f((float) (x), (float) (y), (float) (z)),
-                new VertexBufferConsumer(buffer),
                 buffer,
                 transformMatrix,
                 240,
                 color(0xFF, 0xFF, 0xFF));
-        //hand
 
-        transformMatrix.rotate(hand[0], new Vector3f(1, 0, 0));
-        renderQuads(quadList.subList(156, 192),
-                new Vector3f((float) (x + 0.5F), (float) (y + 0.5F), (float) (z + 0.5F)),
-                new VertexBufferConsumer(buffer),
+        renderQuads(quads, 156, 192,
+                new Vector3f((float) (x), (float) (y), (float) (z)),
                 buffer,
                 transformMatrix,
                 240,
-                color(0xFF, 0xFF, 0xFF));*/
+                color(0xFF, 0xFF, 0xFF));
+
+    }
+
+    void rotateX(Matrix4f matrix, float angle) {
+        this.tempModelMatrix.setIdentity();
+        this.tempModelMatrix.rotX(angle);
+        matrix.mul(this.tempModelMatrix);
+    }
+
+    void rotateY(Matrix4f matrix, float angle) {
+        this.tempModelMatrix.setIdentity();
+        this.tempModelMatrix.rotY(angle);
+        matrix.mul(this.tempModelMatrix);
+    }
+
+    void restoreScale(Matrix4f matrix) {
+        this.tempModelMatrix.setIdentity();
+        this.tempModelMatrix.setM00(1.125F);
+        this.tempModelMatrix.setM11(1.125F);
+        this.tempModelMatrix.setM22(1.125F);
+        matrix.mul(this.tempModelMatrix);
+    }
+
+    void moveToPivot(Matrix4f matrix, Vector3f pivot) {
+        this.tempModelMatrix.setIdentity();
+        this.tempModelMatrix.setTranslation(pivot);
+        matrix.mul(this.tempModelMatrix);
     }
 
     /**
@@ -142,18 +164,17 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
      * @param brightness the brightness of the model. The packed lightmap coordinate system is pretty complex and a lot of parameters are not necessary here so only the dominant one is implemented.
      * @param color      the color of the quad. This is a color multiplier in the ARGB format.
      */
-    public void renderQuads(Iterable<BakedQuad> quads, Vector3f baseOffset, BufferBuilder buffer, Matrix4f transform, float brightness, int color) {
+    public void renderQuads(BakedQuad[] quads, int rangeStart, int rangeEnd, Vector3f baseOffset, BufferBuilder buffer, Matrix4f transform, float brightness, int color) {
         // Get the raw int buffer of the buffer builder object.
         IntBuffer intBuf = getIntBuffer(buffer);
 
         // Uploading the brightness to the buffer.
-
+        Tuple4f vert = new Vector4f();
+        Vector3f vecForPos = new Vector3f();
         // Iterate the iterable
-        int i = 0;
-        for (BakedQuad quad : quads) {
-            if (i > 71) break;
+        for (; rangeStart < rangeEnd; rangeStart++) {
             // Push the quad to the consumer so it can be uploaded onto the buffer.
-            buffer.addVertexData(quad.getVertexData());
+            buffer.addVertexData(quads[rangeStart].getVertexData());
 
             // After the quad has been uploaded the buffer contains enough info to apply the model matrix transformation.
             // Getting the vertex size for the given format.
@@ -171,13 +192,19 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                 float vertX = Float.intBitsToFloat(intBuf.get(vertexIndex));
                 float vertY = Float.intBitsToFloat(intBuf.get(vertexIndex + 1));
                 float vertZ = Float.intBitsToFloat(intBuf.get(vertexIndex + 2));
-                Tuple4f vert = new Vector4f(vertX, vertY, vertZ, 1);
+                vert.x = vertX;
+                vert.y = vertY;
+                vert.z = vertZ;
+                vert.w = 1;
 
                 // Transforming it by the model matrix.
                 transform.transform(vert);
 
                 // Uploading the difference back to the buffer. Have to use the helper function since the provided putX methods upload the data for a quad, not a vertex and this data is vertex-dependent.
-                putPositionForVertex(buffer, intBuf, vertexIndex, new Vector3f(vert.x - vertX, vert.y - vertY, vert.z - vertZ));
+                vecForPos.x = vert.x - vertX;
+                vecForPos.y = vert.y - vertY;
+                vecForPos.z = vert.z - vertZ;
+                putPositionForVertex(buffer, intBuf, vertexIndex, vecForPos);
             }
 
             // Uploading the origin position to the buffer. This is an addition operation.
@@ -190,19 +217,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
             // Uploading the color multiplier to the buffer
             buffer.putColor4(color);
-            i++;
         }
-    }
-
-
-    /**
-     * A helper method that grabs all BakedQuads of a given model of a given IBlockState and joins them onto a single iterable.
-     *
-     * @param state the block state object to get the quads from.
-     * @return the iterable of BakedQuads.
-     */
-    protected static Iterable<BakedQuad> iterateQuadsOfBlock(IBlockState state) {
-        return Arrays.stream(EnumFacing.values()).map(q -> Minecraft.getMinecraft().getBlockRendererDispatcher().getModelForState(state).getQuads(state, q, 0L)).flatMap(Collection::stream).distinct().collect(Collectors.toList());
     }
 
     /**
