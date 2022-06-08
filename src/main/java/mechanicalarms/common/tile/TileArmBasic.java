@@ -77,8 +77,8 @@ public class TileArmBasic extends TileEntity implements ITickable {
 
     @Override
     public void update() {
-        sourcePos = pos.offset(EnumFacing.NORTH, 1);
-        targetPos = pos.offset(EnumFacing.SOUTH, 2);
+        sourcePos = pos.offset(EnumFacing.NORTH, 2).offset(EnumFacing.UP, 1);
+        targetPos = pos.offset(EnumFacing.SOUTH, 1).offset(EnumFacing.DOWN, 2);
         hasInput = sourcePos != null;
         hasOutput = targetPos != null;
 
