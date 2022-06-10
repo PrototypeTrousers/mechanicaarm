@@ -22,11 +22,11 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
     private final Matrix4f tempModelMatrix = new Matrix4f();
     private static final Vector3f V3F_ZERO = new Vector3f();
-    private static final Vector3f PIVOT_1 = new Vector3f(8 / 16F, (float) (18 / 16), (8 / 16F));
-    private static final Vector3f ANTI_PIVOT_1 = new Vector3f(-8 / 16F, (float) (-18 / 16), (-8 / 16F));
+    private static final Vector3f PIVOT_1 = new Vector3f(8 / 16F, 8 / 16F, (8 / 16F));
+    private static final Vector3f ANTI_PIVOT_1 = new Vector3f(-8 / 16F, -8 / 16F, (-8 / 16F));
 
-    private static final Vector3f PIVOT_2 = new Vector3f(8 / 16F, (float) (18 / 16), (-6 / 16F));
-    private static final Vector3f ANTI_PIVOT_2 = new Vector3f(-8 / 16F, (float) (-18 / 16), (6 / 16F));
+    private static final Vector3f PIVOT_2 = new Vector3f(2 + 8 / 16F, 2 + 8 / 16F, 2 + 8 / 16F);
+    private static final Vector3f ANTI_PIVOT_2 = new Vector3f(-2 + 8 / 16F, -2 + 8 / 16F, 2 + 8 / 16F);
     private static BakedQuad[] quads = null;
 
     /**
@@ -54,61 +54,84 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
         Matrix4f transformMatrix = new Matrix4f();
         transformMatrix.setIdentity();
+        this.tempModelMatrix.setIdentity();
+        this.tempModelMatrix.setTranslation(new Vector3f(0, 1, 0));
+        transformMatrix.mul(this.tempModelMatrix);
         //cage
-        renderQuads(quads, 0, 72,
+        renderQuads(quads, 0, 12,
                 new Vector3f((float) x, (float) y, (float) z),
                 buffer,
                 transformMatrix,
                 255,
                 color(0xFF, 0xFF, 0xFF));
         //base
-
-        //move to the correct position
-        this.tempModelMatrix.setIdentity();
-        this.tempModelMatrix.setTranslation(new Vector3f(0, 2 / 16F, 0));
-        transformMatrix.mul(this.tempModelMatrix);
         //move to pivot
+
         moveToPivot(transformMatrix, PIVOT_1);
 
         //rotate
-        rotateX(transformMatrix, baseRotation[0]);
-        rotateY(transformMatrix, baseRotation[1]);
+        rotateY(transformMatrix, (float) (baseRotation[1] + Math.PI));
+        rotateX(transformMatrix, (float) (baseRotation[0]));
+        //rotateZ(transformMatrix, (float) (-Math.PI));
+
 
         //scale back
-        restoreScale(transformMatrix);
+        //restoreScale(transformMatrix);
 
         //move back from pivoting
         moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
-        renderQuads(quads, 72, 102,
+        renderQuads(quads, 12, 30,
                 new Vector3f((float) (x), (float) (y), (float) (z)),
                 buffer,
                 transformMatrix,
                 240,
                 color(0xFF, 0xFF, 0xFF));
-        //firstArm
 
+        //firstArm
+        this.tempModelMatrix.setIdentity();
+        this.tempModelMatrix.setTranslation(new Vector3f(-1, 1, -5));
+        transformMatrix.mul(this.tempModelMatrix);
+        moveToPivot(transformMatrix, PIVOT_2);
+        //rotate
+        rotateX(transformMatrix, (float) (firstXRRotation[0] - Math.PI / 2));
+        //scale back
+        //restoreScale(transformMatrix);
+        //move back from pivoting
+        moveToPivot(transformMatrix, ANTI_PIVOT_2);
+
+        renderQuads(quads, 12, 30,
+                new Vector3f((float) (x), (float) (y), (float) (z)),
+                buffer,
+                transformMatrix,
+                240,
+                color(0xFF, 0xFF, 0xFF));
+
+        renderQuads(quads, 6, 12,
+                new Vector3f((float) (x), (float) (y), (float) (z)),
+                buffer,
+                transformMatrix,
+                240,
+                color(0xFF, 0xFF, 0xFF));
+
+        this.tempModelMatrix.setIdentity();
+        this.tempModelMatrix.setTranslation(new Vector3f(-1, 2, -1));
+        transformMatrix.mul(this.tempModelMatrix);
         moveToPivot(transformMatrix, PIVOT_2);
         //rotate
         rotateX(transformMatrix, firstXRRotation[0]);
         //scale back
-        restoreScale(transformMatrix);
+        //restoreScale(transformMatrix);
         //move back from pivoting
         moveToPivot(transformMatrix, ANTI_PIVOT_2);
 
-        renderQuads(quads, 102, 156,
+        renderQuads(quads, 30, 48,
                 new Vector3f((float) (x), (float) (y), (float) (z)),
                 buffer,
                 transformMatrix,
                 240,
                 color(0xFF, 0xFF, 0xFF));
 
-        renderQuads(quads, 156, 192,
-                new Vector3f((float) (x), (float) (y), (float) (z)),
-                buffer,
-                transformMatrix,
-                240,
-                color(0xFF, 0xFF, 0xFF));
 
     }
 
@@ -121,6 +144,12 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
     void rotateY(Matrix4f matrix, float angle) {
         this.tempModelMatrix.setIdentity();
         this.tempModelMatrix.rotY(angle);
+        matrix.mul(this.tempModelMatrix);
+    }
+
+    void rotateZ(Matrix4f matrix, float angle) {
+        this.tempModelMatrix.setIdentity();
+        this.tempModelMatrix.rotZ(angle);
         matrix.mul(this.tempModelMatrix);
     }
 
