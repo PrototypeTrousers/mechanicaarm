@@ -131,6 +131,21 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         double pitch = Math.atan2(combinedVec.y, Math.sqrt(combinedVec.x * combinedVec.x + combinedVec.z * combinedVec.z));
         double yaw = Math.atan2(-combinedVec.z, combinedVec.x);
 
+        pitch = pitch - rotation[1][0] / 2;
+
+        float dist = (float) combinedVec.length();
+        boolean distReached = false;
+        float currentArmLength;
+        if (Math.cos(rotation[1][0]) < Math.PI / 2) {
+            currentArmLength = (float) Math.sin(rotation[1][0]);
+        } else
+            currentArmLength = (float) (Math.abs(1 / Math.cos(rotation[1][0])));
+        rotation[1][0] = rotateToReach(rotation[1][0], 0.1f, currentArmLength > dist ? -1 : 1);
+
+        if (currentArmLength >= (dist - 0.3f) && currentArmLength <= (dist + 0.3f)) {
+            distReached = true;
+        }
+
         float rotPitch = rotateX(rotation[0][0], 0.1f, (float) pitch);
         boolean pitchReached = false;
         if (rotPitch != rotation[0][0]) {
@@ -161,21 +176,6 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
             if (rotYaw <= (yaw + 0.1f) && rotYaw >= (yaw - 0.1f)) {
                 yawReached = true;
             }
-        }
-
-        float dist = (float) combinedVec.length();
-        boolean distReached = false;
-
-        float currentArmLength = (float) (1 + (Math.abs(2 * rotation[1][0] / Math.PI)));
-        rotation[1][0] = rotateToReach(rotation[1][0], 0.1f, currentArmLength > dist ? 1 : -1);
-        if (currentArmLength >= (dist - 0.3f) && currentArmLength <= (dist + 0.3f)) {
-            distReached = true;
-        }
-
-        float currentHandLength = (float) (0.500f + (Math.abs(2 * rotation[2][0] / Math.PI)));
-        rotation[2][0] = rotateToReach(rotation[2][0], 0.1f, currentHandLength + currentArmLength >= dist ? 1 : -1);
-        if (currentHandLength >= (dist - currentArmLength - 0.3f)) {
-            distReached = true;
         }
 
         if (yawReached && pitchReached && distReached) {
