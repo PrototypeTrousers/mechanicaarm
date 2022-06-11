@@ -1,5 +1,10 @@
 package mechanicalarms.common.tile;
 
+import mechanicalarms.common.logic.behavior.Action;
+import mechanicalarms.common.logic.behavior.ActionTypes;
+import mechanicalarms.common.logic.behavior.Targeting;
+import mechanicalarms.common.logic.behavior.WorkStatus;
+import mechanicalarms.common.logic.movement.MotorCortex;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
@@ -8,31 +13,19 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import software.bernie.geckolib3.core.IAnimatable;
-import software.bernie.geckolib3.core.PlayState;
-import software.bernie.geckolib3.core.builder.AnimationBuilder;
-import software.bernie.geckolib3.core.controller.AnimationController;
-import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
-import static java.lang.Double.NaN;
+public class TileArmBasic extends TileEntity implements ITickable, IAnimatable {
 
-public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
-    private final AnimationFactory factory = new AnimationFactory(this);
-    private final AnimationBuilder builder = new AnimationBuilder().addAnimation("nothing", true);
-    private final boolean extend = true;
-    boolean isOnInput;
-    float[][] rotation = new float[3][3];
+    private final Targeting targeting = new Targeting();
+    AnimationFactory animationFactory = new AnimationFactory(this);
     float[][] animationRotation = new float[3][3];
-
     float armSize = 2;
-    private AnimationController<TileArmBasic> animationController;
-    private boolean hasInput;
-    private BlockPos sourcePos;
-    private boolean hasOutput;
-    private BlockPos targetPos;
-    private boolean carrying = false;
-    private boolean isOnOnput;
+    private final MotorCortex motorCortex = new MotorCortex(this, armSize);
+    private Vec3d currentTarget;
+    private Vec3d armPoint;
+    private final WorkStatus workStatus = new WorkStatus();
 
     public TileArmBasic() {
         super();
@@ -42,28 +35,8 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         return animationRotation;
     }
 
-    private <E extends TileEntity & IAnimatable> PlayState predicate(AnimationEvent<E> event) {
-        AnimationController controller = event.getController();
-        controller.transitionLengthTicks = 0;
-        controller.setAnimation(builder);
-        controller.markNeedsReload();
-
-        return PlayState.CONTINUE;
-    }
-
-    @Override
-    public void registerControllers(AnimationData data) {
-        animationController = new AnimationController<>(this, "controller", 0, this::predicate);
-        data.addAnimationController(animationController);
-    }
-
     public float[] getRotation(int idx) {
-        return rotation[idx];
-    }
-
-    @Override
-    public AnimationFactory getFactory() {
-        return factory;
+        return motorCortex.getRotation(idx);
     }
 
     @Override
@@ -93,6 +66,12 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
     }
 
     @Override
+    public void onLoad() {
+        super.onLoad();
+        armPoint = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    @Override
     public void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);
     }
@@ -105,165 +84,47 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
 
     @Override
     public void update() {
-        hasInput = sourcePos != null;
-        hasOutput = targetPos != null;
-
-        Vec3d vec1 = new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-
-        if (hasInput && !carrying) {
-            Vec3d vec2 = new Vec3d(sourcePos.getX() + 0.5, sourcePos.getY() + 0.5, sourcePos.getZ() + 0.5);
-            Vec3d combinedVec = vec2.subtract(vec1);
-
-            if (sucess(combinedVec)) {
-                this.isOnInput = true;
-                this.carrying = true;
+        if (workStatus.getAction() == Action.IDLING) {
+            if (hasInput() && hasOutput()) {
+                currentTarget = targeting.getSourceVec();
+                if (motorCortex.move(armPoint, currentTarget)) {
+                    workStatus.setAction(Action.RETRIEVE);
+                    workStatus.setType(ActionTypes.INTERACTION);
+                }
             }
-        } else if (hasOutput && carrying) {
-            Vec3d vec2 = new Vec3d(targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5);
-            Vec3d combinedVec = vec2.subtract(vec1);
-            if (sucess(combinedVec)) {
-                this.isOnOnput = true;
-                this.carrying = false;
+        } else if (workStatus.getType() == ActionTypes.MOVEMENT) {
+            if (workStatus.getAction() == Action.RETRIEVE) {
+                
             }
-        } else {
-            this.isOnInput = false;
-            //walkToIdlePosition();
-        }
-    }
 
-    private boolean sucess(Vec3d combinedVec) {
-        double pitch = Math.atan2(combinedVec.y, Math.sqrt(combinedVec.x * combinedVec.x + combinedVec.z * combinedVec.z));
-        double yaw = Math.atan2(-combinedVec.z, combinedVec.x);
+        } else if (workStatus.getType() == ActionTypes.INTERACTION) {
 
-        float dist = (float) combinedVec.length();
-
-        double extraPitchArc = Math.acos(dist / armSize /2);
-        if (Double.isNaN(extraPitchArc)) {
-            extraPitchArc = 0;
-        }
-        double armArcTarget =  Math.asin(dist / armSize /2) * 2 - Math.PI;
-        if (Double.isNaN(armArcTarget)) {
-            armArcTarget = 0;
-        }
-
-        pitch = pitch + extraPitchArc;
-
-        boolean distReached = false;
-
-        rotation[1][0] = (rotateToReach(rotation[1][0], 0.1f, (float) armArcTarget));
-        if (rotation[1][0] >= (armArcTarget - 0.01f) && rotation[1][0] <= (armArcTarget + 0.01f)) {
-            if(extraPitchArc != 0) {
-                distReached = true;
-            }
-            else {
-                distReached = dist <= 2 * armSize + 0.5;
-            }
-        }
-
-        float rotPitch = rotateX(rotation[0][0], 0.1f, (float) pitch);
-        boolean pitchReached = false;
-        rotation[0][0] = rotPitch;
-
-        if (rotPitch >= 0 && pitch >= 0) {
-            if (rotPitch <= (pitch + 0.1f) && rotPitch >= (pitch - 0.1f)) {
-                pitchReached = true;
-            }
-        } else if (rotPitch < 0 && pitch < 0) {
-            if (rotPitch <= (pitch + 0.1f) && rotPitch >= (pitch - 0.1f)) {
-                pitchReached = true;
-            }
-        }
-
-        float rotYaw = rotateX(rotation[0][1], 0.1f, (float) yaw);
-        boolean yawReached = false;
-        if (rotYaw != rotation[0][1]) {
-            rotation[0][1] = rotYaw;
-        }
-
-        if (rotYaw >= 0 && yaw >= 0) {
-            if (rotYaw <= (yaw + 0.1f) && rotYaw >= (yaw - 0.1f)) {
-                yawReached = true;
-            }
-        } else if (rotYaw < 0 && yaw < 0) {
-            if (rotYaw <= (yaw + 0.1f) && rotYaw >= (yaw - 0.1f)) {
-                yawReached = true;
-            }
-        }
-
-        if (yawReached && pitchReached && distReached) {
-            this.isOnInput = true;
-            this.carrying = true;
-            return true;
-        }
-        return false;
-    }
-
-    float rotateX(float currentRotation, float angularSpeed, float targetRotation) {
-        float diff = targetRotation - currentRotation;
-        if (diff < -0.1) {
-            float result = currentRotation - angularSpeed;
-            return Math.max(result, targetRotation);
-
-        } else if (diff > 0.1) {
-            float result = currentRotation + angularSpeed;
-            return Math.min(result, targetRotation);
-        } else if(diff > -0.1 && diff <0.1) {
-            return targetRotation;
-        }
-        return targetRotation;
-    }
-
-    float rotateToReach(float currentRotation, float angularSpeed, float targetedRotation) {
-        float diff = targetedRotation - currentRotation;
-        if (diff < -0.1) {
-            return currentRotation - angularSpeed;
-        } else if (diff > 0.1) {
-            return currentRotation + angularSpeed;
-        } else if (diff > -0.1 && diff < 0.1 ) {
-            return targetedRotation;
-        }
-        return currentRotation;
-    }
-
-    void walkToIdlePosition() {
-        if (rotation[0][1] >= 0.099F) {
-            rotation[0][1] = rotation[0][1] - 0.1F;
-        } else if (rotation[0][1] <= -0.099F) {
-            rotation[0][1] = rotation[0][1] + 0.1F;
-        } else {
-            rotation[0][1] = 0;
-        }
-
-        if (rotation[0][0] >= 0.099F) {
-            rotation[0][0] = rotation[0][0] - 0.1F;
-        } else if (rotation[0][0] <= -0.099F) {
-            rotation[0][0] = rotation[0][0] + 0.1F;
-        } else {
-            rotation[0][0] = 0;
-        }
-
-        if (rotation[1][0] >= 0.099F) {
-            rotation[1][0] = rotation[1][0] - 0.1F;
-        } else if (rotation[0][0] <= -0.099F) {
-            rotation[1][0] = rotation[1][0] + 0.1F;
-        } else {
-            rotation[1][0] = 0;
-        }
-
-        if (rotation[2][0] >= 0.099F) {
-            rotation[2][0] = rotation[2][0] - 0.1F;
-        } else if (rotation[0][0] <= -0.099F) {
-            rotation[2][0] = rotation[2][0] + 0.1F;
-        } else {
-            rotation[2][0] = 0;
         }
     }
 
     public void setSource(BlockPos sourcePos) {
-        this.sourcePos = sourcePos;
+        targeting.setSource(sourcePos);
     }
 
     public void setTarget(BlockPos targetPos) {
-        this.targetPos = targetPos;
+        targeting.setTarget(targetPos);
+    }
+
+    public boolean hasInput() {
+        return targeting.hasInput();
+    }
+
+    public boolean hasOutput() {
+        return targeting.hasOutput();
+    }
+
+    @Override
+    public void registerControllers(AnimationData data) {
+
+    }
+
+    @Override
+    public AnimationFactory getFactory() {
+        return animationFactory;
     }
 }
