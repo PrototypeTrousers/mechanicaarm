@@ -123,7 +123,7 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
             }
         } else {
             this.isOnInput = false;
-            walkToIdlePosition();
+            //walkToIdlePosition();
         }
     }
 
@@ -131,26 +131,34 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         double pitch = Math.atan2(combinedVec.y, Math.sqrt(combinedVec.x * combinedVec.x + combinedVec.z * combinedVec.z));
         double yaw = Math.atan2(-combinedVec.z, combinedVec.x);
 
-        pitch = pitch - rotation[1][0] / 2;
 
         float dist = (float) combinedVec.length();
         boolean distReached = false;
         float currentArmLength;
-        if (Math.cos(rotation[1][0]) < Math.PI / 2) {
-            currentArmLength = (float) Math.sin(rotation[1][0]);
+        if (rotation[1][0] <= Math.PI / 2 + 0.1 && rotation[1][0] >= Math.PI / 2 - 0.1) {
+            currentArmLength = (float) Math.sqrt(8);
+        } else if (rotation[1][0] <= -Math.PI / 2 + 0.1f) {
+            currentArmLength = 0;
+        } else if (rotation[1][0] >= Math.PI) {
+            rotation[1][0] = (float) Math.PI;
+            currentArmLength = (float) Math.sqrt(8);
         } else
-            currentArmLength = (float) (Math.abs(1 / Math.cos(rotation[1][0])));
-        rotation[1][0] = rotateToReach(rotation[1][0], 0.1f, currentArmLength > dist ? -1 : 1);
+            currentArmLength = (float) Math.abs(Math.sin(rotation[1][0] / 2));
 
-        if (currentArmLength >= (dist - 0.3f) && currentArmLength <= (dist + 0.3f)) {
+        rotation[1][0] = (float) (rotateToReach(rotation[1][0], 0.1f, currentArmLength > dist ? -1 : 1) % (Math.PI));
+        if (currentArmLength >= (dist - 0.1f) && currentArmLength <= (dist + 0.1f)) {
             distReached = true;
+        }
+
+        if (rotation[1][0] >= Math.PI / 2) {
+            pitch = pitch + rotation[1][0];
+        } else if (rotation[1][0] <= -Math.PI / 2) {
+            pitch = pitch - rotation[1][0];
         }
 
         float rotPitch = rotateX(rotation[0][0], 0.1f, (float) pitch);
         boolean pitchReached = false;
-        if (rotPitch != rotation[0][0]) {
-            rotation[0][0] = rotPitch;
-        }
+        rotation[0][0] = rotPitch;
 
         if (rotPitch >= 0 && pitch >= 0) {
             if (rotPitch <= (pitch + 0.1f) && rotPitch >= (pitch - 0.1f)) {
@@ -200,12 +208,12 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
     }
 
     float rotateToReach(float currentRotation, float angularSpeed, float targetedRotation) {
-        if (targetedRotation < -0) {
-            float result = currentRotation - angularSpeed;
-            return Math.max(result, (float) (Math.PI / 2));
-        } else if (targetedRotation > 0) {
+        if (targetedRotation < -0.1D) {
             float result = currentRotation + angularSpeed;
-            return Math.min(result, (float) (-Math.PI / 2));
+            return (float) Math.min(result, Math.PI / 2);
+        } else if (targetedRotation > 0) {
+            float result = currentRotation - angularSpeed;
+            return (float) Math.max(result, -Math.PI / 2);
         }
         return currentRotation;
     }
