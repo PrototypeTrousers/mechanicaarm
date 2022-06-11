@@ -131,22 +131,17 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         double pitch = Math.atan2(combinedVec.y, Math.sqrt(combinedVec.x * combinedVec.x + combinedVec.z * combinedVec.z));
         double yaw = Math.atan2(-combinedVec.z, combinedVec.x);
 
-
         float dist = (float) combinedVec.length();
-        boolean distReached = false;
-        float currentArmLength;
-        if (rotation[1][0] <= Math.PI / 2 + 0.1 && rotation[1][0] >= Math.PI / 2 - 0.1) {
-            currentArmLength = (float) Math.sqrt(8);
-        } else if (rotation[1][0] <= -Math.PI / 2 + 0.1f) {
-            currentArmLength = 0;
-        } else if (rotation[1][0] >= Math.PI) {
-            rotation[1][0] = (float) Math.PI;
-            currentArmLength = (float) Math.sqrt(8);
-        } else
-            currentArmLength = (float) Math.abs(Math.sin(rotation[1][0] / 2));
 
-        rotation[1][0] = (float) (rotateToReach(rotation[1][0], 0.1f, currentArmLength > dist ? -1 : 1) % (Math.PI));
-        if (currentArmLength >= (dist - 0.1f) && currentArmLength <= (dist + 0.1f)) {
+        double extraPitchArc = Math.acos(dist / 4);
+        double armArcTarget = -Math.asin(dist / 4);
+
+        pitch = pitch + extraPitchArc;
+
+        boolean distReached = false;
+
+        rotation[1][0] = (rotateToReach(rotation[1][0], 0.1f, (float) armArcTarget));
+        if (rotation[1][0] >= (armArcTarget - 0.1f) && rotation[1][0] <= (armArcTarget + 0.1f)) {
             distReached = true;
         }
 
@@ -208,12 +203,13 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
     }
 
     float rotateToReach(float currentRotation, float angularSpeed, float targetedRotation) {
-        if (targetedRotation < -0.1D) {
-            float result = currentRotation + angularSpeed;
-            return (float) Math.min(result, Math.PI / 2);
-        } else if (targetedRotation > 0) {
+        float diff = targetedRotation - currentRotation;
+        if (diff < -0.1D) {
             float result = currentRotation - angularSpeed;
             return (float) Math.max(result, -Math.PI / 2);
+        } else if (diff > 0) {
+            float result = currentRotation + angularSpeed;
+            return (float) Math.min(result, Math.PI / 2);
         }
         return currentRotation;
     }
