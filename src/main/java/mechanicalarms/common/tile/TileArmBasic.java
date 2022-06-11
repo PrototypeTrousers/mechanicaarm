@@ -5,7 +5,10 @@ import mechanicalarms.common.logic.behavior.ActionTypes;
 import mechanicalarms.common.logic.behavior.Targeting;
 import mechanicalarms.common.logic.behavior.WorkStatus;
 import mechanicalarms.common.logic.movement.MotorCortex;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagFloat;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -74,11 +77,29 @@ public class TileArmBasic extends TileEntity implements ITickable, IAnimatable {
     @Override
     public void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);
+        NBTTagList rotation = compound.getTagList("rotation", 5);
+        int axis = 0;
+        int coords = 0;
+        for (int i = 0; i < rotation.tagCount(); i++) {
+            if (coords > 2) {
+                axis += 1;
+                coords = 0;
+            }
+            getRotation(axis)[coords] = rotation.getFloatAt(i);
+            coords++;
+        }
     }
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         super.writeToNBT(compound);
+        NBTTagList rotation = new NBTTagList();
+        for (int i = 0; i < 3; i++) {
+            for (float r : motorCortex.getRotation(i)) {
+                rotation.appendTag(new NBTTagFloat(r));
+            }
+        }
+        compound.setTag("rotation", rotation);
         return compound;
     }
 
@@ -94,7 +115,7 @@ public class TileArmBasic extends TileEntity implements ITickable, IAnimatable {
             }
         } else if (workStatus.getType() == ActionTypes.MOVEMENT) {
             if (workStatus.getAction() == Action.RETRIEVE) {
-                
+
             }
 
         } else if (workStatus.getType() == ActionTypes.INTERACTION) {
