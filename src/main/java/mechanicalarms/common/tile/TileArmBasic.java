@@ -15,6 +15,8 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
+import static java.lang.Double.NaN;
+
 public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
     private final AnimationFactory factory = new AnimationFactory(this);
     private final AnimationBuilder builder = new AnimationBuilder().addAnimation("nothing", true);
@@ -22,6 +24,8 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
     boolean isOnInput;
     float[][] rotation = new float[3][3];
     float[][] animationRotation = new float[3][3];
+
+    float armSize = 2;
     private AnimationController<TileArmBasic> animationController;
     private boolean hasInput;
     private BlockPos sourcePos;
@@ -104,10 +108,10 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
         hasInput = sourcePos != null;
         hasOutput = targetPos != null;
 
-        Vec3d vec1 = new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5);
+        Vec3d vec1 = new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
 
         if (hasInput && !carrying) {
-            Vec3d vec2 = new Vec3d(sourcePos.getX() + 0.5, sourcePos.getY() + 1, sourcePos.getZ() + 0.5);
+            Vec3d vec2 = new Vec3d(sourcePos.getX() + 0.5, sourcePos.getY() + 0.5, sourcePos.getZ() + 0.5);
             Vec3d combinedVec = vec2.subtract(vec1);
 
             if (sucess(combinedVec)) {
@@ -115,7 +119,7 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
                 this.carrying = true;
             }
         } else if (hasOutput && carrying) {
-            Vec3d vec2 = new Vec3d(targetPos.getX() + 0.5, targetPos.getY() + 1, targetPos.getZ() + 0.5);
+            Vec3d vec2 = new Vec3d(targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5);
             Vec3d combinedVec = vec2.subtract(vec1);
             if (sucess(combinedVec)) {
                 this.isOnOnput = true;
@@ -133,22 +137,27 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
 
         float dist = (float) combinedVec.length();
 
-        double extraPitchArc = Math.acos(dist / 4);
-        double armArcTarget = -Math.asin(dist / 4);
+        double extraPitchArc = Math.acos(dist / armSize /2);
+        if (Double.isNaN(extraPitchArc)) {
+            extraPitchArc = 0;
+        }
+        double armArcTarget =  Math.asin(dist / armSize /2) * 2 - Math.PI;
+        if (Double.isNaN(armArcTarget)) {
+            armArcTarget = 0;
+        }
 
         pitch = pitch + extraPitchArc;
 
         boolean distReached = false;
 
         rotation[1][0] = (rotateToReach(rotation[1][0], 0.1f, (float) armArcTarget));
-        if (rotation[1][0] >= (armArcTarget - 0.1f) && rotation[1][0] <= (armArcTarget + 0.1f)) {
-            distReached = true;
-        }
-
-        if (rotation[1][0] >= Math.PI / 2) {
-            pitch = pitch + rotation[1][0];
-        } else if (rotation[1][0] <= -Math.PI / 2) {
-            pitch = pitch - rotation[1][0];
+        if (rotation[1][0] >= (armArcTarget - 0.01f) && rotation[1][0] <= (armArcTarget + 0.01f)) {
+            if(extraPitchArc != 0) {
+                distReached = true;
+            }
+            else {
+                distReached = dist <= 2 * armSize + 0.5;
+            }
         }
 
         float rotPitch = rotateX(rotation[0][0], 0.1f, (float) pitch);
@@ -191,25 +200,27 @@ public class TileArmBasic extends TileEntity implements IAnimatable, ITickable {
 
     float rotateX(float currentRotation, float angularSpeed, float targetRotation) {
         float diff = targetRotation - currentRotation;
-        if (diff < -0.1D) {
+        if (diff < -0.1) {
             float result = currentRotation - angularSpeed;
             return Math.max(result, targetRotation);
 
-        } else if (diff > 0.1D) {
+        } else if (diff > 0.1) {
             float result = currentRotation + angularSpeed;
             return Math.min(result, targetRotation);
+        } else if(diff > -0.1 && diff <0.1) {
+            return targetRotation;
         }
         return targetRotation;
     }
 
     float rotateToReach(float currentRotation, float angularSpeed, float targetedRotation) {
         float diff = targetedRotation - currentRotation;
-        if (diff < -0.1D) {
-            float result = currentRotation - angularSpeed;
-            return (float) Math.max(result, -Math.PI / 2);
-        } else if (diff > 0) {
-            float result = currentRotation + angularSpeed;
-            return (float) Math.min(result, Math.PI / 2);
+        if (diff < -0.1) {
+            return currentRotation - angularSpeed;
+        } else if (diff > 0.1) {
+            return currentRotation + angularSpeed;
+        } else if (diff > -0.1 && diff < 0.1 ) {
+            return targetedRotation;
         }
         return currentRotation;
     }
