@@ -27,6 +27,10 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         double pitch = Math.atan2(combinedVec.y, Math.sqrt(combinedVec.x * combinedVec.x + combinedVec.z * combinedVec.z));
         double yaw = Math.atan2(-combinedVec.z, combinedVec.x);
 
+        if (yaw <= -Math.PI) {
+            yaw = yaw + 2 * Math.PI;
+        }
+
         float dist = (float) combinedVec.length();
 
         double extraPitchArc = Math.acos(dist / armSize / 2);

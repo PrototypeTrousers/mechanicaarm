@@ -68,7 +68,7 @@ public abstract class TileArmBase extends TileEntity implements ITickable, IAnim
     @Override
     public void onLoad() {
         super.onLoad();
-        armPoint = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
+        armPoint = new Vec3d(pos.getX(), pos.getY() + 1, pos.getZ());
     }
 
     @Override
