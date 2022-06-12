@@ -3,7 +3,6 @@ package mechanicalarms.common.tile;
 import mechanicalarms.common.logic.behavior.*;
 import mechanicalarms.common.logic.movement.MotorCortex;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagFloat;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
@@ -17,6 +16,8 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 import static mechanicalarms.common.logic.behavior.Action.DELIVER;
 import static mechanicalarms.common.logic.behavior.Action.RETRIEVE;
+import static net.minecraftforge.common.util.Constants.NBT.TAG_FLOAT;
+import static net.minecraftforge.common.util.Constants.NBT.TAG_LIST;
 
 public abstract class TileArmBase extends TileEntity implements ITickable, IAnimatable {
     private final Targeting targeting = new Targeting();
@@ -73,7 +74,7 @@ public abstract class TileArmBase extends TileEntity implements ITickable, IAnim
     @Override
     public void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);
-        NBTTagList rotation = compound.getTagList("rotation", 5);
+        NBTTagList rotation = compound.getTagList("rotation", TAG_LIST);
         int axis = 0;
         int coords = 0;
         for (int i = 0; i < rotation.tagCount(); i++) {
@@ -84,6 +85,7 @@ public abstract class TileArmBase extends TileEntity implements ITickable, IAnim
             getRotation(axis)[coords] = rotation.getFloatAt(i);
             coords++;
         }
+        motorCortex.deserializeNBT(compound.getTagList("rotation", TAG_FLOAT));
         targeting.deserializeNBT(compound.getCompoundTag("targeting"));
         workStatus.deserializeNBT(compound.getCompoundTag("workStatus"));
     }
@@ -91,13 +93,7 @@ public abstract class TileArmBase extends TileEntity implements ITickable, IAnim
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         super.writeToNBT(compound);
-        NBTTagList rotation = new NBTTagList();
-        for (int i = 0; i < 3; i++) {
-            for (float r : motorCortex.getRotation(i)) {
-                rotation.appendTag(new NBTTagFloat(r));
-            }
-        }
-        compound.setTag("rotation", rotation);
+        compound.setTag("rotation", motorCortex.serializeNBT());
         compound.setTag("targeting", targeting.serializeNBT());
         compound.setTag("workStatus", workStatus.serializeNBT());
         return compound;

@@ -3,9 +3,12 @@ package mechanicalarms.common.logic.movement;
 import mechanicalarms.common.logic.behavior.ActionResult;
 import mechanicalarms.common.logic.behavior.InteractionType;
 import mechanicalarms.common.tile.TileArmBase;
+import net.minecraft.nbt.NBTTagFloat;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.common.util.INBTSerializable;
 
-public class MotorCortex {
+public class MotorCortex implements INBTSerializable<NBTTagList> {
 
     private final float armSize;
     private final InteractionType interactionType;
@@ -153,5 +156,30 @@ public class MotorCortex {
 
     public float[] getAnimationRotation(int idx) {
         return animationRotation[idx];
+    }
+
+    @Override
+    public NBTTagList serializeNBT() {
+        NBTTagList tagList = new NBTTagList();
+        for (int i = 0; i < 3; i++) {
+            for (float r : getRotation(i)) {
+                tagList.appendTag(new NBTTagFloat(r));
+            }
+        }
+        return tagList;
+    }
+
+    @Override
+    public void deserializeNBT(NBTTagList tagList) {
+        int axis = 0;
+        int coords = 0;
+        for (int i = 0; i < tagList.tagCount(); i++) {
+            if (coords > 2) {
+                axis += 1;
+                coords = 0;
+            }
+            getRotation(axis)[coords] = tagList.getFloatAt(i);
+            coords++;
+        }
     }
 }
