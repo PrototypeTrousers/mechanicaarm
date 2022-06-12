@@ -1,14 +1,18 @@
 package mechanicalarms.common.logic.behavior;
 
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTUtil;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.common.util.INBTSerializable;
 
-public class Targeting {
+public class Targeting implements INBTSerializable<NBTTagCompound> {
 
     private BlockPos sourcePos;
     private Vec3d sourceVec;
     private BlockPos targetPos;
     private Vec3d targetVec;
+
     public Targeting() {
 
     }
@@ -37,5 +41,19 @@ public class Targeting {
 
     public boolean hasOutput() {
         return targetPos != null;
+    }
+    
+    @Override
+    public NBTTagCompound serializeNBT() {
+        NBTTagCompound compound = new NBTTagCompound();
+        compound.setTag("sourcePos", NBTUtil.createPosTag(sourcePos));
+        compound.setTag("targetPos", NBTUtil.createPosTag(targetPos));
+        return compound;
+    }
+
+    @Override
+    public void deserializeNBT(NBTTagCompound compound) {
+        setSource(NBTUtil.getPosFromTag(compound.getCompoundTag("sourcePos")));
+        setTarget(NBTUtil.getPosFromTag(compound.getCompoundTag("targetPos")));
     }
 }

@@ -11,12 +11,12 @@ public class ArmModel extends AnimatedGeoModel<TileArmBasic> {
 
     @Override
     public ResourceLocation getModelLocation(TileArmBasic object) {
-        return new ResourceLocation(MechanicalArms.MODID, "geo/arm.geo.json");
+        return new ResourceLocation(MechanicalArms.MODID, "geo/arm_basic.geo.json");
     }
 
     @Override
     public ResourceLocation getTextureLocation(TileArmBasic object) {
-        return new ResourceLocation(MechanicalArms.MODID, "textures/block/arm.png");
+        return new ResourceLocation(MechanicalArms.MODID, "textures/blocks/arm_basic.png");
     }
 
     @Override

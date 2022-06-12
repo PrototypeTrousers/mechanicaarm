@@ -1,20 +1,25 @@
 package mechanicalarms.common.logic.movement;
 
-import mechanicalarms.common.tile.TileArmBasic;
+import mechanicalarms.common.logic.behavior.ActionResult;
+import mechanicalarms.common.logic.behavior.InteractionType;
+import mechanicalarms.common.tile.TileArmBase;
 import net.minecraft.util.math.Vec3d;
 
 public class MotorCortex {
 
     private final float armSize;
+    private final InteractionType interactionType;
     float[][] rotation = new float[3][3];
-    TileArmBasic te;
+    float[][] animationRotation = new float[3][3];
+    TileArmBase te;
 
-    public MotorCortex(TileArmBasic tileArmBasic, float armSize) {
-        te = tileArmBasic;
+    public MotorCortex(TileArmBase tileArmBase, float armSize, InteractionType interactionType) {
+        te = tileArmBase;
         this.armSize = armSize;
+        this.interactionType = interactionType;
     }
 
-    public boolean move(Vec3d armPoint, Vec3d target) {
+    public ActionResult move(Vec3d armPoint, Vec3d target) {
         Vec3d combinedVec = target.subtract(armPoint);
         double pitch = Math.atan2(combinedVec.y, Math.sqrt(combinedVec.x * combinedVec.x + combinedVec.z * combinedVec.z));
         double yaw = Math.atan2(-combinedVec.z, combinedVec.x);
@@ -28,6 +33,10 @@ public class MotorCortex {
         double armArcTarget = Math.asin(dist / armSize / 2) * 2 - Math.PI;
         if (Double.isNaN(armArcTarget)) {
             armArcTarget = 0;
+        }
+
+        if (dist > 2 * armSize + 0.5) {
+            return ActionResult.FAILURE;
         }
 
         pitch = pitch + extraPitchArc;
@@ -59,9 +68,7 @@ public class MotorCortex {
 
         float rotYaw = rotateX(rotation[0][1], 0.1f, (float) yaw);
         boolean yawReached = false;
-        if (rotYaw != rotation[0][1]) {
-            rotation[0][1] = rotYaw;
-        }
+        rotation[0][1] = rotYaw;
 
         if (rotYaw >= 0 && yaw >= 0) {
             if (rotYaw <= (yaw + 0.1f) && rotYaw >= (yaw - 0.1f)) {
@@ -73,7 +80,10 @@ public class MotorCortex {
             }
         }
 
-        return yawReached && pitchReached && distReached;
+        if (yawReached && pitchReached && distReached) {
+            return ActionResult.SUCCESS;
+        }
+        return ActionResult.CONTINUE;
     }
 
     public float[] getRotation(int idx) {
@@ -139,5 +149,9 @@ public class MotorCortex {
         } else {
             rotation[2][0] = 0;
         }
+    }
+
+    public float[] getAnimationRotation(int idx) {
+        return animationRotation[idx];
     }
 }
