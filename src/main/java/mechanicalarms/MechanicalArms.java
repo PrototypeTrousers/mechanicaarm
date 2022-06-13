@@ -8,7 +8,6 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.Logger;
-import software.bernie.geckolib3.GeckoLib;
 
 @Mod(modid = MechanicalArms.MODID, dependencies = "required:forge@[14.23.5.2847,);")
 public class MechanicalArms {
@@ -22,7 +21,6 @@ public class MechanicalArms {
     public static Logger logger;
 
     public MechanicalArms() {
-        GeckoLib.initialize();
     }
 
     @EventHandler

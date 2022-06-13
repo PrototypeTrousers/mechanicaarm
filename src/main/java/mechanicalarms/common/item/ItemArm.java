@@ -8,25 +8,21 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-public class ItemArm extends ItemBlock
-{
-    private BlockPos sourcePos= null ;
+public class ItemArm extends ItemBlock {
+    private BlockPos sourcePos = null;
     private BlockPos targetPos = null;
 
-    public ItemArm(Block armBase )
-    {
-        super( armBase );
-        setRegistryName( MechanicalArms.MODID, "arm_basic" );
+    public ItemArm(Block armBase) {
+        super(armBase);
+        setRegistryName(MechanicalArms.MODID, "arm_basic");
     }
 
 
@@ -47,16 +43,16 @@ public class ItemArm extends ItemBlock
                 }
             }
         }
-            if (this.sourcePos != null && this.targetPos != null) {
-                return super.onItemUse(player, worldIn, pos, hand, facing, hitX, hitY, hitZ);
-            }
+        if (this.sourcePos != null && this.targetPos != null) {
+            return super.onItemUse(player, worldIn, pos, hand, facing, hitX, hitY, hitZ);
+        }
         return EnumActionResult.FAIL;
     }
 
     @Override
     public boolean placeBlockAt(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, IBlockState newState) {
         if (super.placeBlockAt(stack, player, world, pos, side, hitX, hitY, hitZ, newState)) {
-            TileEntity tileEntity1 = world.getTileEntity( pos );
+            TileEntity tileEntity1 = world.getTileEntity(pos);
             ((TileArmBasic) tileEntity1).setSource(sourcePos);
             ((TileArmBasic) tileEntity1).setTarget(targetPos);
             return true;

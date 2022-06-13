@@ -26,11 +26,13 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         Vec3d combinedVec = target.subtract(armPoint);
         double pitch = Math.atan2(combinedVec.y, Math.sqrt(combinedVec.x * combinedVec.x + combinedVec.z * combinedVec.z));
         double yaw = Math.atan2(-combinedVec.z, combinedVec.x);
-
-        if (yaw <= -Math.PI) {
-            yaw = yaw + 2 * Math.PI;
+/*
+        if (yaw <= -Math.PI / 2) {
+            yaw = yaw + Math.PI / 2;
+        } else if (yaw > Math.PI / 2) {
+            yaw = yaw - Math.PI / 2;
         }
-
+*/
         float dist = (float) combinedVec.length();
 
         double extraPitchArc = Math.acos(dist / armSize / 2);

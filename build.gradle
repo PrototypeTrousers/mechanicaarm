@@ -72,7 +72,6 @@ dependencies {
     if (project.use_mixins.toBoolean()) {
         deobfCompile 'zone.rong:mixinbooter:4.2'
     }
-    deobfCompile 'software.bernie.geckolib:geckolib-forge-1.12.2:3.0.28'
 }
 
 sourceSets {

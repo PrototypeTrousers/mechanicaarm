@@ -10,20 +10,16 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import software.bernie.geckolib3.core.IAnimatable;
-import software.bernie.geckolib3.core.manager.AnimationData;
-import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 import static mechanicalarms.common.logic.behavior.Action.DELIVER;
 import static mechanicalarms.common.logic.behavior.Action.RETRIEVE;
 import static net.minecraftforge.common.util.Constants.NBT.TAG_FLOAT;
 import static net.minecraftforge.common.util.Constants.NBT.TAG_LIST;
 
-public abstract class TileArmBase extends TileEntity implements ITickable, IAnimatable {
+public abstract class TileArmBase extends TileEntity implements ITickable {
     private final Targeting targeting = new Targeting();
     private final MotorCortex motorCortex;
     private final WorkStatus workStatus = new WorkStatus();
-    AnimationFactory animationFactory = new AnimationFactory(this);
     private Vec3d armPoint;
 
     public TileArmBase(float armSize, InteractionType interactionType) {
@@ -99,6 +95,11 @@ public abstract class TileArmBase extends TileEntity implements ITickable, IAnim
         return compound;
     }
 
+    @Override
+    public boolean hasFastRenderer() {
+        return true;
+    }
+
     public abstract ActionResult interact(Vec3d target, Action retrieve);
 
     @Override
@@ -155,15 +156,5 @@ public abstract class TileArmBase extends TileEntity implements ITickable, IAnim
 
     public boolean hasOutput() {
         return targeting.hasOutput();
-    }
-
-    @Override
-    public void registerControllers(AnimationData data) {
-
-    }
-
-    @Override
-    public AnimationFactory getFactory() {
-        return animationFactory;
     }
 }
