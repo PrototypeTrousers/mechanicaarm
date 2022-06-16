@@ -7,7 +7,10 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.model.animation.FastTESR;
 
@@ -76,6 +79,10 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         float[] secondArmRotation = tileArmBasic.getRotation(1);
         float[] secondArmAnimationAngle = tileArmBasic.getAnimationRotation(1);
 
+        float[] handRotation = tileArmBasic.getRotation(2);
+        float[] handRotationAnimationAngle = tileArmBasic.getAnimationRotation(2);
+
+
         V3F_POS.x = (float) x;
         V3F_POS.y = (float) y;
         V3F_POS.z = (float) z;
@@ -133,6 +140,13 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
         //hand
         translate(transformMatrix, new Vector3f(0, 3 / 16F, -(1 + 13 / 16F)));
+        moveToPivot(transformMatrix, PIVOT_2);
+        //rotateY(transformMatrix, (float) (Math.PI /4));
+        //rotateX(transformMatrix, (float) (-Math.PI / 2));
+
+        //rotateY(transformMatrix, lerp(handRotationAnimationAngle[1], handRotation[1], partialTicks));
+        //rotateX(transformMatrix, lerp(handRotationAnimationAngle[0], handRotation[0], partialTicks));
+        moveToPivot(transformMatrix, ANTI_PIVOT_2);
 
         renderQuads(vertexArray[3],
                 V3F_POS,
@@ -144,6 +158,22 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         translate(transformMatrix, new Vector3f(0, 2 / 16F, -0.5F));
 
         renderQuads(vertexArray[4],
+                V3F_POS,
+                transformMatrix,
+                240,
+                color(0xFF, 0xFF, 0xFF));
+
+        //render item
+        RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
+        List<BakedQuad> quads = renderItem.getItemModelMesher().getItemModel(new ItemStack(Items.STONE_SWORD)).getQuads(null, null, 0);
+        int[][] item = new int[quads.size()][];
+        for (int i = 0, quadsSize = quads.size(); i < quadsSize; i++) {
+            item[i] = quads.get(i).getVertexData();
+        }
+
+        translate(transformMatrix, new Vector3f(0.25F, 1F, -0.25F));
+
+        renderQuads(item,
                 V3F_POS,
                 transformMatrix,
                 240,
