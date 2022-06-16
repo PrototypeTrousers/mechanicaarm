@@ -4,15 +4,15 @@
     "custom": { "flip-v": true },
     "model": "mechanicalarms:arm_basic.obj",
     "textures": {
-      "#None": "mechanicalarms:blocks/arm_basic"
+      "#none": "mechanicalarms:blocks/arm_base"
     }
   },
   "variants": {
     "normal": [{}],
     "inventory": [{}],
     "arm_part=1": {"model": "mechanicalarms:arm_base.obj"},
-    "arm_part=2": {"model": "mechanicalarms:arm_arm1.obj"},
-    "arm_part=3": {"model": "mechanicalarms:arm_arm2.obj"},
+    "arm_part=2": {"model": "mechanicalarms:arm_arm.obj"},
+    "arm_part=3": {"model": "mechanicalarms:arm_arm.obj"},
     "arm_part=4": {"model": "mechanicalarms:arm_hand.obj"},
     "arm_part=5": {"model": "mechanicalarms:arm_claw.obj"}
   }

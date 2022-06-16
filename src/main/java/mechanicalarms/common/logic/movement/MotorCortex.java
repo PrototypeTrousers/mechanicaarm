@@ -44,14 +44,11 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
             armArcTarget = 0;
         }
 
-        if (dist > 2 * armSize + 0.5) {
-            return ActionResult.FAILURE;
-        }
-
         pitch = pitch + extraPitchArc;
 
         boolean distReached = false;
 
+        animationRotation[1][0] = rotation[1][0];
         rotation[1][0] = (rotateToReach(rotation[1][0], 0.1f, (float) armArcTarget));
         if (rotation[1][0] >= (armArcTarget - 0.01f) && rotation[1][0] <= (armArcTarget + 0.01f)) {
             if (extraPitchArc != 0) {
@@ -61,30 +58,30 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
             }
         }
 
-        float rotPitch = rotateX(rotation[0][0], 0.1f, (float) pitch);
+        animationRotation[0][0] = rotation[0][0];
+        rotation[0][0] = rotateX(rotation[0][0], 0.1f, (float) pitch);
         boolean pitchReached = false;
-        rotation[0][0] = rotPitch;
 
-        if (rotPitch >= 0 && pitch >= 0) {
-            if (rotPitch <= (pitch + 0.1f) && rotPitch >= (pitch - 0.1f)) {
+        if (rotation[0][0] >= 0 && pitch >= 0) {
+            if (rotation[0][0] <= (pitch + 0.1f) && rotation[0][0] >= (pitch - 0.1f)) {
                 pitchReached = true;
             }
-        } else if (rotPitch < 0 && pitch < 0) {
-            if (rotPitch <= (pitch + 0.1f) && rotPitch >= (pitch - 0.1f)) {
+        } else if (rotation[0][0] < 0 && pitch < 0) {
+            if (rotation[0][0] <= (pitch + 0.1f) && rotation[0][0] >= (pitch - 0.1f)) {
                 pitchReached = true;
             }
         }
 
-        float rotYaw = rotateX(rotation[0][1], 0.1f, (float) yaw);
+        animationRotation[0][1] = rotation[0][1];
+        rotation[0][1] = rotateX(rotation[0][1], 0.1f, (float) yaw);
         boolean yawReached = false;
-        rotation[0][1] = rotYaw;
 
-        if (rotYaw >= 0 && yaw >= 0) {
-            if (rotYaw <= (yaw + 0.1f) && rotYaw >= (yaw - 0.1f)) {
+        if (rotation[0][1] >= 0 && yaw >= 0) {
+            if (rotation[0][1] <= (yaw + 0.1f) && rotation[0][1] >= (yaw - 0.1f)) {
                 yawReached = true;
             }
-        } else if (rotYaw < 0 && yaw < 0) {
-            if (rotYaw <= (yaw + 0.1f) && rotYaw >= (yaw - 0.1f)) {
+        } else if (rotation[0][1] < 0 && yaw < 0) {
+            if (rotation[0][1] <= (yaw + 0.1f) && rotation[0][1] >= (yaw - 0.1f)) {
                 yawReached = true;
             }
         }
@@ -186,6 +183,10 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
             }
             getRotation(axis)[coords] = tagList.getFloatAt(i);
             coords++;
+        }
+
+        for (int i = 0; i < rotation.length; i++) {
+            System.arraycopy(rotation[i], 0, animationRotation[i], 0, animationRotation.length);
         }
     }
 }

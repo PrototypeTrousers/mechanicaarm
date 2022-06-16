@@ -4,6 +4,7 @@ import mechanicalarms.common.logic.behavior.Action;
 import mechanicalarms.common.logic.behavior.ActionResult;
 import mechanicalarms.common.logic.behavior.InteractionType;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -13,7 +14,7 @@ import net.minecraftforge.items.ItemStackHandler;
 
 public class TileArmBasic extends TileArmBase {
 
-    IItemHandler itemHandler = new ItemStackHandler(1);
+    ItemStackHandler itemHandler = new ItemStackHandler(1);
 
     public TileArmBasic() {
         super(2, InteractionType.ITEM);
@@ -53,5 +54,17 @@ public class TileArmBasic extends TileArmBase {
             }
         }
         return ActionResult.CONTINUE;
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+        compound.setTag("inventory", itemHandler.serializeNBT());
+        return super.writeToNBT(compound);
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound compound) {
+        itemHandler.deserializeNBT(compound.getCompoundTag("inventory"));
+        super.readFromNBT(compound);
     }
 }

@@ -70,17 +70,6 @@ public abstract class TileArmBase extends TileEntity implements ITickable {
     @Override
     public void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);
-        NBTTagList rotation = compound.getTagList("rotation", TAG_LIST);
-        int axis = 0;
-        int coords = 0;
-        for (int i = 0; i < rotation.tagCount(); i++) {
-            if (coords > 2) {
-                axis += 1;
-                coords = 0;
-            }
-            getRotation(axis)[coords] = rotation.getFloatAt(i);
-            coords++;
-        }
         motorCortex.deserializeNBT(compound.getTagList("rotation", TAG_FLOAT));
         targeting.deserializeNBT(compound.getCompoundTag("targeting"));
         workStatus.deserializeNBT(compound.getCompoundTag("workStatus"));
@@ -138,16 +127,22 @@ public abstract class TileArmBase extends TileEntity implements ITickable {
     private void updateWorkStatus(ActionTypes type, Action action) {
         workStatus.setType(type);
         workStatus.setAction(action);
-        world.notifyBlockUpdate(pos, world.getBlockState(pos), world.getBlockState(pos), 2);
+        world.notifyBlockUpdate(pos, world.getBlockState(pos), world.getBlockState(pos), 3);
         markDirty();
+    }
+
+    public WorkStatus getWorkStatus() {
+        return workStatus;
     }
 
     public void setSource(BlockPos sourcePos) {
         targeting.setSource(sourcePos);
+        markDirty();
     }
 
     public void setTarget(BlockPos targetPos) {
         targeting.setTarget(targetPos);
+        markDirty();
     }
 
     public boolean hasInput() {

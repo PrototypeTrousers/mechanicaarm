@@ -1,5 +1,6 @@
 package mechanicalarms.client.renderer;
 
+import mechanicalarms.client.mixin.interfaces.IBufferBuilderMixin;
 import mechanicalarms.common.block.BlockArm;
 import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.block.state.IBlockState;
@@ -14,21 +15,46 @@ import javax.vecmath.Matrix4f;
 import javax.vecmath.Tuple4f;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
+import java.util.List;
 
 public class TileArmRenderer extends FastTESR<TileArmBasic> {
+
+    private static final Vector3f V3F_ZERO = new Vector3f();
+    private static int[][][] vertexArray = null;
+    private final Matrix4f tempModelMatrix = new Matrix4f();
+    private final Tuple4f vertexTransformingVec = new Vector4f();
+    private final Vector3f V3F_POS = new Vector3f();
+    private final Vector3f PIVOT_1 = new Vector3f(.5F, 1 + 7 / 16F, .5F);
+    private final Vector3f ANTI_PIVOT_1 = new Vector3f(-.5F, -(1 + 7 / 16F), -.5F);
+    private final Vector3f PIVOT_2 = new Vector3f(0.5F, 1 + 7 / 16F, .5F);
+    private final Vector3f ANTI_PIVOT_2 = new Vector3f(-0.5F, -(1 + 7 / 16F), -.5F);
+    private int[] vertexDataArray;
+    private int quadCount = 0;
 
     public TileArmRenderer() {
         super();
     }
 
-    private final Matrix4f tempModelMatrix = new Matrix4f();
-    private static final Vector3f V3F_ZERO = new Vector3f();
-    private static Vector3f PIVOT_1 = new Vector3f(1, 1F, 0);
-    private static Vector3f ANTI_PIVOT_1 = new Vector3f(-1, -1F, 0);
+    public static int color(int red, int green, int blue) {
 
-    private static Vector3f PIVOT_2 = new Vector3f(0, -1.5F, -2F);
-    private static Vector3f ANTI_PIVOT_2 = new Vector3f(0, 1.5F, 2F);
-    private static BakedQuad[][] quadArray = null;
+        red = MathHelper.clamp(red, 0x00, 0xFF);
+        green = MathHelper.clamp(green, 0x00, 0xFF);
+        blue = MathHelper.clamp(blue, 0x00, 0xFF);
+
+        final int alpha = 0xFF;
+
+        // 0x alpha red green blue
+        // 0xaarrggbb
+
+        // int colorRGBA = 0;
+        // colorRGBA |= red << 16;
+        // colorRGBA |= green << 8;
+        // colorRGBA |= blue << 0;
+        // colorRGBA |= alpha << 24;
+
+        return blue | red << 16 | green << 8 | alpha << 24;
+
+    }
 
     /**
      * The render method that gets called for your FastTESR implementation. This is where you render things.
@@ -44,99 +70,85 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
      */
     @Override
     public void renderTileEntityFast(final TileArmBasic tileArmBasic, final double x, final double y, final double z, final float partialTicks, final int destroyStage, final float partial, final BufferBuilder buffer) {
-        float[] baseRotation = tileArmBasic.getRotation(0);
-        float[] firstXRRotation = tileArmBasic.getRotation(1);
+        float[] firstArmRotation = tileArmBasic.getRotation(0);
+        float[] firstArmAnimationAngle = tileArmBasic.getAnimationRotation(0);
+
+        float[] secondArmRotation = tileArmBasic.getRotation(1);
+        float[] secondArmAnimationAngle = tileArmBasic.getAnimationRotation(1);
+
+        V3F_POS.x = (float) x;
+        V3F_POS.y = (float) y;
+        V3F_POS.z = (float) z;
 
         BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
-        if (quadArray == null) {
-            quadArray = new BakedQuad[5][];
+        if (vertexArray == null) {
+            vertexArray = new int[5][][];
             IBlockState blockState;
-            for (int i = 0; i < 5; i++) {
-                blockState = tileArmBasic.getWorld().getBlockState(tileArmBasic.getPos()).withProperty(BlockArm.ARM_PART_NUMBER, i + 1);
-                quadArray[i] = blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, null, i).toArray(new BakedQuad[0]);
+            for (int i = 1; i < 6; i++) {
+                blockState = tileArmBasic.getWorld().getBlockState(tileArmBasic.getPos()).withProperty(BlockArm.ARM_PART_NUMBER, i);
+                List<BakedQuad> quads = blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, null, i);
+                vertexArray[i - 1] = new int[quads.size()][];
+                for (int j = 0; j < quads.size(); j++) {
+                    vertexArray[i - 1][j] = quads.get(j).getVertexData();
+                }
             }
+            int size = 0;
+            for (int[][] vertexData : vertexArray) {
+                size += vertexData.length;
+            }
+            this.vertexDataArray = new int[2 * size * 28 + 28];
         }
+
+        int light = tileArmBasic.getWorld().getBlockState(tileArmBasic.getPos()).getPackedLightmapCoords(tileArmBasic.getWorld(), tileArmBasic.getPos());
 
         Matrix4f transformMatrix = new Matrix4f();
         transformMatrix.setIdentity();
         this.tempModelMatrix.setIdentity();
-        translate(transformMatrix, new Vector3f(0.5F, 0, 0.5F));
-        rotateY(transformMatrix, (float) (-Math.PI / 2));
-
-        //cage
-        renderQuads(quadArray[0],
-                new Vector3f((float) (x), (float) (y), (float) (z)),
-                buffer,
-                transformMatrix,
-                255,
-                color(0xFF, 0xFF, 0xFF));
-        translate(transformMatrix, new Vector3f(0, 1 + 1 / 16F, 0));
         //firstArm
 
-        PIVOT_1 = new Vector3f(0, .5F, 0);
-        ANTI_PIVOT_1 = new Vector3f(0, -.5F, 0);
-
         moveToPivot(transformMatrix, PIVOT_1);
-
-        rotateY(transformMatrix, (baseRotation[1]));
-        rotateX(transformMatrix, (baseRotation[0]));
+        rotateY(transformMatrix, (float) (-Math.PI / 2));
+        rotateY(transformMatrix, lerp(firstArmAnimationAngle[1], firstArmRotation[1], partialTicks));
+        rotateX(transformMatrix, lerp(firstArmAnimationAngle[0], firstArmRotation[0], partialTicks));
         moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
-
-        renderQuads(quadArray[1],
-                new Vector3f((float) (x), (float) (y), (float) (z)),
-                buffer,
+        renderQuads(vertexArray[1],
+                V3F_POS,
                 transformMatrix,
-                240,
+                light,
                 color(0xFF, 0xFF, 0xFF));
-        translate(transformMatrix, new Vector3f(0, 0, -2.0F));
 
-        PIVOT_2 = new Vector3f(.5F, .5F, 0);
-        ANTI_PIVOT_2 = new Vector3f(-.5F, -.5F, 0);
-        //secondArm
+        //position second arm
+        translate(transformMatrix, new Vector3f(0, 0, -(1 + 12 / 16F)));
+
         moveToPivot(transformMatrix, PIVOT_2);
-        //rotate
-        rotateX(transformMatrix, firstXRRotation[0]);
-        //scale back
-        //restoreScale(transformMatrix);
-        //move back from pivoting
+        rotateX(transformMatrix, lerp(secondArmAnimationAngle[0], secondArmRotation[0], partialTicks));
         moveToPivot(transformMatrix, ANTI_PIVOT_2);
 
-        renderQuads(quadArray[2],
-                new Vector3f((float) (x), (float) (y), (float) (z)),
-                buffer,
+        renderQuads(vertexArray[1],
+                V3F_POS,
                 transformMatrix,
-                240,
-                color(0xFF, 0xFF, 0xFF));
-                /*
-
-
-        renderQuads(quads, 60, 84,
-                new Vector3f((float) (x), (float) (y), (float) (z)),
-                buffer,
-                transformMatrix,
-                240,
+                light,
                 color(0xFF, 0xFF, 0xFF));
 
-        this.tempModelMatrix.setIdentity();
-        transformMatrix.mul(this.tempModelMatrix);
-        moveToPivot(transformMatrix, PIVOT_2);
-        //rotate
-        rotateX(transformMatrix, firstXRRotation[0]);
-        //scale back
-        //restoreScale(transformMatrix);
-        //move back from pivoting
-        moveToPivot(transformMatrix, ANTI_PIVOT_2);
+        translate(transformMatrix, new Vector3f(0, 3 / 16F, -(1 + 12 / 16F)));
 
-
-        renderQuads(quads, 84, 96,
-                new Vector3f((float) (x), (float) (y), (float) (z)),
-                buffer,
+        renderQuads(vertexArray[3],
+                V3F_POS,
                 transformMatrix,
                 240,
                 color(0xFF, 0xFF, 0xFF));
 
-         */
+        translate(transformMatrix, new Vector3f(0, 2 / 16F, -0.5F));
+
+        renderQuads(vertexArray[4],
+                V3F_POS,
+                transformMatrix,
+                240,
+                color(0xFF, 0xFF, 0xFF));
+
+        ((IBufferBuilderMixin) buffer).putIntBulkData(vertexDataArray);
+        quadCount = 0;
     }
 
     void rotateX(Matrix4f matrix, float angle) {
@@ -165,9 +177,9 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
     void restoreScale(Matrix4f matrix) {
         this.tempModelMatrix.setIdentity();
-        this.tempModelMatrix.setM00(1.125F);
-        this.tempModelMatrix.setM11(1.125F);
-        this.tempModelMatrix.setM22(1.125F);
+        this.tempModelMatrix.setM00(1F);
+        this.tempModelMatrix.setM11(1F);
+        this.tempModelMatrix.setM22(1F);
         matrix.mul(this.tempModelMatrix);
     }
 
@@ -177,103 +189,39 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         matrix.mul(this.tempModelMatrix);
     }
 
-    /**
-     * Renders a collection of BakedQuads into the BufferBuilder given. This method allows you to render any model in game in the FastTESR, be it a block model or an item model.
-     * Alternatively a custom list of quads may be constructed at runtime to render things like text.
-     * Drawbacks: doesn't transform normals as they are not guaranteed to be present in the buffer. Not relevant for a FastTESR but may cause issues with Optifine's shaders.
-     *
-     * @param quads           the iterable of BakedQuads. This may be any iterable object.
-     * @param baseOffset      the base position offset for the rendering. This position will not be transformed by the model matrix.
-     * @param buffer          the buffer to upload vertices to.
-     * @param transformMatrix the model matrix that is used to transform quad vertices.
-     * @param brightness      the brightness of the model. The packed lightmap coordinate system is pretty complex and a lot of parameters are not necessary here so only the dominant one is implemented.
-     * @param color           the color of the quad. This is a color multiplier in the ARGB format.
-     */
-    public void renderQuads(BakedQuad[] quads, Vector3f baseOffset, BufferBuilder buffer, Matrix4f transformMatrix, float brightness, int color) {
-        // Uploading the brightness to the buffer.
-        Tuple4f vert = new Vector4f();
-        // Iterate the iterable
-        int[] transformedVertexData = new int[28];
-        for (BakedQuad currentQuad : quads) {
-            int[] quadData = currentQuad.getVertexData();
-            System.arraycopy(quadData, 0, transformedVertexData, 0, quadData.length);
-
+    public void renderQuads(int[][] quadDataList, Vector3f baseOffset, Matrix4f transformMatrix, int brightness, int color) {
+        for (int[] quadData : quadDataList) {
+            System.arraycopy(quadData, 0, vertexDataArray, quadCount * 28, quadData.length);
             for (int k = 0; k < 4; ++k) {
                 // Getting the offset for the current vertex.
                 int vertexIndex = k * 7;
-
-                // Grabbing the position vector from the buffer.
-                float vertX = Float.intBitsToFloat(quadData[vertexIndex]);
-                float vertY = Float.intBitsToFloat(quadData[vertexIndex + 1]);
-                float vertZ = Float.intBitsToFloat(quadData[vertexIndex + 2]);
-                vert.x = vertX;
-                vert.y = vertY;
-                vert.z = vertZ;
-                vert.w = 1;
+                vertexTransformingVec.x = Float.intBitsToFloat(quadData[vertexIndex]);
+                vertexTransformingVec.y = Float.intBitsToFloat(quadData[vertexIndex + 1]);
+                vertexTransformingVec.z = Float.intBitsToFloat(quadData[vertexIndex + 2]);
+                vertexTransformingVec.w = 1;
 
                 // Transforming it by the model matrix.
-                transformMatrix.transform(vert);
+                transformMatrix.transform(vertexTransformingVec);
 
                 // Converting the new data to ints.
-                int x = Float.floatToIntBits(vert.x);
-                int y = Float.floatToIntBits(vert.y);
-                int z = Float.floatToIntBits(vert.z);
+                int x = Float.floatToRawIntBits(vertexTransformingVec.x + baseOffset.x);
+                int y = Float.floatToRawIntBits(vertexTransformingVec.y + baseOffset.y);
+                int z = Float.floatToRawIntBits(vertexTransformingVec.z + baseOffset.z);
 
-                // Putting the data into the buffer
-                transformedVertexData[vertexIndex] = x;
-                transformedVertexData[vertexIndex + 1] = y;
-                transformedVertexData[vertexIndex + 2] = z;
+                int destIndex = quadCount * 28 + vertexIndex;
+                // vertex position data
+                vertexDataArray[destIndex] = x;
+                vertexDataArray[destIndex + 1] = y;
+                vertexDataArray[destIndex + 2] = z;
+
+                // vertex brightness
+                vertexDataArray[destIndex + 6] = brightness;
             }
-            buffer.addVertexData(transformedVertexData);
-
-            // Uploading the origin position to the buffer. This is an addition operation.
-            buffer.putPosition(baseOffset.x, baseOffset.y, baseOffset.z);
-
-            // Constructing the most basic packed lightmap data with a mask of 0x00FF0000.
-            int bVal = ((byte) (brightness * 255)) << 16;
-
-            buffer.putBrightness4(192, 192, 192, 192);
-
-            // Uploading the color multiplier to the buffer
-            buffer.putColor4(color);
+            quadCount++;
         }
     }
 
-    /**
-     * Maps a value from one range to another range. Taken from https://stackoverflow.com/a/5732117
-     *
-     * @param input       the input
-     * @param inputStart  the start of the input's range
-     * @param inputEnd    the end of the input's range
-     * @param outputStart the start of the output's range
-     * @param outputEnd   the end of the output's range
-     * @return the newly mapped value
-     */
-    public static double map(final double input, final double inputStart, final double inputEnd, final double outputStart, final double outputEnd) {
-        final double input_range = inputEnd - inputStart;
-        final double output_range = outputEnd - outputStart;
-
-        return (((input - inputStart) * output_range) / input_range) + outputStart;
-    }
-
-    public static int color(int red, int green, int blue) {
-
-        red = MathHelper.clamp(red, 0x00, 0xFF);
-        green = MathHelper.clamp(green, 0x00, 0xFF);
-        blue = MathHelper.clamp(blue, 0x00, 0xFF);
-
-        final int alpha = 0xFF;
-
-        // 0x alpha red green blue
-        // 0xaarrggbb
-
-        // int colorRGBA = 0;
-        // colorRGBA |= red << 16;
-        // colorRGBA |= green << 8;
-        // colorRGBA |= blue << 0;
-        // colorRGBA |= alpha << 24;
-
-        return blue | red << 16 | green << 8 | alpha << 24;
-
+    private float lerp(float previous, float current, float partialTick) {
+        return (previous * (1.0F - partialTick)) + (current * partialTick);
     }
 }
