@@ -6,11 +6,12 @@ import mechanicalarms.common.logic.behavior.InteractionType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class TileArmBasic extends TileArmBase {
 
@@ -21,10 +22,10 @@ public class TileArmBasic extends TileArmBase {
     }
 
     @Override
-    public ActionResult interact(Vec3d target, Action action) {
-        TileEntity te = world.getTileEntity(new BlockPos(target.x, target.y, target.z));
+    public ActionResult interact(Action action, Pair<BlockPos, EnumFacing> blkFace) {
+        TileEntity te = world.getTileEntity(blkFace.getKey());
         if (te != null) {
-            IItemHandler itemHandler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
+            IItemHandler itemHandler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, blkFace.getRight());
             if (itemHandler != null) {
                 if (action == Action.RETRIEVE) {
                     if (this.itemHandler.getStackInSlot(0).isEmpty()) {

@@ -3,18 +3,18 @@ package mechanicalarms.common.tile;
 import mechanicalarms.common.logic.behavior.*;
 import mechanicalarms.common.logic.movement.MotorCortex;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.apache.commons.lang3.tuple.Pair;
 
 import static mechanicalarms.common.logic.behavior.Action.DELIVER;
 import static mechanicalarms.common.logic.behavior.Action.RETRIEVE;
 import static net.minecraftforge.common.util.Constants.NBT.TAG_FLOAT;
-import static net.minecraftforge.common.util.Constants.NBT.TAG_LIST;
 
 public abstract class TileArmBase extends TileEntity implements ITickable {
     private final Targeting targeting = new Targeting();
@@ -89,7 +89,7 @@ public abstract class TileArmBase extends TileEntity implements ITickable {
         return true;
     }
 
-    public abstract ActionResult interact(Vec3d target, Action retrieve);
+    public abstract ActionResult interact(Action retrieve, Pair<BlockPos, EnumFacing> blkFacePair);
 
     @Override
     public void update() {
@@ -111,12 +111,12 @@ public abstract class TileArmBase extends TileEntity implements ITickable {
             }
         } else if (workStatus.getType() == ActionTypes.INTERACTION) {
             if (workStatus.getAction() == Action.RETRIEVE) {
-                ActionResult result = interact(targeting.getSourceVec(), RETRIEVE);
+                ActionResult result = interact(RETRIEVE, targeting.getSource());
                 if (result == ActionResult.SUCCESS) {
                     updateWorkStatus(ActionTypes.MOVEMENT, DELIVER);
                 }
             } else if (workStatus.getAction() == DELIVER) {
-                ActionResult result = interact(targeting.getTargetVec(), DELIVER);
+                ActionResult result = interact(DELIVER, targeting.getTarget());
                 if (result == ActionResult.SUCCESS) {
                     updateWorkStatus(ActionTypes.MOVEMENT, RETRIEVE);
                 }
@@ -135,13 +135,13 @@ public abstract class TileArmBase extends TileEntity implements ITickable {
         return workStatus;
     }
 
-    public void setSource(BlockPos sourcePos) {
-        targeting.setSource(sourcePos);
+    public void setSource(BlockPos sourcePos, EnumFacing sourceFacing) {
+        targeting.setSource(sourcePos, sourceFacing);
         markDirty();
     }
 
-    public void setTarget(BlockPos targetPos) {
-        targeting.setTarget(targetPos);
+    public void setTarget(BlockPos targetPos, EnumFacing targetFacing) {
+        targeting.setTarget(targetPos, targetFacing);
         markDirty();
     }
 
