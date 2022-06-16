@@ -5,6 +5,7 @@ import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -17,13 +18,19 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 
-import static net.minecraft.block.BlockDirectional.FACING;
-
 public class BlockArm extends Block implements ITileEntityProvider {
+
+    public static final PropertyInteger ARM_PART_NUMBER = PropertyInteger.create("arm_part", 1, 5);
 
     public BlockArm() {
         super(Material.IRON);
         setRegistryName(MechanicalArms.MODID, "arm_basic");
+        setDefaultState(this.blockState.getBaseState().withProperty(ARM_PART_NUMBER, 1));
+    }
+
+    @Override
+    public boolean hasTileEntity() {
+        return true;
     }
 
     @Override
@@ -38,27 +45,27 @@ public class BlockArm extends Block implements ITileEntityProvider {
 
     @Override
     public EnumBlockRenderType getRenderType(IBlockState state) {
-        return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;
+        return EnumBlockRenderType.MODEL;
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING);
+        return new BlockStateContainer(this, ARM_PART_NUMBER);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        return (state.getValue(FACING)).getIndex();
+        return (state.getValue(ARM_PART_NUMBER));
     }
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return this.getDefaultState().withProperty(FACING, EnumFacing.byIndex(meta));
+        return this.getDefaultState().withProperty(ARM_PART_NUMBER, meta);
     }
 
     @Override
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
-        return this.getDefaultState().withProperty(FACING, EnumFacing.UP);
+        return this.getDefaultState().withProperty(ARM_PART_NUMBER, 1);
     }
 
     public boolean isOpaqueCube(IBlockState state) {
@@ -73,10 +80,5 @@ public class BlockArm extends Block implements ITileEntityProvider {
     @Override
     public TileEntity createNewTileEntity(World worldIn, int meta) {
         return new TileArmBasic();
-    }
-
-    @Override
-    public boolean hasTileEntity() {
-        return true;
     }
 }
