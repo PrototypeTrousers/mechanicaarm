@@ -131,7 +131,8 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                 light,
                 color(0xFF, 0xFF, 0xFF));
 
-        translate(transformMatrix, new Vector3f(0, 3 / 16F, -(1 + 12 / 16F)));
+        //hand
+        translate(transformMatrix, new Vector3f(0, 3 / 16F, -(1 + 13 / 16F)));
 
         renderQuads(vertexArray[3],
                 V3F_POS,
@@ -139,6 +140,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                 240,
                 color(0xFF, 0xFF, 0xFF));
 
+        //claw
         translate(transformMatrix, new Vector3f(0, 2 / 16F, -0.5F));
 
         renderQuads(vertexArray[4],

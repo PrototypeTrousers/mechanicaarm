@@ -28,16 +28,16 @@ public class ItemArm extends ItemBlock {
 
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-      /*  TileEntity tileEntity = worldIn.getTileEntity(pos);
+        TileEntity tileEntity = worldIn.getTileEntity(pos);
         if (tileEntity != null) {
             IItemHandler handler = tileEntity.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
             if (handler != null) {
-                if (targetPos == null) {
-                    targetPos = pos;
+                if (targetPos == null && hand == EnumHand.MAIN_HAND) {
+                    targetPos = pos.offset(facing);
                     MechanicalArms.logger.info("Target pos set to " + targetPos);
                     return EnumActionResult.FAIL;
-                } else if (sourcePos == null && targetPos != pos) {
-                    this.sourcePos = pos;
+                } else if (sourcePos == null && hand == EnumHand.OFF_HAND) {
+                    this.sourcePos = pos.offset(facing);
                     MechanicalArms.logger.info("Source pos set to " + sourcePos);
                     return EnumActionResult.FAIL;
                 }
@@ -57,8 +57,6 @@ public class ItemArm extends ItemBlock {
             ((TileArmBasic) tileEntity1).setTarget(targetPos);
             return true;
         }
-        return false;
-    }*/
         return super.placeBlockAt(stack, player, world, pos, side, hitX, hitY, hitZ, newState);
     }
 }
