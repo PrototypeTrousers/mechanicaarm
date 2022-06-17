@@ -15,7 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class TileArmBasic extends TileArmBase {
 
-    ItemStackHandler itemHandler = new ItemStackHandler(1);
+    protected ItemStackHandler itemHandler = new ItemStackHandler(1);
 
     public TileArmBasic() {
         super(2, InteractionType.ITEM);
@@ -67,5 +67,9 @@ public class TileArmBasic extends TileArmBase {
     public void readFromNBT(NBTTagCompound compound) {
         itemHandler.deserializeNBT(compound.getCompoundTag("inventory"));
         super.readFromNBT(compound);
+    }
+
+    public ItemStack getItemStack() {
+        return itemHandler.getStackInSlot(0);
     }
 }

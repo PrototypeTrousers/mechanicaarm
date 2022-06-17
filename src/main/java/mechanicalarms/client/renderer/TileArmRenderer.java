@@ -3,14 +3,16 @@ package mechanicalarms.client.renderer;
 import mechanicalarms.client.mixin.interfaces.IBufferBuilderMixin;
 import mechanicalarms.common.block.BlockArm;
 import mechanicalarms.common.tile.TileArmBasic;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.model.animation.FastTESR;
 
@@ -18,6 +20,7 @@ import javax.vecmath.Matrix4f;
 import javax.vecmath.Tuple4f;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TileArmRenderer extends FastTESR<TileArmBasic> {
@@ -165,15 +168,26 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
         //render item
         RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
-        List<BakedQuad> quads = renderItem.getItemModelMesher().getItemModel(new ItemStack(Items.STONE_SWORD)).getQuads(null, null, 0);
-        int[][] item = new int[quads.size()][];
+        Item item = tileArmBasic.getItemStack().getItem();
+        List<BakedQuad> quads = new ArrayList<>();
+        if (item instanceof ItemBlock) {
+            Block block = ((ItemBlock) item).getBlock();
+            IBlockState blockState = block.getDefaultState();
+            for (EnumFacing facing : EnumFacing.values()) {
+                quads.addAll(blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, facing, 0));
+            }
+            quads.addAll(blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, null, 0));
+        } else {
+            quads = renderItem.getItemModelMesher().getItemModel(tileArmBasic.getItemStack()).getQuads(null, null, 0);
+        }
+        int[][] itemQ = new int[quads.size()][];
         for (int i = 0, quadsSize = quads.size(); i < quadsSize; i++) {
-            item[i] = quads.get(i).getVertexData();
+            itemQ[i] = quads.get(i).getVertexData();
         }
 
         translate(transformMatrix, new Vector3f(0.25F, 1F, -0.25F));
 
-        renderQuads(item,
+        renderQuads(itemQ,
                 V3F_POS,
                 transformMatrix,
                 240,
@@ -245,6 +259,8 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                 vertexDataArray[destIndex] = x;
                 vertexDataArray[destIndex + 1] = y;
                 vertexDataArray[destIndex + 2] = z;
+
+                vertexDataArray[destIndex + 3] = color;
 
                 // vertex brightness
                 vertexDataArray[destIndex + 6] = brightness;
