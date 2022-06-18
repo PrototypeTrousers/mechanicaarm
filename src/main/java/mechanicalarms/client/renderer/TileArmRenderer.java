@@ -58,7 +58,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         // colorRGBA |= blue << 0;
         // colorRGBA |= alpha << 24;
 
-        return blue | red << 16 | green << 8 | alpha << 24;
+        return -16777216 | blue << 16 | green << 8 | red;
 
     }
 
@@ -144,11 +144,6 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         //hand
         translate(transformMatrix, new Vector3f(0, 3 / 16F, -(1 + 13 / 16F)));
         moveToPivot(transformMatrix, PIVOT_2);
-        //rotateY(transformMatrix, (float) (Math.PI /4));
-        //rotateX(transformMatrix, (float) (-Math.PI / 2));
-
-        //rotateY(transformMatrix, lerp(handRotationAnimationAngle[1], handRotation[1], partialTicks));
-        //rotateX(transformMatrix, lerp(handRotationAnimationAngle[0], handRotation[0], partialTicks));
         moveToPivot(transformMatrix, ANTI_PIVOT_2);
 
         renderQuads(vertexArray[3],
@@ -174,9 +169,9 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
             Block block = ((ItemBlock) item).getBlock();
             IBlockState blockState = block.getDefaultState();
             for (EnumFacing facing : EnumFacing.values()) {
-                quads.addAll(blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, facing, 0));
+                quads.addAll(blockRendererDispatcher.getModelForState(blockState).getQuads(null, facing, 0));
             }
-            quads.addAll(blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, null, 0));
+            quads.addAll(blockRendererDispatcher.getModelForState(blockState).getQuads(null, null, 0));
         } else {
             quads = renderItem.getItemModelMesher().getItemModel(tileArmBasic.getItemStack()).getQuads(null, null, 0);
         }
@@ -185,7 +180,15 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
             itemQ[i] = quads.get(i).getVertexData();
         }
 
-        translate(transformMatrix, new Vector3f(0.25F, 1F, -0.25F));
+        translate(transformMatrix, new Vector3f(0.03125F, 0.75F, -0.25F));
+        moveToPivot(transformMatrix, new Vector3f(0.5F, 0.5F, 0.5F));
+        tempModelMatrix.setIdentity();
+        tempModelMatrix.m00 = 0.1875F;
+        tempModelMatrix.m11 = 0.1875F;
+        tempModelMatrix.m22 = 0.1875F;
+        transformMatrix.mul(tempModelMatrix);
+        moveToPivot(transformMatrix, new Vector3f(-0.5F, -0.5F, -0.5F));
+
 
         renderQuads(itemQ,
                 V3F_POS,
@@ -237,7 +240,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
     public void renderQuads(int[][] quadDataList, Vector3f baseOffset, Matrix4f transformMatrix, int brightness, int color) {
         for (int[] quadData : quadDataList) {
-            System.arraycopy(quadData, 0, vertexDataArray, quadCount * 28, quadData.length);
+            System.arraycopy(quadData, 0, vertexDataArray, quadCount * 28, quadData.length - 1);
             for (int k = 0; k < 4; ++k) {
                 // Getting the offset for the current vertex.
                 int vertexIndex = k * 7;
