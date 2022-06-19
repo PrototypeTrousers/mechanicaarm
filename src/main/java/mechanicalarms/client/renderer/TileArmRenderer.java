@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.model.animation.FastTESR;
@@ -35,6 +36,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
     private final Vector3f PIVOT_2 = new Vector3f(0.5F, 1 + 7 / 16F, .5F);
     private final Vector3f ANTI_PIVOT_2 = new Vector3f(-0.5F, -(1 + 7 / 16F), -.5F);
     private int[] vertexDataArray;
+    private int[] vertexItemDataArray;
     private int quadCount = 0;
 
     public TileArmRenderer() {
@@ -90,6 +92,8 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         V3F_POS.y = (float) y;
         V3F_POS.z = (float) z;
 
+        IBufferBuilderMixin mixedInBuffer = ((IBufferBuilderMixin) buffer);
+
         BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
         if (vertexArray == null) {
             vertexArray = new int[5][][];
@@ -106,7 +110,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
             for (int[][] vertexData : vertexArray) {
                 size += vertexData.length;
             }
-            this.vertexDataArray = new int[2 * size * 28 + 28];
+            this.vertexDataArray = new int[size * 28];
         }
 
         int light = tileArmBasic.getWorld().getBlockState(tileArmBasic.getPos()).getPackedLightmapCoords(tileArmBasic.getWorld(), tileArmBasic.getPos());
@@ -122,7 +126,8 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         rotateX(transformMatrix, lerp(firstArmAnimationAngle[0], firstArmRotation[0], partialTicks));
         moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
-        renderQuads(vertexArray[1],
+        renderQuads(mixedInBuffer,
+                vertexArray[1],
                 V3F_POS,
                 transformMatrix,
                 light,
@@ -135,7 +140,8 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         rotateX(transformMatrix, lerp(secondArmAnimationAngle[0], secondArmRotation[0], partialTicks));
         moveToPivot(transformMatrix, ANTI_PIVOT_2);
 
-        renderQuads(vertexArray[1],
+        renderQuads(mixedInBuffer,
+                vertexArray[1],
                 V3F_POS,
                 transformMatrix,
                 light,
@@ -144,9 +150,11 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         //hand
         translate(transformMatrix, new Vector3f(0, 3 / 16F, -(1 + 13 / 16F)));
         moveToPivot(transformMatrix, PIVOT_2);
+        rotateX(transformMatrix, lerp(handRotationAnimationAngle[0], handRotation[0], partialTicks));
         moveToPivot(transformMatrix, ANTI_PIVOT_2);
 
-        renderQuads(vertexArray[3],
+        renderQuads(mixedInBuffer,
+                vertexArray[3],
                 V3F_POS,
                 transformMatrix,
                 240,
@@ -155,7 +163,8 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         //claw
         translate(transformMatrix, new Vector3f(0, 2 / 16F, -0.5F));
 
-        renderQuads(vertexArray[4],
+        renderQuads(mixedInBuffer,
+                vertexArray[4],
                 V3F_POS,
                 transformMatrix,
                 240,
@@ -163,40 +172,46 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
         //render item
         RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
-        Item item = tileArmBasic.getItemStack().getItem();
-        List<BakedQuad> quads = new ArrayList<>();
-        if (item instanceof ItemBlock) {
-            Block block = ((ItemBlock) item).getBlock();
-            IBlockState blockState = block.getDefaultState();
-            for (EnumFacing facing : EnumFacing.values()) {
-                quads.addAll(blockRendererDispatcher.getModelForState(blockState).getQuads(null, facing, 0));
+        ItemStack onArm = tileArmBasic.getItemStack();
+        if (!onArm.isEmpty()) {
+            Item item = onArm.getItem();
+            List<BakedQuad> quads = new ArrayList<>();
+            if (item instanceof ItemBlock) {
+                Block block = ((ItemBlock) item).getBlock();
+                IBlockState blockState = block.getDefaultState();
+                for (EnumFacing facing : EnumFacing.values()) {
+                    quads.addAll(blockRendererDispatcher.getModelForState(blockState).getQuads(null, facing, 0));
+                }
+                quads.addAll(blockRendererDispatcher.getModelForState(blockState).getQuads(null, null, 0));
+            } else {
+                quads = renderItem.getItemModelMesher().getItemModel(tileArmBasic.getItemStack()).getQuads(null, null, 0);
             }
-            quads.addAll(blockRendererDispatcher.getModelForState(blockState).getQuads(null, null, 0));
-        } else {
-            quads = renderItem.getItemModelMesher().getItemModel(tileArmBasic.getItemStack()).getQuads(null, null, 0);
+            int[][] itemQ = new int[quads.size()][];
+            for (int i = 0, quadsSize = quads.size(); i < quadsSize; i++) {
+                itemQ[i] = quads.get(i).getVertexData();
+            }
+            this.vertexItemDataArray = new int[itemQ.length * 28];
+
+            translate(transformMatrix, new Vector3f(0.03125F, 0.75F, -0.25F));
+            moveToPivot(transformMatrix, new Vector3f(0.5F, 0.5F, 0.5F));
+            tempModelMatrix.setIdentity();
+            tempModelMatrix.m00 = 0.1875F;
+            tempModelMatrix.m11 = 0.1875F;
+            tempModelMatrix.m22 = 0.1875F;
+            transformMatrix.mul(tempModelMatrix);
+            moveToPivot(transformMatrix, new Vector3f(-0.5F, -0.5F, -0.5F));
+
+
+            renderItemQuads(mixedInBuffer,
+                    itemQ,
+                    V3F_POS,
+                    transformMatrix,
+                    240,
+                    color(0xFF, 0xFF, 0xFF));
         }
-        int[][] itemQ = new int[quads.size()][];
-        for (int i = 0, quadsSize = quads.size(); i < quadsSize; i++) {
-            itemQ[i] = quads.get(i).getVertexData();
-        }
-
-        translate(transformMatrix, new Vector3f(0.03125F, 0.75F, -0.25F));
-        moveToPivot(transformMatrix, new Vector3f(0.5F, 0.5F, 0.5F));
-        tempModelMatrix.setIdentity();
-        tempModelMatrix.m00 = 0.1875F;
-        tempModelMatrix.m11 = 0.1875F;
-        tempModelMatrix.m22 = 0.1875F;
-        transformMatrix.mul(tempModelMatrix);
-        moveToPivot(transformMatrix, new Vector3f(-0.5F, -0.5F, -0.5F));
-
-
-        renderQuads(itemQ,
-                V3F_POS,
-                transformMatrix,
-                240,
-                color(0xFF, 0xFF, 0xFF));
-
-        ((IBufferBuilderMixin) buffer).putIntBulkData(vertexDataArray);
+        mixedInBuffer.putIntBulkData(vertexDataArray);
+        if (!onArm.isEmpty())
+            mixedInBuffer.putIntBulkData(vertexItemDataArray);
         quadCount = 0;
     }
 
@@ -238,7 +253,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         matrix.mul(this.tempModelMatrix);
     }
 
-    public void renderQuads(int[][] quadDataList, Vector3f baseOffset, Matrix4f transformMatrix, int brightness, int color) {
+    public void renderQuads(IBufferBuilderMixin buffer, int[][] quadDataList, Vector3f baseOffset, Matrix4f transformMatrix, int brightness, int color) {
         for (int[] quadData : quadDataList) {
             System.arraycopy(quadData, 0, vertexDataArray, quadCount * 28, quadData.length - 1);
             for (int k = 0; k < 4; ++k) {
@@ -253,9 +268,9 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                 transformMatrix.transform(vertexTransformingVec);
 
                 // Converting the new data to ints.
-                int x = Float.floatToRawIntBits(vertexTransformingVec.x + baseOffset.x);
-                int y = Float.floatToRawIntBits(vertexTransformingVec.y + baseOffset.y);
-                int z = Float.floatToRawIntBits(vertexTransformingVec.z + baseOffset.z);
+                int x = Float.floatToRawIntBits((float) (vertexTransformingVec.x + baseOffset.x + buffer.getOffsetX()));
+                int y = Float.floatToRawIntBits((float) (vertexTransformingVec.y + baseOffset.y + buffer.getOffsetY()));
+                int z = Float.floatToRawIntBits((float) (vertexTransformingVec.z + baseOffset.z + buffer.getOffsetZ()));
 
                 int destIndex = quadCount * 28 + vertexIndex;
                 // vertex position data
@@ -269,6 +284,40 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                 vertexDataArray[destIndex + 6] = brightness;
             }
             quadCount++;
+        }
+    }
+
+    public void renderItemQuads(IBufferBuilderMixin buffer, int[][] quadDataList, Vector3f baseOffset, Matrix4f transformMatrix, int brightness, int color) {
+        for (int i = 0, quadDataListLength = quadDataList.length; i < quadDataListLength; i++) {
+            int[] quadData = quadDataList[i];
+            System.arraycopy(quadData, 0, vertexItemDataArray, i * 28, quadData.length - 1);
+            for (int k = 0; k < 4; ++k) {
+                // Getting the offset for the current vertex.
+                int vertexIndex = k * 7;
+                vertexTransformingVec.x = Float.intBitsToFloat(quadData[vertexIndex]);
+                vertexTransformingVec.y = Float.intBitsToFloat(quadData[vertexIndex + 1]);
+                vertexTransformingVec.z = Float.intBitsToFloat(quadData[vertexIndex + 2]);
+                vertexTransformingVec.w = 1;
+
+                // Transforming it by the model matrix.
+                transformMatrix.transform(vertexTransformingVec);
+
+                // Converting the new data to ints.
+                int x = Float.floatToRawIntBits((float) (vertexTransformingVec.x + baseOffset.x + buffer.getOffsetX()));
+                int y = Float.floatToRawIntBits((float) (vertexTransformingVec.y + baseOffset.y + buffer.getOffsetY()));
+                int z = Float.floatToRawIntBits((float) (vertexTransformingVec.z + baseOffset.z + buffer.getOffsetZ()));
+
+                int destIndex = i * 28 + vertexIndex;
+                // vertex position data
+                vertexItemDataArray[destIndex] = x;
+                vertexItemDataArray[destIndex + 1] = y;
+                vertexItemDataArray[destIndex + 2] = z;
+
+                vertexItemDataArray[destIndex + 3] = color;
+
+                // vertex brightness
+                vertexItemDataArray[destIndex + 6] = brightness;
+            }
         }
     }
 

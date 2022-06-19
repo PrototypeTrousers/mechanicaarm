@@ -15,6 +15,12 @@ public class BufferBuilderMixin implements IBufferBuilderMixin {
     @Shadow
     private int vertexCount;
     @Shadow
+    private double xOffset;
+    @Shadow
+    private double yOffset;
+    @Shadow
+    private double zOffset;
+    @Shadow
     private VertexFormat vertexFormat;
 
     @Override
@@ -23,6 +29,21 @@ public class BufferBuilderMixin implements IBufferBuilderMixin {
         this.rawIntBuffer.position(this.getBufferSize());
         this.rawIntBuffer.put(buffer);
         this.vertexCount += buffer.length / 7;
+    }
+
+    @Override
+    public double getOffsetX() {
+        return xOffset;
+    }
+
+    @Override
+    public double getOffsetY() {
+        return yOffset;
+    }
+
+    @Override
+    public double getOffsetZ() {
+        return zOffset;
     }
 
     @Shadow
