@@ -192,13 +192,14 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
             }
             this.vertexItemDataArray = new int[itemQ.length * 28];
 
-            translate(transformMatrix, new Vector3f(0.03125F, 0.75F, -0.25F));
+            translate(transformMatrix, new Vector3f(0, 0.75F, -0.25F));
             moveToPivot(transformMatrix, new Vector3f(0.5F, 0.5F, 0.5F));
             tempModelMatrix.setIdentity();
             tempModelMatrix.m00 = 0.1875F;
             tempModelMatrix.m11 = 0.1875F;
             tempModelMatrix.m22 = 0.1875F;
             transformMatrix.mul(tempModelMatrix);
+
             moveToPivot(transformMatrix, new Vector3f(-0.5F, -0.5F, -0.5F));
 
 
@@ -254,8 +255,8 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
     }
 
     public void renderQuads(IBufferBuilderMixin buffer, int[][] quadDataList, Vector3f baseOffset, Matrix4f transformMatrix, int brightness, int color) {
-        for (int[] quadData : quadDataList) {
-            System.arraycopy(quadData, 0, vertexDataArray, quadCount * 28, quadData.length - 1);
+        for (int i = 0, quadDataListLength = quadDataList.length; i < quadDataListLength; i++) {
+            int[] quadData = quadDataList[i];
             for (int k = 0; k < 4; ++k) {
                 // Getting the offset for the current vertex.
                 int vertexIndex = k * 7;
@@ -280,8 +281,11 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
                 vertexDataArray[destIndex + 3] = color;
 
+                vertexDataArray[destIndex + 4] = quadData[vertexIndex + 4]; //texture
+                vertexDataArray[destIndex + 5] = quadData[vertexIndex + 5];
+
                 // vertex brightness
-                vertexDataArray[destIndex + 6] = brightness;
+                vertexDataArray[destIndex + 6] = brightness; //normal
             }
             quadCount++;
         }
@@ -290,7 +294,6 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
     public void renderItemQuads(IBufferBuilderMixin buffer, int[][] quadDataList, Vector3f baseOffset, Matrix4f transformMatrix, int brightness, int color) {
         for (int i = 0, quadDataListLength = quadDataList.length; i < quadDataListLength; i++) {
             int[] quadData = quadDataList[i];
-            System.arraycopy(quadData, 0, vertexItemDataArray, i * 28, quadData.length - 1);
             for (int k = 0; k < 4; ++k) {
                 // Getting the offset for the current vertex.
                 int vertexIndex = k * 7;
@@ -314,6 +317,9 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                 vertexItemDataArray[destIndex + 2] = z;
 
                 vertexItemDataArray[destIndex + 3] = color;
+
+                vertexItemDataArray[destIndex + 4] = quadData[vertexIndex + 4]; //texture
+                vertexItemDataArray[destIndex + 5] = quadData[vertexIndex + 5];
 
                 // vertex brightness
                 vertexItemDataArray[destIndex + 6] = brightness;
