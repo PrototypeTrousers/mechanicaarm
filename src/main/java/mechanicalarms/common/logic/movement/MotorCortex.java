@@ -27,20 +27,6 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         float pitch = (float) Math.atan2(combinedVec.y, Math.sqrt(combinedVec.x * combinedVec.x + combinedVec.z * combinedVec.z));
         float yaw = (float) Math.atan2(-combinedVec.z, combinedVec.x);
 
-        //limit pitch to a positive angle, between 0 and Math.PI rad
-        if (yaw < 0) {
-            yaw = (float) (2 * Math.PI + yaw);
-        }
-
-
-
-/*
-        if (yaw <= -Math.PI / 2) {
-            yaw = yaw + Math.PI / 2;
-        } else if (yaw > Math.PI / 2) {
-            yaw = yaw - Math.PI / 2;
-        }
-*/
         float dist = (float) combinedVec.length();
 
         float extraPitchArc = (float) Math.acos(dist / armSize / 2);
@@ -75,7 +61,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         boolean yawReached = rotation[0][1] == yaw;
 
         animationRotation[2][0] = rotation[2][0];
-        rotation[2][0] = rotation[2][0] + 0.1F;//(float) ( Math.PI /4 +rotation[0][0] + Math.abs(extraPitchArc));
+        rotation[2][0] = (float) (Math.PI / 4 + rotation[0][0]);
 
         if (yawReached && pitchReached && distReached) {
             return ActionResult.SUCCESS;
@@ -96,7 +82,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         } else if (shortestAngle < -0.1F) {
             float result = currentRotation - angularSpeed;
             if (result < 0) {
-                result = (float) (Math.PI + result);
+                result = (float) (2 * Math.PI + result);
             }
             return (float) (result % (2 * Math.PI));
         } else if (shortestAngle > -0.1 && shortestAngle < 0.1) {
