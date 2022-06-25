@@ -75,7 +75,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         boolean yawReached = rotation[0][1] == yaw;
 
         animationRotation[2][0] = rotation[2][0];
-        rotation[2][0] = (float) (3 * Math.PI / 2 + (rotation[0][0]));
+        rotation[2][0] = rotation[2][0] + 0.1F;//(float) ( Math.PI /4 +rotation[0][0] + Math.abs(extraPitchArc));
 
         if (yawReached && pitchReached && distReached) {
             return ActionResult.SUCCESS;

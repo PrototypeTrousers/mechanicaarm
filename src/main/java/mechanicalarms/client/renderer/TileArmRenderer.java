@@ -35,6 +35,9 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
     private final Vector3f ANTI_PIVOT_1 = new Vector3f(-.5F, -(1 + 7 / 16F), -.5F);
     private final Vector3f PIVOT_2 = new Vector3f(0.5F, 1 + 7 / 16F, .5F);
     private final Vector3f ANTI_PIVOT_2 = new Vector3f(-0.5F, -(1 + 7 / 16F), -.5F);
+
+    private final Vector3f PIVOT_3 = new Vector3f(0.5F, 1 + 7 / 16F, 0);
+    private final Vector3f ANTI_PIVOT_3 = new Vector3f(-0.5F, -(1 + 7 / 16F), 0);
     private int[] vertexDataArray;
     private int[] vertexItemDataArray;
     private int quadCount = 0;
@@ -145,10 +148,12 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                 color(0xFF, 0xFF, 0xFF));
 
         //hand
+        final Vector3f PIVOT_3 = new Vector3f(0.5F, 1 + 5 / 16F, 0.5F);
+        final Vector3f ANTI_PIVOT_3 = new Vector3f(-0.5F, -(1 + 5 / 16F), -0.5F);
         translate(transformMatrix, new Vector3f(0, 3 / 16F, -(1 + 13 / 16F)));
-        moveToPivot(transformMatrix, PIVOT_2);
+        moveToPivot(transformMatrix, PIVOT_3);
         rotateX(transformMatrix, lerp(handRotationAnimationAngle[0], handRotation[0], partialTicks));
-        moveToPivot(transformMatrix, ANTI_PIVOT_2);
+        moveToPivot(transformMatrix, ANTI_PIVOT_3);
 
         renderQuads(mixedInBuffer,
                 vertexArray[1],
