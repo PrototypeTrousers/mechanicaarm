@@ -38,13 +38,13 @@ public class Targeting implements INBTSerializable<NBTTagCompound> {
     public void setSource(BlockPos sourcePos, EnumFacing sourceFacing) {
         this.source = Pair.of(sourcePos, sourceFacing);
         BlockPos vecPos = sourcePos.offset(sourceFacing, 1);
-        this.sourceVec = new Vec3d(vecPos.getX(), vecPos.getY(), vecPos.getZ());
+        this.sourceVec = new Vec3d(vecPos.getX() + 0.5, vecPos.getY() + 0.5, vecPos.getZ() + 0.5);
     }
 
     public void setTarget(BlockPos targetPos, EnumFacing targetFacing) {
         this.target = Pair.of(targetPos, targetFacing);
         BlockPos vecPos = targetPos.offset(targetFacing, 1);
-        this.targetVec = new Vec3d(vecPos.getX(), vecPos.getY(), vecPos.getZ());
+        this.targetVec = new Vec3d(vecPos.getX() + 0.5, vecPos.getY() + 0.5, vecPos.getZ() + 0.5);
     }
 
     public boolean hasInput() {
