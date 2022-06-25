@@ -96,9 +96,9 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
 
         BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
         if (vertexArray == null) {
-            vertexArray = new int[5][][];
+            vertexArray = new int[3][][];
             IBlockState blockState;
-            for (int i = 1; i < 6; i++) {
+            for (int i = 1; i < 4; i++) {
                 blockState = tileArmBasic.getWorld().getBlockState(tileArmBasic.getPos()).withProperty(BlockArm.ARM_PART_NUMBER, i);
                 List<BakedQuad> quads = blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, null, i);
                 vertexArray[i - 1] = new int[quads.size()][];
@@ -106,10 +106,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                     vertexArray[i - 1][j] = quads.get(j).getVertexData();
                 }
             }
-            int size = 0;
-            for (int[][] vertexData : vertexArray) {
-                size += vertexData.length;
-            }
+            int size = vertexArray[0].length * 2 + vertexArray[1].length + vertexArray[2].length;
             this.vertexDataArray = new int[size * 28];
         }
 
@@ -127,7 +124,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
         renderQuads(mixedInBuffer,
-                vertexArray[1],
+                vertexArray[0],
                 V3F_POS,
                 transformMatrix,
                 light,
@@ -141,7 +138,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         moveToPivot(transformMatrix, ANTI_PIVOT_2);
 
         renderQuads(mixedInBuffer,
-                vertexArray[1],
+                vertexArray[0],
                 V3F_POS,
                 transformMatrix,
                 light,
@@ -154,7 +151,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         moveToPivot(transformMatrix, ANTI_PIVOT_2);
 
         renderQuads(mixedInBuffer,
-                vertexArray[3],
+                vertexArray[1],
                 V3F_POS,
                 transformMatrix,
                 240,
@@ -164,7 +161,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         translate(transformMatrix, new Vector3f(0, 2 / 16F, -0.5F));
 
         renderQuads(mixedInBuffer,
-                vertexArray[4],
+                vertexArray[2],
                 V3F_POS,
                 transformMatrix,
                 240,

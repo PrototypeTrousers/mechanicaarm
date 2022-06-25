@@ -20,12 +20,12 @@ import javax.annotation.Nullable;
 
 public class BlockArm extends Block implements ITileEntityProvider {
 
-    public static final PropertyInteger ARM_PART_NUMBER = PropertyInteger.create("arm_part", 1, 5);
+    public static final PropertyInteger ARM_PART_NUMBER = PropertyInteger.create("arm_part", 0, 3);
 
     public BlockArm() {
         super(Material.IRON);
         setRegistryName(MechanicalArms.MODID, "arm_basic");
-        setDefaultState(this.blockState.getBaseState().withProperty(ARM_PART_NUMBER, 1));
+        setDefaultState(this.blockState.getBaseState().withProperty(ARM_PART_NUMBER, 0));
     }
 
     @Override
@@ -65,7 +65,7 @@ public class BlockArm extends Block implements ITileEntityProvider {
 
     @Override
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
-        return this.getDefaultState().withProperty(ARM_PART_NUMBER, 1);
+        return this.getDefaultState().withProperty(ARM_PART_NUMBER, 0);
     }
 
     public boolean isOpaqueCube(IBlockState state) {
