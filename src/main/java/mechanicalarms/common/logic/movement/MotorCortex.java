@@ -28,11 +28,6 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         float pitch = (float) Math.atan2(combinedVec.y, Math.sqrt(combinedVec.x * combinedVec.x + combinedVec.z * combinedVec.z));
         float yaw = (float) Math.atan2(-combinedVec.z, combinedVec.x);
 
-        //limit yaw to a positive angle, between 0 and Math.PI rad
-        if (yaw < 0) {
-            yaw = (float) (2 * Math.PI + yaw);
-        }
-
         float dist = (float) combinedVec.length();
 
         float extraPitchArc = (float) Math.acos(dist / armSize / 2);
@@ -105,11 +100,8 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
             return (float) (result % (2 * Math.PI));
         } else if (shortestAngle < -0.1F) {
             float result = currentRotation - angularSpeed;
-            if (result < 0) {
-                result = (float) (2 * Math.PI + result);
-            }
             return (float) (result % (2 * Math.PI));
-        } else if (shortestAngle > -0.1 && shortestAngle < 0.1) {
+        } else if (shortestAngle >= -0.1 && shortestAngle <= 0.1) {
             return targetRotation;
         }
 
