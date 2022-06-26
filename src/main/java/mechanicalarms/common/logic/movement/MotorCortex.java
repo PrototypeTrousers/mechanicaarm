@@ -5,6 +5,7 @@ import mechanicalarms.common.logic.behavior.InteractionType;
 import mechanicalarms.common.tile.TileArmBase;
 import net.minecraft.nbt.NBTTagFloat;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.common.util.INBTSerializable;
 
@@ -22,10 +23,15 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         this.interactionType = interactionType;
     }
 
-    public ActionResult move(Vec3d armPoint, Vec3d target) {
+    public ActionResult move(Vec3d armPoint, Vec3d target, EnumFacing facing) {
         Vec3d combinedVec = target.subtract(armPoint);
         float pitch = (float) Math.atan2(combinedVec.y, Math.sqrt(combinedVec.x * combinedVec.x + combinedVec.z * combinedVec.z));
         float yaw = (float) Math.atan2(-combinedVec.z, combinedVec.x);
+
+        //limit yaw to a positive angle, between 0 and Math.PI rad
+        if (yaw < 0) {
+            yaw = (float) (2 * Math.PI + yaw);
+        }
 
         float dist = (float) combinedVec.length();
 
@@ -61,7 +67,25 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         boolean yawReached = rotation[0][1] == yaw;
 
         animationRotation[2][0] = rotation[2][0];
-        rotation[2][0] = (float) ( - Math.PI /2 - rotation[1][0] -rotation[0][0]);
+        animationRotation[2][1] = rotation[2][1];
+        rotation[2][0] = (float) (-Math.PI / 2 - rotation[1][0] - rotation[0][0]);
+
+        if (facing.getOpposite() == EnumFacing.WEST) {
+            rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
+            rotation[2][1] = (float) -(rotation[0][1] + Math.PI);
+        } else if (facing.getOpposite() == EnumFacing.EAST) {
+            rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
+            rotation[2][1] = (float) -(rotation[0][1]);
+        } else if (facing.getOpposite() == EnumFacing.NORTH) {
+            rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
+            rotation[2][1] = (float) -(rotation[0][1] - Math.PI / 2);
+        } else if (facing.getOpposite() == EnumFacing.SOUTH) {
+            rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
+            rotation[2][1] = (float) -(rotation[0][1] + Math.PI / 2);
+        } else if (facing.getOpposite() == EnumFacing.UP) {
+            rotation[2][0] = (float) (rotation[2][0] + Math.PI);
+        }
+
 
         if (yawReached && pitchReached && distReached) {
             return ActionResult.SUCCESS;

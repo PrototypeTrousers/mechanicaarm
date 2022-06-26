@@ -153,13 +153,14 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         translate(transformMatrix, new Vector3f(0, 3 / 16F, -(1 + 13 / 16F)));
         moveToPivot(transformMatrix, PIVOT_3);
         rotateX(transformMatrix, lerp(handRotationAnimationAngle[0], handRotation[0], partialTicks));
+        rotateY(transformMatrix, lerp(handRotationAnimationAngle[1], handRotation[1], partialTicks));
         moveToPivot(transformMatrix, ANTI_PIVOT_3);
 
         renderQuads(mixedInBuffer,
                 vertexArray[1],
                 V3F_POS,
                 transformMatrix,
-                240,
+                light,
                 color(0xFF, 0xFF, 0xFF));
 
         //claw
@@ -209,7 +210,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                     itemQ,
                     V3F_POS,
                     transformMatrix,
-                    240,
+                    light,
                     color(0xFF, 0xFF, 0xFF));
         }
         mixedInBuffer.putIntBulkData(vertexDataArray);
@@ -257,7 +258,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
     }
 
     public void renderQuads(IBufferBuilderMixin buffer, int[][] quadDataList, Vector3f baseOffset, Matrix4f transformMatrix, int brightness, int color) {
-        for (int i = 0, quadDataListLength = quadDataList.length; i < quadDataListLength; i++) {
+        for (int i = 0; i < quadDataList.length; i++) {
             int[] quadData = quadDataList[i];
             for (int k = 0; k < 4; ++k) {
                 // Getting the offset for the current vertex.
@@ -287,14 +288,14 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                 vertexDataArray[destIndex + 5] = quadData[vertexIndex + 5];
 
                 // vertex brightness
-                vertexDataArray[destIndex + 6] = brightness; //normal
+                vertexDataArray[destIndex + 6] = brightness;
             }
             quadCount++;
         }
     }
 
     public void renderItemQuads(IBufferBuilderMixin buffer, int[][] quadDataList, Vector3f baseOffset, Matrix4f transformMatrix, int brightness, int color) {
-        for (int i = 0, quadDataListLength = quadDataList.length; i < quadDataListLength; i++) {
+        for (int i = 0; i < quadDataList.length; i++) {
             int[] quadData = quadDataList[i];
             for (int k = 0; k < 4; ++k) {
                 // Getting the offset for the current vertex.

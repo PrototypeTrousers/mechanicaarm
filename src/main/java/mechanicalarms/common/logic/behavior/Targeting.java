@@ -35,6 +35,14 @@ public class Targeting implements INBTSerializable<NBTTagCompound> {
         return target;
     }
 
+    public EnumFacing getTargetFacing() {
+        return target.getRight();
+    }
+
+    public EnumFacing getSourceFacing() {
+        return source.getRight();
+    }
+
     public void setSource(BlockPos sourcePos, EnumFacing sourceFacing) {
         this.source = Pair.of(sourcePos, sourceFacing);
         BlockPos vecPos = sourcePos.offset(sourceFacing, 1);

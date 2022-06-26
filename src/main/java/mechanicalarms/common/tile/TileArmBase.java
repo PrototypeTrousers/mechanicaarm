@@ -64,7 +64,7 @@ public abstract class TileArmBase extends TileEntity implements ITickable {
     @Override
     public void onLoad() {
         super.onLoad();
-        armPoint = new Vec3d(pos.getX() + 0.5, pos.getY() + 1.5, pos.getZ()+ 0.5);
+        armPoint = new Vec3d(pos.getX() + 0.5, pos.getY() + 1.5, pos.getZ() + 0.5);
     }
 
     @Override
@@ -99,12 +99,12 @@ public abstract class TileArmBase extends TileEntity implements ITickable {
             }
         } else if (workStatus.getType() == ActionTypes.MOVEMENT) {
             if (workStatus.getAction() == Action.RETRIEVE) {
-                ActionResult result = motorCortex.move(armPoint, targeting.getSourceVec());
+                ActionResult result = motorCortex.move(armPoint, targeting.getSourceVec(), targeting.getSourceFacing());
                 if (result == ActionResult.SUCCESS) {
                     updateWorkStatus(ActionTypes.INTERACTION, RETRIEVE);
                 }
             } else if (workStatus.getAction() == DELIVER) {
-                ActionResult result = motorCortex.move(armPoint, targeting.getTargetVec());
+                ActionResult result = motorCortex.move(armPoint, targeting.getTargetVec(), targeting.getTargetFacing());
                 if (result == ActionResult.SUCCESS) {
                     updateWorkStatus(ActionTypes.INTERACTION, DELIVER);
                 }
