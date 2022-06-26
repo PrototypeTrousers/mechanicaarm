@@ -16,6 +16,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
     float[][] rotation = new float[3][3];
     float[][] animationRotation = new float[3][3];
     TileArmBase te;
+    private final static float PI = (float) Math.PI;
 
     public MotorCortex(TileArmBase tileArmBase, float armSize, InteractionType interactionType) {
         te = tileArmBase;
@@ -34,7 +35,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         if (Double.isNaN(extraPitchArc)) {
             extraPitchArc = 0;
         }
-        float armArcTarget = (float) (Math.asin(dist / armSize / 2) * 2 - Math.PI);
+        float armArcTarget = (float) (Math.asin(dist / armSize / 2) * 2 - PI);
         if (Double.isNaN(armArcTarget)) {
             armArcTarget = 0;
         }
@@ -44,7 +45,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         boolean distReached = false;
 
         animationRotation[1][0] = rotation[1][0];
-        rotation[1][0] = (rotateToReach(rotation[1][0], 0.1f, armArcTarget));
+        rotation[1][0] = (rotateX(rotation[1][0], 0.1f, armArcTarget));
         if (rotation[1][0] == armArcTarget) {
             if (extraPitchArc != 0) {
                 distReached = true;
@@ -59,29 +60,105 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
 
         animationRotation[0][1] = rotation[0][1];
         rotation[0][1] = rotateX(rotation[0][1], 0.1f, yaw);
-        boolean yawReached = (rotation[0][1] == yaw || Math.abs(yaw) + Math.abs(rotation[0][1]) == Math.abs(2 * (float) Math.PI));
+        float yawDiff = (Math.abs(rotation[0][1]) - Math.abs(animationRotation[0][1]));
+        boolean yawReached = (yawDiff < 0.01 && yawDiff > -0.01);
 
         animationRotation[2][0] = rotation[2][0];
         animationRotation[2][1] = rotation[2][1];
-        rotation[2][0] = (float) (-Math.PI / 2 - rotation[1][0] - rotation[0][0]);
+        //rotation[2][0] = -PI / 2 - rotation[1][0] - rotation[0][0];
 
         if (yawReached && pitchReached && distReached) {
-            if (facing.getOpposite() == EnumFacing.WEST) {
-                rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
-                rotation[2][1] = (float) -(rotation[0][1] + Math.PI);
-            } else if (facing.getOpposite() == EnumFacing.EAST) {
-                rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
-                rotation[2][1] = (float) -(rotation[0][1]);
-            } else if (facing.getOpposite() == EnumFacing.NORTH) {
-                rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
-                rotation[2][1] = (float) -(rotation[0][1] - Math.PI / 2);
-            } else if (facing.getOpposite() == EnumFacing.SOUTH) {
-                rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
-                rotation[2][1] = (float) -(rotation[0][1] + Math.PI / 2);
-            } else if (facing.getOpposite() == EnumFacing.UP) {
-                rotation[2][0] = (float) (rotation[2][0] + Math.PI);
+            float targetHandYaw = 0;
+            float targetHandPitch = 0;
+
+            EnumFacing opposite = facing.getOpposite();
+
+            targetHandPitch = (-rotation[1][0] - rotation[0][0]) % PI;
+
+            targetHandYaw = (PI - rotation[0][1]) % PI;
+
+            if (armPoint.x >= target.x && armPoint.z <= target.z) {
+                //arm is NE from target
+
+                if (opposite == EnumFacing.SOUTH) {
+                    targetHandYaw = targetHandYaw - PI / 2;
+                } else if (opposite == EnumFacing.NORTH) {
+                    targetHandPitch = targetHandPitch + PI;
+                    targetHandYaw = -targetHandYaw + PI / 2;
+                } else if (opposite == EnumFacing.EAST) {
+                    targetHandPitch = targetHandPitch - PI;
+                    targetHandYaw = -targetHandYaw + PI;
+                } else {
+                    targetHandYaw = targetHandYaw + PI;
+                }
             }
-            return ActionResult.SUCCESS;
+
+            if (armPoint.x <= target.x && armPoint.z <= target.z) {
+                //arm is NW from target
+                if (opposite == EnumFacing.SOUTH) {
+                    targetHandYaw = targetHandYaw - PI / 2;
+                } else if (opposite == EnumFacing.NORTH) {
+                    targetHandPitch = targetHandPitch + PI;
+                    targetHandYaw = -targetHandYaw + PI / 2;
+                } else if (opposite == EnumFacing.WEST) {
+                    targetHandPitch = targetHandPitch - PI;
+                    targetHandYaw = -targetHandYaw;
+                }
+            }
+
+            if (armPoint.x <= target.x && armPoint.z >= target.z) {
+                //arm is SW from target
+
+                if (opposite == EnumFacing.NORTH) {
+                    targetHandYaw = targetHandYaw - PI / 2;
+                } else if (opposite == EnumFacing.SOUTH) {
+                    targetHandPitch = targetHandPitch - PI;
+                    targetHandYaw = targetHandYaw + PI;
+                } else if (opposite == EnumFacing.WEST) {
+                    targetHandPitch = targetHandPitch - PI;
+                    targetHandYaw = -targetHandYaw - PI;
+                } else {
+                    targetHandYaw = targetHandYaw + PI;
+                }
+            }
+
+            if (armPoint.x >= target.x && armPoint.z >= target.z) {
+                //arm is SE from target
+                if (opposite == EnumFacing.NORTH) {
+                    targetHandYaw = targetHandYaw - PI / 2;
+                }
+                if (opposite == EnumFacing.EAST) {
+                    targetHandPitch = targetHandPitch - PI;
+                    targetHandYaw = -targetHandYaw;
+                } else if (opposite == EnumFacing.SOUTH) {
+                    targetHandYaw = targetHandYaw + PI / 2;
+                } else {
+                    targetHandYaw = targetHandYaw - 2 * PI;
+                }
+            }
+
+
+            if (opposite == EnumFacing.UP) {
+                targetHandPitch = (PI - rotation[1][0] - rotation[0][0]) % PI;
+            }
+
+            rotation[2][1] = rotateX(rotation[2][1], 0.15F, targetHandYaw);
+            float yawDiffHand = (Math.abs(rotation[2][1]) - Math.abs(animationRotation[2][1]));
+            boolean yawHandReached = (yawDiffHand < 0.01 && yawDiffHand > -0.01);
+
+            rotation[2][0] = rotateX(rotation[2][0], 0.15F, targetHandPitch);
+            float pitchDiffHand = (Math.abs(rotation[2][0]) - Math.abs(animationRotation[2][0]));
+            boolean pitchHandReached = (pitchDiffHand < 0.01 && pitchDiffHand > -0.01);
+
+            if (pitchHandReached && yawHandReached) {
+                return ActionResult.SUCCESS;
+            }
+            return ActionResult.CONTINUE;
+        } else {
+            float targetHandYaw = 0;
+            float targetHandPitch = -PI / 2 - rotation[1][0] - rotation[0][0];
+            rotation[2][1] = rotateX(rotation[2][1], 0.15F, targetHandYaw);
+            rotation[2][0] = rotateX(rotation[2][0], 0.15F, targetHandPitch);
         }
         return ActionResult.CONTINUE;
     }
@@ -91,31 +168,19 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
     }
 
     float rotateX(float currentRotation, float angularSpeed, float targetRotation) {
-        currentRotation = currentRotation % (2 * (float) Math.PI);
+        currentRotation = currentRotation % (2 * PI);
 
         float shortestAngle = (float) (((targetRotation - currentRotation) + 3 * Math.PI) % (2 * Math.PI) - Math.PI);
 
-        if (shortestAngle > 0.1F) {
-            float result = currentRotation + angularSpeed;
-            return result % (2 * (float) Math.PI);
-        } else if (shortestAngle < -0.1F) {
-            float result = currentRotation - angularSpeed;
-            return result % (2 * (float) Math.PI);
+        if (shortestAngle >= 0.1F) {
+            float result = currentRotation + Math.min(angularSpeed, shortestAngle);
+            return result % (2 * PI);
+        } else if (shortestAngle <= -0.1F) {
+            float result = currentRotation + Math.max(-angularSpeed, shortestAngle);
+            return result % (2 * PI);
         } else {
-            return (currentRotation + shortestAngle) % (2 * (float) Math.PI);
+            return (currentRotation + shortestAngle) % (2 * PI);
         }
-    }
-
-    float rotateToReach(float currentRotation, float angularSpeed, float targetedRotation) {
-        float diff = targetedRotation - currentRotation;
-        if (diff <= -0.1) {
-            return currentRotation - angularSpeed;
-        } else if (diff >= 0.1) {
-            return currentRotation + angularSpeed;
-        } else if (diff > -0.1 && diff < 0.1) {
-            return targetedRotation;
-        }
-        return currentRotation;
     }
 
     public void rest() {
