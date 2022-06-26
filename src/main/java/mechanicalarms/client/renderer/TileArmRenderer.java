@@ -170,7 +170,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
                 vertexArray[2],
                 V3F_POS,
                 transformMatrix,
-                240,
+                light,
                 color(0xFF, 0xFF, 0xFF));
 
         //render item

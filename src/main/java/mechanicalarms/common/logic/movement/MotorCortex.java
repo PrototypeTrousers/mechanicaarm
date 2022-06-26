@@ -59,30 +59,28 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
 
         animationRotation[0][1] = rotation[0][1];
         rotation[0][1] = rotateX(rotation[0][1], 0.1f, yaw);
-        boolean yawReached = rotation[0][1] == yaw;
+        boolean yawReached = (rotation[0][1] == yaw || Math.abs(yaw) + Math.abs(rotation[0][1]) == Math.abs(2 * (float) Math.PI));
 
         animationRotation[2][0] = rotation[2][0];
         animationRotation[2][1] = rotation[2][1];
         rotation[2][0] = (float) (-Math.PI / 2 - rotation[1][0] - rotation[0][0]);
 
-        if (facing.getOpposite() == EnumFacing.WEST) {
-            rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
-            rotation[2][1] = (float) -(rotation[0][1] + Math.PI);
-        } else if (facing.getOpposite() == EnumFacing.EAST) {
-            rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
-            rotation[2][1] = (float) -(rotation[0][1]);
-        } else if (facing.getOpposite() == EnumFacing.NORTH) {
-            rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
-            rotation[2][1] = (float) -(rotation[0][1] - Math.PI / 2);
-        } else if (facing.getOpposite() == EnumFacing.SOUTH) {
-            rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
-            rotation[2][1] = (float) -(rotation[0][1] + Math.PI / 2);
-        } else if (facing.getOpposite() == EnumFacing.UP) {
-            rotation[2][0] = (float) (rotation[2][0] + Math.PI);
-        }
-
-
         if (yawReached && pitchReached && distReached) {
+            if (facing.getOpposite() == EnumFacing.WEST) {
+                rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
+                rotation[2][1] = (float) -(rotation[0][1] + Math.PI);
+            } else if (facing.getOpposite() == EnumFacing.EAST) {
+                rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
+                rotation[2][1] = (float) -(rotation[0][1]);
+            } else if (facing.getOpposite() == EnumFacing.NORTH) {
+                rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
+                rotation[2][1] = (float) -(rotation[0][1] - Math.PI / 2);
+            } else if (facing.getOpposite() == EnumFacing.SOUTH) {
+                rotation[2][0] = (float) (rotation[2][0] + Math.PI / 2);
+                rotation[2][1] = (float) -(rotation[0][1] + Math.PI / 2);
+            } else if (facing.getOpposite() == EnumFacing.UP) {
+                rotation[2][0] = (float) (rotation[2][0] + Math.PI);
+            }
             return ActionResult.SUCCESS;
         }
         return ActionResult.CONTINUE;
@@ -93,19 +91,19 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
     }
 
     float rotateX(float currentRotation, float angularSpeed, float targetRotation) {
+        currentRotation = currentRotation % (2 * (float) Math.PI);
+
         float shortestAngle = (float) (((targetRotation - currentRotation) + 3 * Math.PI) % (2 * Math.PI) - Math.PI);
 
         if (shortestAngle > 0.1F) {
             float result = currentRotation + angularSpeed;
-            return (float) (result % (2 * Math.PI));
+            return result % (2 * (float) Math.PI);
         } else if (shortestAngle < -0.1F) {
             float result = currentRotation - angularSpeed;
-            return (float) (result % (2 * Math.PI));
-        } else if (shortestAngle >= -0.1 && shortestAngle <= 0.1) {
-            return targetRotation;
+            return result % (2 * (float) Math.PI);
+        } else {
+            return (currentRotation + shortestAngle) % (2 * (float) Math.PI);
         }
-
-        return currentRotation;
     }
 
     float rotateToReach(float currentRotation, float angularSpeed, float targetedRotation) {
