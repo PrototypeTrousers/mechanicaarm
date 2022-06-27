@@ -9,6 +9,8 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.common.util.INBTSerializable;
 
+import static net.minecraft.util.EnumFacing.*;
+
 public class MotorCortex implements INBTSerializable<NBTTagList> {
 
     private final float armSize;
@@ -68,85 +70,110 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         //rotation[2][0] = -PI / 2 - rotation[1][0] - rotation[0][0];
 
         if (yawReached && pitchReached && distReached) {
-            float targetHandYaw = 0;
-            float targetHandPitch = 0;
+            float targetHandYaw = (PI - rotation[0][1]) % PI;
+            float targetHandPitch = (-rotation[1][0] - rotation[0][0]) % PI;
 
-            EnumFacing opposite = facing.getOpposite();
+            EnumFacing accessingSide = facing.getOpposite();
 
-            targetHandPitch = (-rotation[1][0] - rotation[0][0]) % PI;
-
-            targetHandYaw = (PI - rotation[0][1]) % PI;
-
-            if (armPoint.x >= target.x && armPoint.z <= target.z) {
+            if (accessingSide == UP) {
+                targetHandYaw = 0;
+                targetHandPitch = +PI / 2 - rotation[1][0] - rotation[0][0];
+            } else if (accessingSide == DOWN) {
+                targetHandYaw = 0;
+                targetHandPitch = -PI / 2 - rotation[1][0] - rotation[0][0];
+            } else if (armPoint.x > target.x && armPoint.z < target.z) {
                 //arm is NE from target
-
-                if (opposite == EnumFacing.SOUTH) {
+                if (accessingSide == SOUTH) {
                     targetHandYaw = targetHandYaw - PI / 2;
-                } else if (opposite == EnumFacing.NORTH) {
+                } else if (accessingSide == NORTH) {
                     targetHandPitch = targetHandPitch + PI;
                     targetHandYaw = -targetHandYaw + PI / 2;
-                } else if (opposite == EnumFacing.EAST) {
+                } else if (accessingSide == EAST) {
                     targetHandPitch = targetHandPitch - PI;
                     targetHandYaw = -targetHandYaw + PI;
                 } else {
                     targetHandYaw = targetHandYaw + PI;
                 }
-            }
-
-            if (armPoint.x <= target.x && armPoint.z <= target.z) {
+            } else if (armPoint.x < target.x && armPoint.z < target.z) {
                 //arm is NW from target
-                if (opposite == EnumFacing.SOUTH) {
+                if (accessingSide == SOUTH) {
                     targetHandYaw = targetHandYaw - PI / 2;
-                } else if (opposite == EnumFacing.NORTH) {
+                } else if (accessingSide == NORTH) {
                     targetHandPitch = targetHandPitch + PI;
                     targetHandYaw = -targetHandYaw + PI / 2;
-                } else if (opposite == EnumFacing.WEST) {
+                } else if (accessingSide == WEST) {
                     targetHandPitch = targetHandPitch - PI;
                     targetHandYaw = -targetHandYaw;
                 }
-            }
-
-            if (armPoint.x <= target.x && armPoint.z >= target.z) {
+            } else if (armPoint.x < target.x && armPoint.z > target.z) {
                 //arm is SW from target
-
-                if (opposite == EnumFacing.NORTH) {
+                if (accessingSide == NORTH) {
                     targetHandYaw = targetHandYaw - PI / 2;
-                } else if (opposite == EnumFacing.SOUTH) {
+                } else if (accessingSide == SOUTH) {
                     targetHandPitch = targetHandPitch - PI;
                     targetHandYaw = targetHandYaw + PI;
-                } else if (opposite == EnumFacing.WEST) {
+                } else if (accessingSide == WEST) {
                     targetHandPitch = targetHandPitch - PI;
                     targetHandYaw = -targetHandYaw - PI;
                 } else {
                     targetHandYaw = targetHandYaw + PI;
                 }
-            }
-
-            if (armPoint.x >= target.x && armPoint.z >= target.z) {
+            } else if (armPoint.x > target.x && armPoint.z > target.z) {
                 //arm is SE from target
-                if (opposite == EnumFacing.NORTH) {
+                if (accessingSide == NORTH) {
                     targetHandYaw = targetHandYaw - PI / 2;
-                }
-                if (opposite == EnumFacing.EAST) {
+                } else if (accessingSide == EAST) {
                     targetHandPitch = targetHandPitch - PI;
                     targetHandYaw = -targetHandYaw;
-                } else if (opposite == EnumFacing.SOUTH) {
-                    targetHandYaw = targetHandYaw + PI / 2;
+                } else if (accessingSide == SOUTH) {
+                    targetHandYaw = -targetHandYaw + PI / 2;
+                    targetHandPitch = targetHandPitch - PI;
+                }
+            } else if (armPoint.x == target.x) {
+                if (armPoint.z > target.z) {
+                    if (accessingSide == EAST) {
+                        targetHandYaw = -targetHandYaw;
+                    } else if (accessingSide == SOUTH) {
+                        targetHandPitch = targetHandPitch + PI;
+                        targetHandYaw = 0;
+                    } else if (accessingSide == NORTH) {
+                        targetHandYaw = 0;
+                    }
                 } else {
-                    targetHandYaw = targetHandYaw - 2 * PI;
+                    if (accessingSide == WEST) {
+                        targetHandYaw = -targetHandYaw;
+                    } else if (accessingSide == NORTH) {
+                        targetHandPitch = targetHandPitch + PI;
+                        targetHandYaw = 0;
+                    } else if (accessingSide == SOUTH) {
+                        targetHandYaw = 0;
+                    }
+                }
+            } else if (armPoint.z == target.z) {
+                if (armPoint.x > target.x) {
+                    if (accessingSide == SOUTH) {
+                        targetHandYaw = targetHandYaw + PI / 2;
+                    } else if (accessingSide == NORTH) {
+                        targetHandYaw = targetHandYaw - PI / 2;
+                    } else if (accessingSide == EAST) {
+                        targetHandPitch = targetHandPitch - PI;
+                    }
+                } else {
+                    if (accessingSide == NORTH) {
+                        targetHandYaw = targetHandYaw - PI / 2;
+                    } else if (accessingSide == SOUTH) {
+                        targetHandYaw = targetHandYaw + PI / 2;
+                    } else if (accessingSide == WEST) {
+                        targetHandPitch = targetHandPitch - PI;
+                    }
                 }
             }
 
-
-            if (opposite == EnumFacing.UP) {
-                targetHandPitch = (PI - rotation[1][0] - rotation[0][0]) % PI;
-            }
-
-            rotation[2][1] = rotateX(rotation[2][1], 0.15F, targetHandYaw);
+            rotation[2][1] = rotateX(rotation[2][1], 0.10F, targetHandYaw);
             float yawDiffHand = (Math.abs(rotation[2][1]) - Math.abs(animationRotation[2][1]));
             boolean yawHandReached = (yawDiffHand < 0.01 && yawDiffHand > -0.01);
 
-            rotation[2][0] = rotateX(rotation[2][0], 0.15F, targetHandPitch);
+            rotation[2][0] = rotateX(rotation[2][0], 0.10F, targetHandPitch);
             float pitchDiffHand = (Math.abs(rotation[2][0]) - Math.abs(animationRotation[2][0]));
             boolean pitchHandReached = (pitchDiffHand < 0.01 && pitchDiffHand > -0.01);
 
@@ -156,7 +183,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
             return ActionResult.CONTINUE;
         } else {
             float targetHandYaw = 0;
-            float targetHandPitch = -PI / 2 - rotation[1][0] - rotation[0][0];
+            float targetHandPitch = -PI / 2 - rotation[1][0] - rotation[0][0] + 0.01F;
             rotation[2][1] = rotateX(rotation[2][1], 0.15F, targetHandYaw);
             rotation[2][0] = rotateX(rotation[2][0], 0.15F, targetHandPitch);
         }
