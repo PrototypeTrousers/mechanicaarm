@@ -47,7 +47,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         boolean distReached = false;
 
         animationRotation[1][0] = rotation[1][0];
-        rotation[1][0] = (rotateX(rotation[1][0], 0.1f, armArcTarget));
+        rotation[1][0] = (rotateShortest(rotation[1][0], 0.1f, armArcTarget));
         if (rotation[1][0] == armArcTarget) {
             if (extraPitchArc != 0) {
                 distReached = true;
@@ -57,11 +57,11 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         }
 
         animationRotation[0][0] = rotation[0][0];
-        rotation[0][0] = rotateX(rotation[0][0], 0.1f, pitch);
+        rotation[0][0] = rotateShortest(rotation[0][0], 0.1f, pitch);
         boolean pitchReached = rotation[0][0] == pitch;
 
         animationRotation[0][1] = rotation[0][1];
-        rotation[0][1] = rotateX(rotation[0][1], 0.1f, yaw);
+        rotation[0][1] = rotateShortest(rotation[0][1], 0.1f, yaw);
         float yawDiff = (Math.abs(rotation[0][1]) - Math.abs(animationRotation[0][1]));
         boolean yawReached = (yawDiff < 0.01 && yawDiff > -0.01);
 
@@ -169,11 +169,11 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
                 }
             }
 
-            rotation[2][1] = rotateX(rotation[2][1], 0.10F, targetHandYaw);
+            rotation[2][1] = rotateShortest(rotation[2][1], 0.10F, targetHandYaw);
             float yawDiffHand = (Math.abs(rotation[2][1]) - Math.abs(animationRotation[2][1]));
             boolean yawHandReached = (yawDiffHand < 0.01 && yawDiffHand > -0.01);
 
-            rotation[2][0] = rotateX(rotation[2][0], 0.10F, targetHandPitch);
+            rotation[2][0] = rotateShortest(rotation[2][0], 0.10F, targetHandPitch);
             float pitchDiffHand = (Math.abs(rotation[2][0]) - Math.abs(animationRotation[2][0]));
             boolean pitchHandReached = (pitchDiffHand < 0.01 && pitchDiffHand > -0.01);
 
@@ -184,8 +184,8 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         } else {
             float targetHandYaw = 0;
             float targetHandPitch = -PI / 2 - rotation[1][0] - rotation[0][0] + 0.01F;
-            rotation[2][1] = rotateX(rotation[2][1], 0.15F, targetHandYaw);
-            rotation[2][0] = rotateX(rotation[2][0], 0.15F, targetHandPitch);
+            rotation[2][1] = rotateShortest(rotation[2][1], 0.15F, targetHandYaw);
+            rotation[2][0] = rotateToReach(rotation[2][0], 0.15F, targetHandPitch);
         }
         return ActionResult.CONTINUE;
     }
@@ -194,7 +194,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         return rotation[idx];
     }
 
-    float rotateX(float currentRotation, float angularSpeed, float targetRotation) {
+    float rotateShortest(float currentRotation, float angularSpeed, float targetRotation) {
         currentRotation = currentRotation % (2 * PI);
 
         float shortestAngle = (float) (((targetRotation - currentRotation) + 3 * Math.PI) % (2 * Math.PI) - Math.PI);
@@ -208,6 +208,18 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         } else {
             return (currentRotation + shortestAngle) % (2 * PI);
         }
+    }
+
+    float rotateToReach(float currentRotation, float angularSpeed, float targetedRotation) {
+        float diff = targetedRotation - currentRotation;
+        if (diff <= -0.1) {
+            return currentRotation - angularSpeed;
+        } else if (diff >= 0.1) {
+            return currentRotation + angularSpeed;
+        } else if (diff > -0.1 && diff < 0.1) {
+            return targetedRotation;
+        }
+        return currentRotation;
     }
 
     public void rest() {
