@@ -14,7 +14,7 @@ public class MechanicalArms {
     public final static String MODID = "mechanicalarms";
     @Mod.Instance(MODID)
 
-    public static MechanicalArms instance;
+    public static MechanicalArms INSTANCE;
 
     @SidedProxy(modId = MODID, clientSide = "mechanicalarms.common.proxy.ClientProxy", serverSide = "mechanicalarms.common.proxy.ServerProxy")
     public static CommonProxy proxy;

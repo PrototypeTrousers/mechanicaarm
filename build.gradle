@@ -63,6 +63,10 @@ repositories {
     maven {
         url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
     }
+    maven {
+        name = 'CurseForge'
+        url = 'https://minecraft.curseforge.com/api/maven/'
+    }
 }
 
 dependencies {
@@ -72,6 +76,8 @@ dependencies {
     if (project.use_mixins.toBoolean()) {
         deobfCompile 'zone.rong:mixinbooter:4.2'
     }
+
+    deobfCompile 'modularui:ModularUI:1.0.3'
 }
 
 sourceSets {

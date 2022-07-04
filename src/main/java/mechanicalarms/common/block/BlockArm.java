@@ -1,5 +1,6 @@
 package mechanicalarms.common.block;
 
+import com.cleanroommc.modularui.api.UIInfos;
 import mechanicalarms.MechanicalArms;
 import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.block.Block;
@@ -9,10 +10,12 @@ import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -94,5 +97,14 @@ public class BlockArm extends Block implements ITileEntityProvider {
             }
         }
         super.getDrops(drops, world, pos, state, fortune);
+    }
+
+
+    @Override
+    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+        if (!worldIn.isRemote) {
+            UIInfos.TILE_MODULAR_UI.open(playerIn, worldIn, pos);
+        }
+        return true;
     }
 }

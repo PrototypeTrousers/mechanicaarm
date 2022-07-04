@@ -1,10 +1,18 @@
 package mechanicalarms.common.tile;
 
+import com.cleanroommc.modularui.api.ModularUITextures;
+import com.cleanroommc.modularui.api.drawable.IDrawable;
+import com.cleanroommc.modularui.api.drawable.Text;
+import com.cleanroommc.modularui.api.math.Size;
+import com.cleanroommc.modularui.api.screen.ITileWithModularUI;
+import com.cleanroommc.modularui.api.screen.ModularWindow;
+import com.cleanroommc.modularui.api.screen.UIBuildContext;
 import mechanicalarms.common.logic.behavior.Action;
 import mechanicalarms.common.logic.behavior.ActionResult;
 import mechanicalarms.common.logic.behavior.InteractionType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -13,12 +21,31 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import org.apache.commons.lang3.tuple.Pair;
 
-public class TileArmBasic extends TileArmBase {
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+public class TileArmBasic extends TileArmBase implements ITileWithModularUI {
 
     protected ItemStackHandler itemHandler = new ItemStackHandler(1);
 
     public TileArmBasic() {
         super(2, InteractionType.ITEM);
+    }
+
+    @Override
+    public void writeInitialSyncData(PacketBuffer packetBuffer) {
+
+    }
+
+    @Override
+    public void receiveInitialSyncData(PacketBuffer packetBuffer) {
+
+    }
+
+    @Override
+    public void receiveCustomData(int i, PacketBuffer packetBuffer) {
+
     }
 
     @Override
@@ -72,4 +99,14 @@ public class TileArmBasic extends TileArmBase {
     public ItemStack getItemStack() {
         return itemHandler.getStackInSlot(0);
     }
+
+    @Override
+    public ModularWindow createWindow(UIBuildContext uiBuildContext) {
+        Text[] var10000 = new Text[]{(new Text("Blue §nUnderlined§rBlue ")).color(3168440), (new Text("Mint")).color(4628111)};
+        ModularWindow.Builder builder = ModularWindow.builder(new Size(176, 272));
+        List<Integer> nums = (List) IntStream.range(1, 101).boxed().collect(Collectors.toList());
+        builder.setBackground(new IDrawable[]{ModularUITextures.VANILLA_BACKGROUND}).bindPlayerInventory(uiBuildContext.getPlayer());
+        return builder.build();
+    }
+
 }
