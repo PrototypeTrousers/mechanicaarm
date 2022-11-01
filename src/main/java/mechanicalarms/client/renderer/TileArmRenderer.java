@@ -1,7 +1,7 @@
 package mechanicalarms.client.renderer;
 
 import mechanicalarms.client.mixin.interfaces.IBufferBuilderMixin;
-import mechanicalarms.common.block.BlockArm;
+import mechanicalarms.common.proxy.ClientProxy;
 import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -10,17 +10,19 @@ import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.ModelBakery;
+import net.minecraft.client.renderer.block.model.ModelManager;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.animation.FastTESR;
+import org.lwjgl.util.vector.Quaternion;
 
-import javax.vecmath.Matrix4f;
-import javax.vecmath.Tuple4f;
-import javax.vecmath.Vector3f;
-import javax.vecmath.Vector4f;
+import javax.vecmath.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,17 +98,23 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         V3F_POS.z = (float) z;
 
         IBufferBuilderMixin mixedInBuffer = ((IBufferBuilderMixin) buffer);
-
         BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
+        ModelManager modelManager = blockRendererDispatcher.getBlockModelShapes().getModelManager();
         if (vertexArray == null) {
             vertexArray = new int[3][][];
-            IBlockState blockState;
-            for (int i = 1; i < 4; i++) {
-                blockState = tileArmBasic.getWorld().getBlockState(tileArmBasic.getPos()).withProperty(BlockArm.ARM_PART_NUMBER, i);
-                List<BakedQuad> quads = blockRendererDispatcher.getModelForState(blockState).getQuads(blockState, null, i);
-                vertexArray[i - 1] = new int[quads.size()][];
+
+            ModelResourceLocation[] mrl = new ModelResourceLocation[]{
+                    ClientProxy.arm,
+                    ClientProxy.hand,
+                    ClientProxy.claw
+            };
+
+            for (int i = 0; i < mrl.length; i++) {
+                ModelResourceLocation m = mrl[i];
+                List<BakedQuad> quads = modelManager.getModel(m).getQuads(null, null, 0);
+                vertexArray[i] = new int[quads.size()][];
                 for (int j = 0; j < quads.size(); j++) {
-                    vertexArray[i - 1][j] = quads.get(j).getVertexData();
+                    vertexArray[i][j] = quads.get(j).getVertexData();
                 }
             }
             int size = vertexArray[0].length * 2 + vertexArray[1].length + vertexArray[2].length;
@@ -152,10 +160,12 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         final Vector3f ANTI_PIVOT_3 = new Vector3f(-0.5F, -(1 + 5 / 16F), -0.5F);
         translate(transformMatrix, new Vector3f(0, 3 / 16F, -(1 + 13 / 16F)));
         moveToPivot(transformMatrix, PIVOT_3);
-        rotateX(transformMatrix, lerp(handRotationAnimationAngle[0], handRotation[0], partialTicks));
-        rotateY(transformMatrix, lerp(handRotationAnimationAngle[1], handRotation[1], partialTicks));
-        moveToPivot(transformMatrix, ANTI_PIVOT_3);
 
+        rotateY(transformMatrix, lerp(handRotationAnimationAngle[1], handRotation[1], partialTicks));
+        rotateX(transformMatrix, lerp(handRotationAnimationAngle[0], handRotation[0], partialTicks));
+
+        moveToPivot(transformMatrix, ANTI_PIVOT_3);
+        Minecraft.getMinecraft().getRenderItem();
         renderQuads(mixedInBuffer,
                 vertexArray[1],
                 V3F_POS,
@@ -179,6 +189,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
         if (!onArm.isEmpty()) {
             Item item = onArm.getItem();
             List<BakedQuad> quads = new ArrayList<>();
+            modelManager.getModel(new ModelResourceLocation(item.getRegistryName(),"inventory"));
             if (item instanceof ItemBlock) {
                 Block block = ((ItemBlock) item).getBlock();
                 IBlockState blockState = block.getDefaultState();
@@ -218,6 +229,7 @@ public class TileArmRenderer extends FastTESR<TileArmBasic> {
             mixedInBuffer.putIntBulkData(vertexItemDataArray);
         quadCount = 0;
     }
+
 
     void rotateX(Matrix4f matrix, float angle) {
         this.tempModelMatrix.setIdentity();
