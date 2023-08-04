@@ -1,11 +1,11 @@
 package mechanicalarms.common.tile;
 
-import com.cleanroommc.modularui.test.SyncedTileEntityBase;
 import mechanicalarms.common.logic.behavior.*;
 import mechanicalarms.common.logic.movement.MotorCortex;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
@@ -16,7 +16,7 @@ import static mechanicalarms.common.logic.behavior.Action.DELIVER;
 import static mechanicalarms.common.logic.behavior.Action.RETRIEVE;
 import static net.minecraftforge.common.util.Constants.NBT.TAG_FLOAT;
 
-public abstract class TileArmBase extends SyncedTileEntityBase implements ITickable {
+public abstract class TileArmBase extends TileEntity implements ITickable {
     private final Targeting targeting = new Targeting();
     private final MotorCortex motorCortex;
     private final WorkStatus workStatus = new WorkStatus();
