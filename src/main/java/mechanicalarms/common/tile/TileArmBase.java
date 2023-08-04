@@ -84,11 +84,6 @@ public abstract class TileArmBase extends TileEntity implements ITickable {
         return compound;
     }
 
-    @Override
-    public boolean hasFastRenderer() {
-        return true;
-    }
-
     public abstract ActionResult interact(Action retrieve, Pair<BlockPos, EnumFacing> blkFacePair);
 
     @Override

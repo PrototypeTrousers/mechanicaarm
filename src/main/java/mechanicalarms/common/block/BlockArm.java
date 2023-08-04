@@ -2,10 +2,9 @@ package mechanicalarms.common.block;
 
 import mechanicalarms.MechanicalArms;
 import mechanicalarms.common.tile.TileArmBasic;
-import net.minecraft.block.Block;
+import net.minecraft.block.BlockDirectional;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -20,14 +19,11 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 
-public class BlockArm extends Block implements ITileEntityProvider {
-
-    public static final PropertyInteger ARM_PART_NUMBER = PropertyInteger.create("arm_part", 0, 3);
+public class BlockArm extends BlockDirectional implements ITileEntityProvider {
 
     public BlockArm() {
         super(Material.IRON);
         setRegistryName(MechanicalArms.MODID, "arm_basic");
-        setDefaultState(this.blockState.getBaseState().withProperty(ARM_PART_NUMBER, 0));
     }
 
     @Override
@@ -35,39 +31,10 @@ public class BlockArm extends Block implements ITileEntityProvider {
         return true;
     }
 
-    @Override
-    public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
-        super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
-    }
 
     @Override
     public void onPlayerDestroy(World worldIn, BlockPos pos, IBlockState state) {
         super.onPlayerDestroy(worldIn, pos, state);
-    }
-
-    @Override
-    public EnumBlockRenderType getRenderType(IBlockState state) {
-        return EnumBlockRenderType.MODEL;
-    }
-
-    @Override
-    protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, ARM_PART_NUMBER);
-    }
-
-    @Override
-    public int getMetaFromState(IBlockState state) {
-        return (state.getValue(ARM_PART_NUMBER));
-    }
-
-    @Override
-    public IBlockState getStateFromMeta(int meta) {
-        return this.getDefaultState().withProperty(ARM_PART_NUMBER, meta);
-    }
-
-    @Override
-    public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
-        return this.getDefaultState().withProperty(ARM_PART_NUMBER, 0);
     }
 
     public boolean isOpaqueCube(IBlockState state) {
@@ -82,6 +49,40 @@ public class BlockArm extends Block implements ITileEntityProvider {
     @Override
     public TileEntity createNewTileEntity(World worldIn, int meta) {
         return new TileArmBasic();
+    }
+
+    @Override
+    public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
+        return getDefaultState().withProperty(FACING, placer.getHorizontalFacing().getOpposite());
+    }
+
+    @Override
+    public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+        worldIn.setBlockState(pos, state.withProperty(FACING, placer.getHorizontalFacing().getOpposite()), 2);
+    }
+
+    @Override
+    public IBlockState getStateFromMeta(int meta) {
+        EnumFacing enumfacing = EnumFacing.byHorizontalIndex(meta);
+        if(enumfacing.getAxis() == EnumFacing.Axis.Y) {
+            enumfacing = EnumFacing.NORTH;
+        }
+        return getDefaultState().withProperty(FACING, enumfacing);
+    }
+
+    @Override
+    public int getMetaFromState(IBlockState state) {
+        return state.getValue(FACING).getIndex();
+    }
+
+    @Override
+    protected BlockStateContainer createBlockState() {
+        return new BlockStateContainer(this, FACING);
+    }
+
+    @Override
+    public boolean shouldSideBeRendered(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side) {
+        return false;
     }
 
     @Override

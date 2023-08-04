@@ -1,6 +1,8 @@
 package mechanicalarms.common.proxy;
 
+import com.modularmods.mcgltf.MCglTF;
 import mechanicalarms.MechanicalArms;
+import mechanicalarms.Tags;
 import mechanicalarms.client.renderer.TileArmRenderer;
 import mechanicalarms.common.item.Items;
 import mechanicalarms.common.tile.TileArmBasic;
@@ -18,24 +20,20 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod.EventBusSubscriber(Side.CLIENT)
 public class ClientProxy extends CommonProxy {
 
-    public static final ModelResourceLocation base = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_base.obj"), "base");
-    public static final ModelResourceLocation arm = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_arm.obj"), "arm");
-    public static final ModelResourceLocation hand = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_hand.obj"), "hand");
-    public static final ModelResourceLocation claw = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_claw.obj"), "claw");
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
-        ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 0, new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic.obj"), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 0, new ModelResourceLocation(Tags.MODID, "models/block/arm#inventory"));
 
-        ModelBakery.registerItemVariants(Items.ARM_BASE, base);
-        ModelBakery.registerItemVariants(Items.ARM_BASE, arm);
-        ModelBakery.registerItemVariants(Items.ARM_BASE, hand);
-        ModelBakery.registerItemVariants(Items.ARM_BASE, claw);
     }
 
     @Override
     public void preInit() {
-        OBJLoader.INSTANCE.addDomain(MechanicalArms.MODID);
-        ClientRegistry.bindTileEntitySpecialRenderer(TileArmBasic.class, new TileArmRenderer());
+        TileArmRenderer tesr = new TileArmRenderer();
+        MCglTF.getInstance().addGltfModelReceiver(tesr);
+        ClientRegistry.bindTileEntitySpecialRenderer(TileArmBasic.class, tesr);
         super.preInit();
     }
+
+
+
 }

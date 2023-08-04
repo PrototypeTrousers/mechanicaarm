@@ -1,22 +1,11 @@
 {
-  "forge_marker": 1,
-  "defaults": {
-    "custom": { "flip-v": true },
-    "model": "mechanicalarms:arm_basic.obj",
-    "textures": {
-      "#none": "mechanicalarms:blocks/arm_base"
-    }
-  },
-    "textures": {
-    "all": "blocks/arm_basic"
-    },
-
   "variants": {
-    "normal": [{}],
-    "inventory": [{}],
-    "arm_part=0": {"model": "mechanicalarms:arm_base.obj"},
-    "arm_part=1": {"model": "mechanicalarms:arm_arm.obj"},
-    "arm_part=2": {"model": "mechanicalarms:arm_hand.obj"},
-    "arm_part=3": {"model": "mechanicalarms:arm_claw.obj"}
+    "normal": [
+      { "model": "stone" }
+    ],
+    "facing=south": { "model": "stone" },
+    "facing=west": { "model": "stone" },
+    "facing=north": { "model": "stone" },
+    "facing=east": { "model": "stone" }
   }
 }
