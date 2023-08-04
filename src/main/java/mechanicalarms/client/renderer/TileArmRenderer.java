@@ -14,8 +14,6 @@ import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
-import javax.vecmath.Matrix4f;
-
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> implements IGltfModelReceiver  {
 
     protected RenderedGltfScene renderedScene;
@@ -43,30 +41,30 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
             GL11.glTranslatef(0.5F, 0.0F, 0.5F); //Make sure it is in the center of the block
         }
 
-        float[] firstArmRotation = tileArmBasic.getRotation(0);
-        float[] firstArmAnimationAngle = tileArmBasic.getAnimationRotation(0);
+        float[] firstArmCurrRot = tileArmBasic.getCurrentRotation(0);
+        float[] firstArmPrevRot = tileArmBasic.getPreviousRotation(0);
 
-        Quaternion rot = Quaternion.ToQuaternion(lerp(firstArmAnimationAngle[0], firstArmRotation[0], partialTicks),
-                lerp(firstArmAnimationAngle[1], firstArmRotation[1], partialTicks)
+        Quaternion rot = Quaternion.ToQuaternion(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks),
+                lerp((float) (firstArmPrevRot[1] - Math.PI / 2), (float) (firstArmCurrRot[1] - Math.PI / 2), partialTicks)
         );
 
         firstArm.setRotation(new float[]{rot.x, rot.y, rot.z, rot.w});
 
 
-        float[] secondArmRotation = tileArmBasic.getRotation(1);
-        float[] secondArmAnimationAngle = tileArmBasic.getAnimationRotation(1);
+        float[] secondArmCurrRot = tileArmBasic.getCurrentRotation(1);
+        float[] secondArmPrevRot = tileArmBasic.getPreviousRotation(1);
 
-        rot =  Quaternion.ToQuaternion(lerp(secondArmAnimationAngle[0], secondArmRotation[0], partialTicks),
+        rot = Quaternion.ToQuaternion(lerp(secondArmPrevRot[0], secondArmCurrRot[0], partialTicks),
                 0);
 
         secondArm.setRotation(new float[]{rot.x, rot.y, rot.z, rot.w});
 
 
-        float[] handRotation = tileArmBasic.getRotation(2);
-        float[] handRotationAnimationAngle = tileArmBasic.getAnimationRotation(2);
+        float[] handRotation = tileArmBasic.getCurrentRotation(2);
+        float[] handPrevRot = tileArmBasic.getPreviousRotation(2);
 
-        rot =  Quaternion.ToQuaternion(lerp(handRotationAnimationAngle[0], handRotation[0], partialTicks),
-                lerp(handRotationAnimationAngle[1], handRotation[1], partialTicks));
+        rot = Quaternion.ToQuaternion(lerp(handPrevRot[0], handRotation[0], partialTicks),
+                lerp(handPrevRot[1], handRotation[1], partialTicks));
 
         hand.setRotation(new float[]{rot.x, rot.y, rot.z, rot.w});
 
@@ -82,50 +80,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
 
     private float lerp(float previous, float current, float partialTick) {
         return (previous * (1.0F - partialTick)) + (current * partialTick);
-    }
-
-
-    public void rotateX(float[] floats, float radian) {
-        radian *= 0.5F;
-        float x = (float) Math.sin(radian);
-        float w = (float) Math.cos(radian);
-        float x0 = floats[0];
-        float y0 = floats[1];
-        float z0 = floats[2];
-        float w0 = floats[3];
-        floats[0] =  x0 * w + w0 * x;
-        floats[1] =  y0 * w + z0 * x;
-        floats[2] = -y0 * x + z0 * w;
-        floats[3] = -x0 * x + w0 * w;
-    }
-
-    public void rotateY(float[] floats, float radian) {
-        radian *= 0.5F;
-        float y = (float) Math.sin(radian);
-        float w = (float) Math.cos(radian);
-        float x0 = floats[0];
-        float y0 = floats[1];
-        float z0 = floats[2];
-        float w0 = floats[3];
-        floats[0] =  x0 * w - z0 * y;
-        floats[1] =  y0 * w + w0 * y;
-        floats[2] = x0 * y + z0 * w;
-        floats[3] = -y0 * y + w0 * w;
-    }
-
-    public float[] rotateZ(float[] floats, float radian) {
-        radian *= 0.5F;
-        float z = (float) Math.sin(radian);
-        float w = (float) Math.cos(radian);
-        float x0 = floats[0];
-        float y0 = floats[1];
-        float z0 = floats[2];
-        float w0 = floats[3];
-        floats[0] =  x0 * w + y0 * z;
-        floats[1] =  -x0 * w + y0 * w;
-        floats[2] = z0 * w + w0 * z;
-        floats[3] = -z0 * z + w0 * w;
-        return floats;
     }
 
     @Override

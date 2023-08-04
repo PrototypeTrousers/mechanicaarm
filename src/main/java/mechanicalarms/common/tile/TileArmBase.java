@@ -27,11 +27,11 @@ public abstract class TileArmBase extends TileEntity implements ITickable {
         motorCortex = new MotorCortex(this, armSize, interactionType);
     }
 
-    public float[] getAnimationRotation(int idx) {
+    public float[] getPreviousRotation(int idx) {
         return motorCortex.getAnimationRotation(idx);
     }
 
-    public float[] getRotation(int idx) {
+    public float[] getCurrentRotation(int idx) {
         return motorCortex.getRotation(idx);
     }
 
