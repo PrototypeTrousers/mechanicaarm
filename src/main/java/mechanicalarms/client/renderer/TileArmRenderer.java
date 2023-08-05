@@ -64,7 +64,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
         float[] handPrevRot = tileArmBasic.getPreviousRotation(2);
 
         rot = Quaternion.ToQuaternion(lerp(handPrevRot[0], handRotation[0], partialTicks),
-                lerp(handPrevRot[1], handRotation[1], partialTicks));
+                lerp(handPrevRot[1], handRotation[1], partialTicks),
+                lerp(handPrevRot[2], handRotation[2], partialTicks));
 
         hand.setRotation(new float[]{rot.x, rot.y, rot.z, rot.w});
 

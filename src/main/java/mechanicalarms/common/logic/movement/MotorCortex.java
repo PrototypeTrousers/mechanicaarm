@@ -70,19 +70,23 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         if (yawReached && pitchReached && distReached) {
             float targetHandYaw = (PI - rotation[0][1]) % PI;
             float targetHandPitch = (-rotation[1][0] - rotation[0][0]) % PI;
+            float targetHandRoll = - rotation[0][1] % PI;
 
             EnumFacing accessingSide = facing.getOpposite();
 
             if (accessingSide == UP) {
                 targetHandYaw = 0;
                 targetHandPitch = +PI / 2 - rotation[1][0] - rotation[0][0];
+                targetHandRoll = 0;
             } else if (accessingSide == DOWN) {
                 targetHandYaw = 0;
                 targetHandPitch = -PI / 2 - rotation[1][0] - rotation[0][0];
+                targetHandRoll = 0;
             } else if (armPoint.x > target.x && armPoint.z < target.z) {
                 //arm is NE from target
                 if (accessingSide == SOUTH) {
-                    targetHandYaw = targetHandYaw - PI / 2;
+                    targetHandYaw = targetHandYaw + PI /4;
+                    targetHandRoll =  PI / 2+ targetHandRoll;
                 } else if (accessingSide == NORTH) {
                     targetHandPitch = targetHandPitch + PI;
                     targetHandYaw = -targetHandYaw + PI / 2;
@@ -90,7 +94,8 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
                     targetHandPitch = targetHandPitch - PI;
                     targetHandYaw = -targetHandYaw + PI;
                 } else {
-                    targetHandYaw = targetHandYaw + PI;
+                    targetHandYaw = PI + targetHandYaw ;
+                    targetHandRoll =  -PI + targetHandRoll;
                 }
             } else if (armPoint.x < target.x && armPoint.z < target.z) {
                 //arm is NW from target
@@ -119,13 +124,17 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
             } else if (armPoint.x > target.x && armPoint.z > target.z) {
                 //arm is SE from target
                 if (accessingSide == NORTH) {
-                    targetHandYaw = targetHandYaw - PI / 2;
+                    targetHandYaw = targetHandYaw - PI / 4;
+                    targetHandRoll =  PI/2 + targetHandRoll;
                 } else if (accessingSide == EAST) {
                     targetHandPitch = targetHandPitch - PI;
                     targetHandYaw = -targetHandYaw;
                 } else if (accessingSide == SOUTH) {
                     targetHandYaw = -targetHandYaw + PI / 2;
                     targetHandPitch = targetHandPitch - PI;
+                } else {
+                    targetHandRoll =  0;
+                    targetHandYaw = targetHandYaw + PI /2 ;
                 }
             } else if (armPoint.x == target.x) {
                 if (armPoint.z > target.z) {
@@ -167,31 +176,39 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
                 }
             }
 
-            animationRotation[2][0] = rotation[2][0];
             animationRotation[2][1] = rotation[2][1];
-
             rotation[2][1] = rotateShortest(rotation[2][1], 0.10f, targetHandYaw);
             float yawDiffHand = (Math.abs(rotation[2][1]) - Math.abs(animationRotation[2][1]));
             boolean yawHandReached = (yawDiffHand < 0.01 && yawDiffHand > -0.01);
 
+            animationRotation[2][0] = rotation[2][0];
             rotation[2][0] = rotateShortest(rotation[2][0], 0.10f, targetHandPitch);
             float pitchDiffHand = (Math.abs(rotation[2][0]) - Math.abs(animationRotation[2][0]));
             boolean pitchHandReached = (pitchDiffHand < 0.01 && pitchDiffHand > -0.01);
 
-            if (pitchHandReached && yawHandReached) {
+            animationRotation[2][2] = rotation[2][2];
+            rotation[2][2] = rotateShortest(rotation[2][2], 0.10f, targetHandRoll);
+            float rollDiffHand = (Math.abs(rotation[2][2]) - Math.abs(animationRotation[2][2]));
+            boolean rollHandReached = (rollDiffHand < 0.01 && rollDiffHand > -0.01);
+
+            if (pitchHandReached && yawHandReached && rollHandReached) {
                 return ActionResult.SUCCESS;
             }
             return ActionResult.CONTINUE;
         } else {
-
-            animationRotation[2][0] = rotation[2][0];
-            animationRotation[2][1] = rotation[2][1];
-
             float targetHandYaw = 0;
-            float targetHandPitch = -PI / 2 - rotation[1][0] - rotation[0][0] + 0.01F;
+            float targetHandPitch = -PI / 2 - rotation[1][0] - rotation[0][0];
+            float targetHandRoll = 0;
+
+            animationRotation[2][2] = rotation[2][2];
+            rotation[2][2] = rotateShortest(rotation[2][2], 0.10f, targetHandRoll);
+            animationRotation[2][1] = rotation[2][1];
             rotation[2][1] = rotateShortest(rotation[2][1], 0.10F, targetHandYaw);
+            animationRotation[2][0] = rotation[2][0];
             rotation[2][0] = rotateToReach(rotation[2][0], 0.10F, targetHandPitch);
         }
+
+
         return ActionResult.CONTINUE;
     }
 

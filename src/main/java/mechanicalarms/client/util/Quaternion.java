@@ -69,4 +69,24 @@ public class Quaternion {
 
         return q;
     }
+
+    public static Quaternion ToQuaternion(double roll, double pitch, double yaw) // roll (x), pitch (Y), yaw (z)
+    {
+        // Abbreviations for the various angular functions
+
+        double cr = Math.cos(roll * 0.5);
+        double sr = Math.sin(roll * 0.5);
+        double cp = Math.cos(pitch * 0.5);
+        double sp = Math.sin(pitch * 0.5);
+        double cy = Math.cos(yaw * 0.5);
+        double sy = Math.sin(yaw * 0.5);
+
+        Quaternion q = new Quaternion();
+        q.w = (float) (cr * cp * cy + sr * sp * sy);
+        q.x = (float) (sr * cp * cy - cr * sp * sy);
+        q.y = (float) (cr * sp * cy + sr * cp * sy);
+        q.z = (float) (cr * cp * sy - sr * sp * cy);
+
+        return q;
+    }
 }
