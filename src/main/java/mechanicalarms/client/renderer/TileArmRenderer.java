@@ -44,9 +44,11 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
         float[] firstArmCurrRot = tileArmBasic.getCurrentRotation(0);
         float[] firstArmPrevRot = tileArmBasic.getPreviousRotation(0);
 
-        Quaternion rot = Quaternion.ToQuaternion(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks),
-                lerp((float) (firstArmPrevRot[1] - Math.PI / 2), (float) (firstArmCurrRot[1] - Math.PI / 2), partialTicks)
-        );
+        Quaternion rot = Quaternion.createIdentity();
+
+        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
+        rot.rotateY(lerp((float) (firstArmPrevRot[1] ), (float) (firstArmCurrRot[1] ), partialTicks));
+        //rot.rotateZ();
 
         firstArm.setRotation(new float[]{rot.x, rot.y, rot.z, rot.w});
 
@@ -54,20 +56,23 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
         float[] secondArmCurrRot = tileArmBasic.getCurrentRotation(1);
         float[] secondArmPrevRot = tileArmBasic.getPreviousRotation(1);
 
-        rot = Quaternion.ToQuaternion(lerp(secondArmPrevRot[0], secondArmCurrRot[0], partialTicks),
-                0);
+        rot.setIndentity();
+        rot.rotateX(lerp(secondArmPrevRot[0], secondArmCurrRot[0], partialTicks));
 
         secondArm.setRotation(new float[]{rot.x, rot.y, rot.z, rot.w});
-
+/*
 
         float[] handRotation = tileArmBasic.getCurrentRotation(2);
         float[] handPrevRot = tileArmBasic.getPreviousRotation(2);
 
-        rot = Quaternion.ToQuaternion(lerp(handPrevRot[0], handRotation[0], partialTicks),
-                lerp(handPrevRot[1], handRotation[1], partialTicks),
-                lerp(handPrevRot[2], handRotation[2], partialTicks));
+        rot.setIndentity();
+        rot.rotateX(lerp(handPrevRot[0], handRotation[0], partialTicks));
+        rot.rotateY(lerp(handPrevRot[1], handRotation[1], partialTicks));
+        rot.rotateZ(lerp(handPrevRot[1], handRotation[2], partialTicks));
 
         hand.setRotation(new float[]{rot.x, rot.y, rot.z, rot.w});
+
+         */
 
         if (MCglTF.getInstance().isShaderModActive()) {
             renderedScene.renderForShaderMod();
@@ -80,6 +85,12 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
     }
 
     private float lerp(float previous, float current, float partialTick) {
+        var diff = Math.abs(previous) - Math.abs(current);
+        if (diff > Math.PI) {
+            previous = 0;
+        } else if (diff < -Math.PI) {
+            current = 0;
+        }
         return (previous * (1.0F - partialTick)) + (current * partialTick);
     }
 
