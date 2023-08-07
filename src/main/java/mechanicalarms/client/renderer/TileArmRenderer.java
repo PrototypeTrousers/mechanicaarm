@@ -46,12 +46,10 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
 
         Quaternion rot = Quaternion.createIdentity();
 
+        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
         rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
-        rot.rotateY(lerp((float) (firstArmPrevRot[1] ), (float) (firstArmCurrRot[1] ), partialTicks));
-        //rot.rotateZ();
 
         firstArm.setRotation(new float[]{rot.x, rot.y, rot.z, rot.w});
-
 
         float[] secondArmCurrRot = tileArmBasic.getCurrentRotation(1);
         float[] secondArmPrevRot = tileArmBasic.getPreviousRotation(1);
@@ -60,19 +58,18 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
         rot.rotateX(lerp(secondArmPrevRot[0], secondArmCurrRot[0], partialTicks));
 
         secondArm.setRotation(new float[]{rot.x, rot.y, rot.z, rot.w});
-/*
 
         float[] handRotation = tileArmBasic.getCurrentRotation(2);
         float[] handPrevRot = tileArmBasic.getPreviousRotation(2);
 
         rot.setIndentity();
-        rot.rotateX(lerp(handPrevRot[0], handRotation[0], partialTicks));
+
         rot.rotateY(lerp(handPrevRot[1], handRotation[1], partialTicks));
-        rot.rotateZ(lerp(handPrevRot[1], handRotation[2], partialTicks));
+        rot.rotateZ(lerp(handPrevRot[2], handRotation[2], partialTicks));
+        rot.rotateX(lerp(handPrevRot[0], handRotation[0], partialTicks));
+
 
         hand.setRotation(new float[]{rot.x, rot.y, rot.z, rot.w});
-
-         */
 
         if (MCglTF.getInstance().isShaderModActive()) {
             renderedScene.renderForShaderMod();

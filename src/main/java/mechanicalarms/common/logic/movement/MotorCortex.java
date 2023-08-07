@@ -29,8 +29,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
     public ActionResult move(Vec3d armPoint, Vec3d target, EnumFacing facing) {
         Vec3d combinedVec = target.subtract(armPoint);
         float pitch = (float) Math.atan2(combinedVec.y, Math.sqrt(combinedVec.x * combinedVec.x + combinedVec.z * combinedVec.z));
-        float yaw = (float) (Math.atan2(-combinedVec.z, combinedVec.x));
-        if (yaw < 0) { yaw += (float) ( 2 * Math.PI);}
+        float yaw = (float) (Math.atan2(-combinedVec.z, combinedVec.x) - Math.PI /2);
 
         float dist = (float) combinedVec.length();
 
@@ -38,15 +37,10 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         if (Double.isNaN(extraPitchArc)) {
             extraPitchArc = 0;
         }
-        if (extraPitchArc < 0) {
-            extraPitchArc += (float) (2 * Math.PI);
-        }
+
         float armArcTarget = (float) (Math.asin(dist / armSize / 2) * 2 - PI);
         if (Double.isNaN(armArcTarget)) {
             armArcTarget = 0;
-        }
-        if (armArcTarget < 0) {
-          armArcTarget += (float) (2 * Math.PI);
         }
 
         pitch = pitch + extraPitchArc;
@@ -54,7 +48,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         boolean distReached = false;
 
         animationRotation[1][0] = rotation[1][0];
-        rotation[1][0] = (rotateShortest(rotation[1][0], 0.15f, armArcTarget));
+        rotation[1][0] = (rotateShortest(rotation[1][0], 0.1f, armArcTarget));
         if (rotation[1][0] == armArcTarget) {
             if (extraPitchArc != 0) {
                 distReached = true;
@@ -64,15 +58,16 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
         }
 
         animationRotation[0][0] = rotation[0][0];
-        rotation[0][0] = rotateShortest(rotation[0][0], 0.15f, pitch);
+        rotation[0][0] = rotateShortest(rotation[0][0], 0.1f, pitch);
         boolean pitchReached = rotation[0][0] == pitch;
 
         animationRotation[0][1] = rotation[0][1];
-        rotation[0][1] = rotateShortest(rotation[0][1], 0.15f, yaw);
+        rotation[0][1] = rotateShortest(rotation[0][1], 0.1f, yaw);
         float yawDiff = (Math.abs(rotation[0][1]) - Math.abs(animationRotation[0][1]));
         boolean yawReached = (yawDiff < 0.01 && yawDiff > -0.01);
 
-        //rotation[2][0] = -PI / 2 - rotation[1][0] - rotation[0][0];
+        animationRotation[2][0] = rotation[2][0];
+        animationRotation[2][1] = rotation[2][1];
 
         if (yawReached && pitchReached && distReached) {
             /*float targetHandYaw = (PI - rotation[0][1]) % PI;
@@ -232,9 +227,6 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
 
     float rotateShortest(float currentRotation, float angularSpeed, float targetRotation) {
         currentRotation = currentRotation % (2 * PI);
-        if (currentRotation < 0) {
-            currentRotation += (float) Math.PI;
-        }
 
         float shortestAngle = (float) (((targetRotation - currentRotation) + 3 * Math.PI) % (2 * Math.PI) - Math.PI);
 
