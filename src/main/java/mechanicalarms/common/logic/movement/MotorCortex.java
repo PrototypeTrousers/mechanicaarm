@@ -78,12 +78,14 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
 
             if (facing == UP) {
                 targetHandYaw = 0;
-                targetHandPitch = targetHandPitch -PI /2;
+                targetHandPitch = targetHandPitch - PI /2;
+                targetHandRoll = -(rotation[0][1] - PI/2) % PI;
                
             } else if (facing == DOWN) {
                 targetHandYaw = 0;
                 targetHandPitch = targetHandPitch + PI/2;
-                
+                targetHandRoll = -(rotation[0][1] - PI/2) % PI;
+
             } else if (armPoint.x > target.x && armPoint.z < target.z) {
                 //arm is NE from target
                 if (facing == SOUTH) {
