@@ -64,9 +64,11 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
 
         rot.setIndentity();
 
+        rot.rotateX(lerp(handPrevRot[0], handRotation[0], partialTicks));
         rot.rotateY(lerp(handPrevRot[1], handRotation[1], partialTicks));
         rot.rotateZ(lerp(handPrevRot[2], handRotation[2], partialTicks));
-        rot.rotateX(lerp(handPrevRot[0], handRotation[0], partialTicks));
+
+
 
 
         hand.setRotation(new float[]{rot.x, rot.y, rot.z, rot.w});
