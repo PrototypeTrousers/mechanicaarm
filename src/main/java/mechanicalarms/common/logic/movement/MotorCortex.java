@@ -73,21 +73,21 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
 
             float targetHandYaw = (PI - rotation[0][1]) % PI;
             float targetHandPitch = -(rotation[1][0] + rotation[0][0]) % PI;
-            float targetHandRoll = -(rotation[0][1] - PI/2) % PI;
+            float targetHandRoll = 0;
+
 
             if (facing == UP) {
                 targetHandYaw = 0;
                 targetHandPitch = targetHandPitch -PI /2;
-               // targetHandRoll = 0;
+               
             } else if (facing == DOWN) {
                 targetHandYaw = 0;
                 targetHandPitch = targetHandPitch + PI/2;
-                //targetHandRoll = 0;
+                
             } else if (armPoint.x > target.x && armPoint.z < target.z) {
                 //arm is NE from target
                 if (facing == SOUTH) {
                     targetHandYaw = targetHandYaw + PI;
-                    //targetHandRoll =  PI / 2+ targetHandRoll;
                 } else if (facing == NORTH) {
                     targetHandPitch = targetHandPitch + PI;
                     targetHandYaw = -targetHandYaw + PI ;
@@ -96,7 +96,6 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
                     targetHandYaw = -targetHandYaw - PI/2;
                 } else {
                     targetHandYaw =  targetHandYaw +PI/2;
-                    //targetHandRoll =  -PI + targetHandRoll;
                 }
             } else if (armPoint.x < target.x && armPoint.z < target.z) {
                 //arm is NW from target
@@ -116,68 +115,47 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
                 //arm is SW from target
                 if (facing == NORTH) {
                     targetHandYaw = targetHandYaw - PI ;
-                    targetHandRoll = 0  ;
-
                 } else if (facing == SOUTH) {
                     targetHandPitch = targetHandPitch - PI;
                     targetHandYaw = targetHandYaw + PI /2;
-                    targetHandRoll = 0  ;
-
                 } else if (facing == EAST) {
                     targetHandPitch = targetHandPitch - PI;
                     targetHandYaw = -targetHandYaw + PI /2;
-                    targetHandRoll = 0  ;
-
                 } else {
-                    targetHandYaw = targetHandYaw - PI /2 ;
-                    targetHandPitch = targetHandPitch;
-                    targetHandRoll = 0  ;
+                    targetHandPitch =targetHandPitch + PI;
+                    targetHandYaw = -targetHandYaw - PI/2;
                 }
             } else if (armPoint.x > target.x && armPoint.z > target.z) {
                 //arm is SE from target
                 if (facing == NORTH) {
                     targetHandYaw = targetHandYaw - 2* PI ;
-                    targetHandRoll = 0  ;
-
-                    //  targetHandRoll =  PI/2 + targetHandRoll;
                 } else if (facing == EAST) {
                     targetHandPitch = targetHandPitch - PI;
                     targetHandYaw = -targetHandYaw - PI/2;
-                    targetHandRoll = 0  ;
-
                 } else if (facing == SOUTH) {
                     targetHandYaw = -targetHandYaw + 2* PI;
                     targetHandPitch = targetHandPitch - PI;
-                    targetHandRoll = 0  ;
-
                 } else {
                     targetHandYaw = targetHandYaw + PI /2 ;
-                    targetHandRoll = 0  ;
-
                 }
             } else if (armPoint.x == target.x) {
                 if (facing == NORTH ) {
                     targetHandPitch = targetHandPitch -PI;
                     targetHandYaw = 0;
-                 //   targetHandRoll = 0;
                 }
                 if (facing == SOUTH) {
-                    targetHandPitch = targetHandPitch;
                     targetHandYaw = 0;
-               //     targetHandRoll = 0;
                 }
 
                 if (armPoint.z > target.z) {
                     if (facing == WEST) {
                         targetHandYaw = targetHandYaw - PI / 2;
                         targetHandPitch = targetHandPitch - PI / 2;
-                       // targetHandRoll = targetHandRoll - PI / 2;
                     } else if (facing == NORTH) {
                         targetHandYaw = 0;
                     } else if (facing == EAST) {
                         targetHandYaw = targetHandYaw + PI / 2;
                         targetHandPitch = targetHandPitch + PI / 2;
-                     //   targetHandRoll = targetHandRoll + PI / 2;
                     }
                 } else {
                     if (facing == WEST) {
@@ -187,11 +165,10 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
                     } else if (facing == EAST) {
                         targetHandYaw = targetHandYaw - PI / 2;
                         targetHandPitch = targetHandPitch - PI / 2;
-                        //targetHandRoll = targetHandRoll + PI;
                     } else if (facing == SOUTH) {
                         targetHandYaw = 0;
                         targetHandPitch = targetHandPitch - PI;
-                       // targetHandRoll = 0;
+                       
                     }
                 }
             } else if (armPoint.z == target.z) {
@@ -202,7 +179,6 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
                          targetHandRoll = targetHandRoll - PI /2;
                         targetHandPitch = targetHandPitch - PI / 2;
                     } else if (facing == NORTH) {
-                        targetHandYaw = targetHandYaw;
                         targetHandRoll = targetHandRoll + PI /2;
                         targetHandPitch = targetHandPitch + PI / 2;
                     } else if (facing == EAST) {
@@ -210,7 +186,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
                     } else if (facing == WEST) {
                         targetHandYaw = targetHandYaw - PI / 2;
                         targetHandPitch = targetHandPitch - PI;
-                        // targetHandRoll = 0;
+                        
                     }
                 } else {
                     if (facing == NORTH) {
@@ -218,7 +194,6 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
                         targetHandRoll = targetHandRoll - PI /2;
                         targetHandPitch = targetHandPitch - PI / 2;
                     } else if (facing == SOUTH) {
-                        targetHandYaw = targetHandYaw;
                         targetHandRoll = targetHandRoll + PI /2;
                         targetHandPitch = targetHandPitch + PI / 2;
                     } else if (facing == WEST) {
@@ -226,7 +201,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
                     } else {
                         targetHandYaw = targetHandYaw - PI / 2;
                         targetHandPitch = targetHandPitch - PI;
-                        // targetHandRoll = 0;
+                        
                     }
                 }
             }
