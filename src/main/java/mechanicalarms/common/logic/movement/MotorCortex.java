@@ -198,15 +198,19 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
                     }
                 } else {
                     if (facing == NORTH) {
-                        targetHandYaw = targetHandYaw - PI / 2;
+                        targetHandYaw = targetHandYaw - PI;
+                        targetHandRoll = targetHandRoll - PI;
+                        targetHandPitch = targetHandPitch - PI / 2;
                     } else if (facing == SOUTH) {
-                        targetHandYaw = targetHandYaw + PI / 2;
+                        targetHandYaw = targetHandYaw + PI;
+                        targetHandRoll = targetHandRoll + PI;
+                        targetHandPitch = targetHandPitch + PI / 2;
                     } else if (facing == WEST) {
-                        targetHandPitch = targetHandPitch;
                         targetHandYaw = targetHandYaw - PI / 2;
                     } else {
+                        targetHandYaw = targetHandYaw - PI / 2;
                         targetHandPitch = targetHandPitch - PI;
-                    }
+                        targetHandRoll = 0;                    }
                 }
             }
 
