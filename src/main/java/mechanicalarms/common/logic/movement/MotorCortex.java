@@ -163,12 +163,12 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
 
 
             animationRotation[2][1] = rotation[2][1];
-            rotation[2][1] = rotateShortest(rotation[2][1], 0.10f, targetHandYaw);
+            rotation[2][1] = rotateShortest(rotation[2][1], 0.20f, targetHandYaw);
             float yawDiffHand = (Math.abs(rotation[2][1]) - Math.abs(animationRotation[2][1]));
             boolean yawHandReached = (yawDiffHand < 0.01 && yawDiffHand > -0.01);
 
             animationRotation[2][0] = rotation[2][0];
-            rotation[2][0] = rotateToReach(rotation[2][0], 0.10f, targetHandPitch);
+            rotation[2][0] = rotateToReach(rotation[2][0], 0.20f, targetHandPitch);
             float pitchDiffHand = (Math.abs(rotation[2][0]) - Math.abs(animationRotation[2][0]));
             boolean pitchHandReached = (pitchDiffHand < 0.01 && pitchDiffHand > -0.01);
 
@@ -191,11 +191,11 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
             float targetHandRoll = 0;
 
             animationRotation[2][2] = rotation[2][2];
-            rotation[2][2] = rotateShortest(rotation[2][2], 0.10f, targetHandRoll);
+            rotation[2][2] = rotateShortest(rotation[2][2], 0.20F, targetHandRoll);
             animationRotation[2][1] = rotation[2][1];
-            rotation[2][1] = rotateShortest(rotation[2][1], 0.10F, targetHandYaw);
+            rotation[2][1] = rotateShortest(rotation[2][1], 0.20F, targetHandYaw);
             animationRotation[2][0] = rotation[2][0];
-            rotation[2][0] = rotateToReach(rotation[2][0], 0.10F, targetHandPitch);
+            rotation[2][0] = rotateToReach(rotation[2][0], 0.20F, targetHandPitch);
         }
 
 
@@ -228,7 +228,7 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
             return currentRotation - angularSpeed;
         } else if (diff >= 0.1) {
             return currentRotation + angularSpeed;
-        } else if (diff > -0.1 && diff < 0.1) {
+        } else if (diff > -angularSpeed && diff < angularSpeed) {
             return targetedRotation;
         }
         return currentRotation;
