@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
@@ -27,8 +28,6 @@ import javax.vecmath.Vector4f;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.List;
-
-import static org.lwjgl.opengl.GL11.GL_FALSE;
 
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
@@ -159,20 +158,19 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
             vao = Vao.setupVertices(vertexArray);
         }
         GL11.glPushMatrix();
-        GL11.glTranslated(x + 0.5, y + 4, z + 0.5);
+//        GL11.glTranslated(x + 0.5, y + 4, z + 0.5);
+
+
+        // Create a FloatBuffer to store the matrix data
+        FloatBuffer projectionMatrixBuffer = BufferUtils.createFloatBuffer(16);
+        // Get the current projection matrix
+        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, projectionMatrixBuffer);
+        // Create a Matrix4f from the FloatBuffer
+        mat = new Matrix4f(projectionMatrixBuffer.array());
 
         base_vao.use();
 
         int rotationLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "rotation");
-
-        if (mat == null) {
-            mat = new Matrix4f();
-        }
-        mat.setIdentity();
-
-        //translate(mat, new Vector3f((float) x, (float) y + 4, (float) z));
-
-        rotateX(mat, (float) (Math.PI/8));
 
 
         ByteBuffer data = GLAllocation.createDirectByteBuffer(16 * 4);
