@@ -1,20 +1,20 @@
 package mechanicalarms.client.renderer;
 
 import mechanicalarms.MechanicalArms;
-import mechanicalarms.client.mixin.interfaces.IBufferBuilderMixin;
 import mechanicalarms.client.renderer.shaders.Shader;
 import mechanicalarms.client.renderer.shaders.ShaderManager;
+import mechanicalarms.client.renderer.util.Quaternion;
 import mechanicalarms.common.proxy.ClientProxy;
 import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.BlockRendererDispatcher;
+import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ModelManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
@@ -23,8 +23,8 @@ import javax.vecmath.Tuple4f;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.List;
+
 
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
@@ -58,7 +58,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     }
 
     @Override
-    public void render(TileArmBasic te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+    public void render(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
         if (vbo == null) {
             BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
             ModelManager modelManager = blockRendererDispatcher.getBlockModelShapes().getModelManager();
@@ -88,10 +88,17 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         }
         GL11.glPushMatrix();
         GL11.glTranslatef((float) x, (float) y, (float) z);
-        mat = new Matrix4f();
-        mat.setIdentity();
-        translate(mat, new Vector3f((float) 0, (float) 1, (float) 0));
-        rotateX(mat, (float) (Math.PI/4));
+
+        float[] firstArmCurrRot = tileArmBasic.getAnimationRotation(0);
+        float[] firstArmPrevRot = tileArmBasic.getRotation(0);
+
+        Quaternion rot = Quaternion.createIdentity();
+
+        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
+        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
+
+        mat = Quaternion.createRotateMatrix(rot);
+
 
         base_vao.use();
 
@@ -170,7 +177,63 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     }
 
     private float lerp(float previous, float current, float partialTick) {
+        var diff = Math.abs(previous) - Math.abs(current);
+        if (diff > Math.PI) {
+            previous = 0;
+        } else if (diff < -Math.PI) {
+            current = 0;
+        }
         return (previous * (1.0F - partialTick)) + (current * partialTick);
+    }
+
+    public void rotate(Quaternion quaternion, Matrix4f matrix4f) {
+        // setup rotation matrix
+        float xx = 2.0F * quaternion.x * quaternion.x;
+        float yy = 2.0F * quaternion.y * quaternion.y;
+        float zz = 2.0F * quaternion.z * quaternion.z;
+        float xy = quaternion.x * quaternion.y;
+        float yz = quaternion.y * quaternion.z;
+        float zx = quaternion.z * quaternion.x;
+        float xw = quaternion.x * quaternion.w;
+        float yw = quaternion.y * quaternion.w;
+        float zw = quaternion.z * quaternion.w;
+
+        float r00 = 1.0F - yy - zz;
+        float r11 = 1.0F - zz - xx;
+        float r22 = 1.0F - xx - yy;
+        float r10 = 2.0F * (xy + zw);
+        float r01 = 2.0F * (xy - zw);
+        float r20 = 2.0F * (zx - yw);
+        float r02 = 2.0F * (zx + yw);
+        float r21 = 2.0F * (yz + xw);
+        float r12 = 2.0F * (yz - xw);
+
+        // multiply matrices
+        float f00 = matrix4f.m00;
+        float f01 = matrix4f.m01;
+        float f02 = matrix4f.m02;
+        float f10 = matrix4f.m10;
+        float f11 = matrix4f.m11;
+        float f12 = matrix4f.m12;
+        float f20 = matrix4f.m20;
+        float f21 = matrix4f.m21;
+        float f22 = matrix4f.m22;
+        float f30 = matrix4f.m30;
+        float f31 = matrix4f.m31;
+        float f32 = matrix4f.m32;
+
+        matrix4f.m00 = f00 * r00 + f01 * r10 + f02 * r20;
+        matrix4f.m01 = f00 * r01 + f01 * r11 + f02 * r21;
+        matrix4f.m02 = f00 * r02 + f01 * r12 + f02 * r22;
+        matrix4f.m10 = f10 * r00 + f11 * r10 + f12 * r20;
+        matrix4f.m11 = f10 * r01 + f11 * r11 + f12 * r21;
+        matrix4f.m12 = f10 * r02 + f11 * r12 + f12 * r22;
+        matrix4f.m20 = f20 * r00 + f21 * r10 + f22 * r20;
+        matrix4f.m21 = f20 * r01 + f21 * r11 + f22 * r21;
+        matrix4f.m22 = f20 * r02 + f21 * r12 + f22 * r22;
+        matrix4f.m30 = f30 * r00 + f31 * r10 + f32 * r20;
+        matrix4f.m31 = f30 * r01 + f31 * r11 + f32 * r21;
+        matrix4f.m32 = f30 * r02 + f31 * r12 + f32 * r22;
     }
 
 
