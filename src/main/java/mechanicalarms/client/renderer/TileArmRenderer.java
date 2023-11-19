@@ -56,22 +56,11 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     private int[] vertexItemDataArray;
     private int quadCount = 0;
 
-    Vertex bottomLeft =  new Vertex(-0.5F, -0.5F, 0F, 0F, 0F, 0F, 0F, 1F, 1F, 1F, 1F, 1F);
-    Vertex bottomRight = new Vertex(0.5F, -0.5F, 0F, 1F, 0F, 0F, 0F, 1F, 1F, 1F, 1F, 1F);
-    Vertex topLeft =     new Vertex(-0.5F, 0.5F, 0F, 0F, 1F, 0F, 0F, 1F, 1F, 1F, 1F, 1F);
-    Vertex topRight =    new Vertex(0.5F, 0.5F, 0F, 1F, 1F, 0F, 0F, 1F, 1F, 1F, 1F, 1F);
-    Vertex[] vertices = new Vertex[]{bottomLeft, bottomRight, topRight, topLeft};
     FixedFunctionVbo vbo;
 
     public TileArmRenderer() {
         super();
-        Vertex bottomLeft =  new Vertex(-0.5F, -0.5F, 0F, 0F, 0F, 0F, 0F, 1F, 1F, 1F, 1F, 1F);
-        Vertex bottomRight = new Vertex(0.5F, -0.5F, 0F, 1F, 0F, 0F, 0F, 1F, 1F, 1F, 1F, 1F);
-        Vertex topLeft =     new Vertex(-0.5F, 0.5F, 0F, 0F, 1F, 0F, 0F, 1F, 1F, 1F, 1F, 1F);
-        Vertex topRight =    new Vertex(0.5F, 0.5F, 0F, 1F, 1F, 0F, 0F, 1F, 1F, 1F, 1F, 1F);
-        Vertex[] vertices = new Vertex[]{bottomLeft, bottomRight, topRight, topLeft};
 
-        vbo = FixedFunctionVbo.setupVbo(vertices);
     }
 
 
@@ -111,11 +100,65 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
      */
     @Override
     public void renderTileEntityFast(final TileArmBasic tileArmBasic, final double x, final double y, final double z, final float partialTicks, final int destroyStage, final float partial, final BufferBuilder buffer) {
+        {
+            V3F_POS.x = (float) x;
+            V3F_POS.y = (float) y;
+            V3F_POS.z = (float) z;
 
+            BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
+            ModelManager modelManager = blockRendererDispatcher.getBlockModelShapes().getModelManager();
+            if (vertexArray == null) {
+                vertexArray = new int[3][][];
+
+                ModelResourceLocation[] mrl = new ModelResourceLocation[]{
+                        ClientProxy.arm,
+                        ClientProxy.hand,
+                        ClientProxy.claw
+                };
+
+                for (int i = 0; i < mrl.length; i++) {
+                    ModelResourceLocation m = mrl[i];
+                    List<BakedQuad> quads = modelManager.getModel(m).getQuads(null, null, 0);
+                    vertexArray[i] = new int[quads.size()][];
+                    for (int j = 0; j < quads.size(); j++) {
+                        vertexArray[i][j] = quads.get(j).getVertexData();
+                    }
+                }
+                int size = vertexArray[0].length * 2 + vertexArray[1].length + vertexArray[2].length;
+                this.vertexDataArray = new int[size * 28];
+
+            }
+        }
     }
 
     @Override
     public void render(TileArmBasic te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+        if (vbo == null) {
+            BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
+            ModelManager modelManager = blockRendererDispatcher.getBlockModelShapes().getModelManager();
+            if (vertexArray == null) {
+                vertexArray = new int[3][][];
+
+                ModelResourceLocation[] mrl = new ModelResourceLocation[]{
+                        ClientProxy.arm,
+                        ClientProxy.hand,
+                        ClientProxy.claw
+                };
+
+                for (int i = 0; i < mrl.length; i++) {
+                    ModelResourceLocation m = mrl[i];
+                    List<BakedQuad> quads = modelManager.getModel(m).getQuads(null, null, 0);
+                    vertexArray[i] = new int[quads.size()][];
+                    for (int j = 0; j < quads.size(); j++) {
+                        vertexArray[i][j] = quads.get(j).getVertexData();
+                    }
+                }
+                int size = vertexArray[0].length * 2 + vertexArray[1].length + vertexArray[2].length;
+                this.vertexDataArray = new int[size * 28];
+
+            }
+            vbo = FixedFunctionVbo.setupVbo(vertexArray);
+        }
         GL11.glPushMatrix();
         GL11.glTranslated(x + 0.5, y + 4, z + 0.5);
 
@@ -163,6 +206,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         this.tempModelMatrix.setTranslation(pivot);
         matrix.mul(this.tempModelMatrix);
     }
+
 
     public void renderQuads(IBufferBuilderMixin buffer, int[][] quadDataList, Vector3f baseOffset, Matrix4f transformMatrix, int brightness, int color) {
         for (int i = 0; i < quadDataList.length; i++) {

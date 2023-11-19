@@ -6,6 +6,8 @@ import org.lwjgl.opengl.GL15;
 
 import java.nio.ByteBuffer;
 
+import static java.lang.Float.floatToRawIntBits;
+
 public class FixedFunctionVbo extends Vbo {
 
     public FixedFunctionVbo(int vbo, int drawMode, int numVertices) {
@@ -38,6 +40,46 @@ public class FixedFunctionVbo extends Vbo {
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
 
         FixedFunctionVbo vbo = new FixedFunctionVbo(vboId, GL11.GL_QUADS, vertices.length);
+        return vbo;
+    }
+
+    public static FixedFunctionVbo setupVbo(int[][][] vertices){
+        ByteBuffer data = GLAllocation.createDirectByteBuffer(240 * Vertex.BYTES_PER_VERTEX);
+        int v = 0;
+
+        for (int part = 0; part < vertices.length; part++) {
+            int[][] quadData = vertices[part];
+            for (int i = 0; i < quadData.length; i++) {
+                int[] vertexData = quadData[i];
+                for (int k = 0; k < 4; ++k) {
+                    // Getting the offset for the current vertex.
+                    int vertexIndex = k * 7;
+                    data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex]));
+                    data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex + 1]));
+                    data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex + 2]));
+                    data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex + 4]));
+                    data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex + 5]));
+                    //Normals don't need as much precision as tex coords or positions
+                    data.put((byte) ((int) (0 * 127) & 0xFF));
+                    data.put((byte) ((int) (0 * 127) & 0xFF));
+                    data.put((byte) ((int) (0 * 127) & 0xFF));
+                    //Neither do colors
+                    data.put((byte) (vertexData[vertexIndex + 3] * 255));
+                    data.put((byte) (vertexData[vertexIndex + 3] * 255));
+                    data.put((byte) (vertexData[vertexIndex + 3] * 255));
+                    data.put((byte) (vertexData[vertexIndex + 3] * 255));
+                    v++;
+                }
+            }
+        }
+
+        data.rewind();
+        int vboId = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, data, GL15.GL_STATIC_DRAW);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+
+        FixedFunctionVbo vbo = new FixedFunctionVbo(vboId, GL11.GL_QUADS, v);
         return vbo;
     }
 
