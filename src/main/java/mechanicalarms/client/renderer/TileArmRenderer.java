@@ -7,10 +7,7 @@ import mechanicalarms.client.renderer.shaders.ShaderManager;
 import mechanicalarms.common.proxy.ClientProxy;
 import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BlockRendererDispatcher;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GLAllocation;
-import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ModelManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -158,15 +155,12 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
             vao = Vao.setupVertices(vertexArray);
         }
         GL11.glPushMatrix();
-//        GL11.glTranslated(x + 0.5, y + 4, z + 0.5);
+        GL11.glTranslated(x + 0.5, y + 4, z + 0.5);
 
 
-        // Create a FloatBuffer to store the matrix data
-        FloatBuffer projectionMatrixBuffer = BufferUtils.createFloatBuffer(16);
-        // Get the current projection matrix
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, projectionMatrixBuffer);
-        // Create a Matrix4f from the FloatBuffer
-        mat = new Matrix4f(projectionMatrixBuffer.array());
+        mat = new Matrix4f();
+        mat.setIdentity();
+        translate(mat, new Vector3f((float) 0, (float) -2, (float) 0));
 
         base_vao.use();
 
