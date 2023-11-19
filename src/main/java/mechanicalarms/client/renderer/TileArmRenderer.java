@@ -159,7 +159,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
             vao = Vao.setupVertices(vertexArray);
         }
         GL11.glPushMatrix();
-        //GL11.glTranslated(x + 0.5, y + 4, z + 0.5);
+        GL11.glTranslated(x + 0.5, y + 4, z + 0.5);
 
         base_vao.use();
 
@@ -167,11 +167,13 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         if (mat == null) {
             mat = new Matrix4f();
-            mat.setIdentity();
         }
+        mat.setIdentity();
+
+        //translate(mat, new Vector3f((float) x, (float) y + 4, (float) z));
 
         rotateX(mat, (float) (Math.PI/8));
-        translate(mat, new Vector3f((float) x, (float) y, (float) z));
+
 
         ByteBuffer data = GLAllocation.createDirectByteBuffer(16 * 4);
         data.asFloatBuffer().put(new float[]{
@@ -195,9 +197,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         mat.setIdentity();
 
-        GL20.glUniformMatrix4(rotationLoc, false, data.asFloatBuffer());
-
-        //base_vao.withUniforms()
+        GL20.glUniformMatrix4(rotationLoc, true, data.asFloatBuffer());
 
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
