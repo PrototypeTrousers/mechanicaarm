@@ -86,7 +86,7 @@ public abstract class TileArmBase extends SyncedTileEntityBase implements ITicka
 
     @Override
     public boolean hasFastRenderer() {
-        return true;
+        return false;
     }
 
     public abstract ActionResult interact(Action retrieve, Pair<BlockPos, EnumFacing> blkFacePair);
