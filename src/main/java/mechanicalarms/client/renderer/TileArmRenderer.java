@@ -1,42 +1,34 @@
 package mechanicalarms.client.renderer;
 
+import mechanicalarms.MechanicalArms;
 import mechanicalarms.client.mixin.interfaces.IBufferBuilderMixin;
+import mechanicalarms.client.renderer.shaders.Shader;
+import mechanicalarms.client.renderer.shaders.ShaderManager;
 import mechanicalarms.common.proxy.ClientProxy;
 import mechanicalarms.common.tile.TileArmBasic;
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.client.model.animation.FastTESR;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.ARBVertexBufferObject;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.util.vector.Quaternion;
+import org.lwjgl.opengl.GL20;
 
-import javax.vecmath.*;
+import javax.vecmath.Matrix4f;
+import javax.vecmath.Tuple4f;
+import javax.vecmath.Vector3f;
+import javax.vecmath.Vector4f;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import static net.minecraft.client.renderer.OpenGlHelper.*;
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_FALSE;
 
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
@@ -56,7 +48,13 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     private int[] vertexItemDataArray;
     private int quadCount = 0;
 
+    Matrix4f mat;
+
+    public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader"))
+            .withUniforms(ShaderManager.LIGHTMAP).withUniforms();
+
     FixedFunctionVbo vbo;
+    Vao vao;
 
     public TileArmRenderer() {
         super();
@@ -96,7 +94,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
      * @param partialTicks the amount of partial ticks escaped. Partial ticks happen when there are multiple frames per tick.
      * @param destroyStage the destroy progress of the TE. You may use it to render the "breaking" animation.
      * @param partial      currently seems to be a 1.0 constant.
-     * @param buffer       the BufferBuilder containing vertex data for vertices being rendered. It is safe to assume that the format is {@link net.minecraft.client.renderer.vertex.DefaultVertexFormats DefaultVertexFormats}.BLOCK. It is also safe to assume that the GL primitive for drawing is QUADS.
+     * @param buffer       the BufferBuilder containing arm_shader.vert data for vertices being rendered. It is safe to assume that the format is {@link net.minecraft.client.renderer.vertex.DefaultVertexFormats DefaultVertexFormats}.BLOCK. It is also safe to assume that the GL primitive for drawing is QUADS.
      */
     @Override
     public void renderTileEntityFast(final TileArmBasic tileArmBasic, final double x, final double y, final double z, final float partialTicks, final int destroyStage, final float partial, final BufferBuilder buffer) {
@@ -158,13 +156,54 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
             }
             vbo = FixedFunctionVbo.setupVbo(vertexArray);
+            vao = Vao.setupVertices(vertexArray);
         }
         GL11.glPushMatrix();
-        GL11.glTranslated(x + 0.5, y + 4, z + 0.5);
+        //GL11.glTranslated(x + 0.5, y + 4, z + 0.5);
+
+        base_vao.use();
+
+        int rotationLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "rotation");
+
+        if (mat == null) {
+            mat = new Matrix4f();
+            mat.setIdentity();
+        }
+
+        rotateX(mat, (float) (Math.PI/8));
+        translate(mat, new Vector3f((float) x, (float) y, (float) z));
+
+        ByteBuffer data = GLAllocation.createDirectByteBuffer(16 * 4);
+        data.asFloatBuffer().put(new float[]{
+                mat.m00,
+                mat.m01,
+                mat.m02,
+                mat.m03,
+                mat.m10,
+                mat.m11,
+                mat.m12,
+                mat.m13,
+                mat.m20,
+                mat.m21,
+                mat.m22,
+                mat.m23,
+                mat.m30,
+                mat.m31,
+                mat.m32,
+                mat.m33}
+        );
+
+        mat.setIdentity();
+
+        GL20.glUniformMatrix4(rotationLoc, false, data.asFloatBuffer());
+
+        //base_vao.withUniforms()
 
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
-        Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(""));
-        vbo.draw();
+        Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
+        vao.draw();
+        base_vao.release();
+        //vbo.draw();
 
         GL11.glPopMatrix();
     }
@@ -212,7 +251,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         for (int i = 0; i < quadDataList.length; i++) {
             int[] quadData = quadDataList[i];
             for (int k = 0; k < 4; ++k) {
-                // Getting the offset for the current vertex.
+                // Getting the offset for the current arm_shader.vert.
                 int vertexIndex = k * 7;
                 vertexTransformingVec.x = Float.intBitsToFloat(quadData[vertexIndex]);
                 vertexTransformingVec.y = Float.intBitsToFloat(quadData[vertexIndex + 1]);
@@ -228,7 +267,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
                 int z = Float.floatToRawIntBits((float) (vertexTransformingVec.z + baseOffset.z + buffer.getOffsetZ()));
 
                 int destIndex = quadCount * 28 + vertexIndex;
-                // vertex position data
+                // arm_shader.vert position data
                 vertexDataArray[destIndex] = x;
                 vertexDataArray[destIndex + 1] = y;
                 vertexDataArray[destIndex + 2] = z;
@@ -238,7 +277,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
                 vertexDataArray[destIndex + 4] = quadData[vertexIndex + 4]; //texture
                 vertexDataArray[destIndex + 5] = quadData[vertexIndex + 5];
 
-                // vertex brightness
+                // arm_shader.vert brightness
                 vertexDataArray[destIndex + 6] = brightness;
             }
             quadCount++;
@@ -249,7 +288,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         for (int i = 0; i < quadDataList.length; i++) {
             int[] quadData = quadDataList[i];
             for (int k = 0; k < 4; ++k) {
-                // Getting the offset for the current vertex.
+                // Getting the offset for the current arm_shader.vert.
                 int vertexIndex = k * 7;
                 vertexTransformingVec.x = Float.intBitsToFloat(quadData[vertexIndex]);
                 vertexTransformingVec.y = Float.intBitsToFloat(quadData[vertexIndex + 1]);
@@ -265,7 +304,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
                 int z = Float.floatToRawIntBits((float) (vertexTransformingVec.z + baseOffset.z + buffer.getOffsetZ()));
 
                 int destIndex = i * 28 + vertexIndex;
-                // vertex position data
+                // arm_shader.vert position data
                 vertexItemDataArray[destIndex] = x;
                 vertexItemDataArray[destIndex + 1] = y;
                 vertexItemDataArray[destIndex + 2] = z;
@@ -275,7 +314,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
                 vertexItemDataArray[destIndex + 4] = quadData[vertexIndex + 4]; //texture
                 vertexItemDataArray[destIndex + 5] = quadData[vertexIndex + 5];
 
-                // vertex brightness
+                // arm_shader.vert brightness
                 vertexItemDataArray[destIndex + 6] = brightness;
             }
         }

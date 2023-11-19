@@ -52,7 +52,7 @@ public class FixedFunctionVbo extends Vbo {
             for (int i = 0; i < quadData.length; i++) {
                 int[] vertexData = quadData[i];
                 for (int k = 0; k < 4; ++k) {
-                    // Getting the offset for the current vertex.
+                    // Getting the offset for the current arm_shader.vert.
                     int vertexIndex = k * 7;
                     data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex]));
                     data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex + 1]));
@@ -86,7 +86,7 @@ public class FixedFunctionVbo extends Vbo {
     @Override
     public void draw() {
         preDraw();
-        //Draws the currently bound array buffer with the specified draw mode (quads in this case), from vertex 0 to the number of vertices (the whole model).
+        //Draws the currently bound array buffer with the specified draw mode (quads in this case), from arm_shader.vert 0 to the number of vertices (the whole model).
         GL11.glDrawArrays(drawMode, 0, numVertices);
         postDraw();
     }
@@ -94,17 +94,17 @@ public class FixedFunctionVbo extends Vbo {
     private void preDraw(){
         //Bind the buffer to the array buffer
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
-        //Tells opengl that we specificed our positions as 3 numbers stored as 3 floats, with a stride of the size of a vertex and an offset of 0.
+        //Tells opengl that we specificed our positions as 3 numbers stored as 3 floats, with a stride of the size of a arm_shader.vert and an offset of 0.
         GL11.glVertexPointer(3, GL11.GL_FLOAT, Vertex.BYTES_PER_VERTEX, 0);
         //Enables the position attribute
         GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
         //Tells opengl that the texcoords is 2 numbers, stored as floats, with an offset of 12 (position is the first 12 bytes)
         GL11.glTexCoordPointer(2, GL11.GL_FLOAT, Vertex.BYTES_PER_VERTEX, 12);
         GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
-        //Tells opengl that the normal (which is always 3 numbers) is stored as signed bytes, with an offset of 20 (vertex bytes + the 8 texcoord bytes come first)
+        //Tells opengl that the normal (which is always 3 numbers) is stored as signed bytes, with an offset of 20 (arm_shader.vert bytes + the 8 texcoord bytes come first)
         GL11.glNormalPointer(GL11.GL_BYTE, Vertex.BYTES_PER_VERTEX, 20);
         GL11.glEnableClientState(GL11.GL_NORMAL_ARRAY);
-        //Tells opengl that color is 4 numbers, stored as an unsigned byte, and has an offset of 23 (vertex bytes + texcoord bytes + the 3 normal bytes)
+        //Tells opengl that color is 4 numbers, stored as an unsigned byte, and has an offset of 23 (arm_shader.vert bytes + texcoord bytes + the 3 normal bytes)
         GL11.glColorPointer(4, GL11.GL_UNSIGNED_BYTE, Vertex.BYTES_PER_VERTEX, 23);
         GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
     }
