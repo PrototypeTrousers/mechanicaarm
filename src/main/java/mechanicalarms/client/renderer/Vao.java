@@ -71,12 +71,16 @@ public class Vao {
         int vao = GL30.glGenVertexArrays();
         GL30.glBindVertexArray(vao);
 
+        //Pos
         GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 0);
         GL20.glEnableVertexAttribArray(0);
+        //Texture
         GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 12);
         GL20.glEnableVertexAttribArray(1);
+        //Normal
         GL20.glVertexAttribPointer(2, 3, GL11.GL_BYTE, true, Vertex.BYTES_PER_VERTEX, 20);
         GL20.glEnableVertexAttribArray(2);
+        //Color
         GL20.glVertexAttribPointer(3, 4, GL11.GL_UNSIGNED_BYTE, true, Vertex.BYTES_PER_VERTEX, 23);
         GL20.glEnableVertexAttribArray(3);
 

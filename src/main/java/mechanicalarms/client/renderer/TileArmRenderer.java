@@ -8,6 +8,7 @@ import mechanicalarms.common.proxy.ClientProxy;
 import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -49,7 +50,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader"))
             .withUniforms(ShaderManager.LIGHTMAP).withUniforms();
 
-    FixedFunctionVbo vbo;
     Vao vao;
 
     public TileArmRenderer() {
@@ -58,8 +58,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     }
 
     @Override
-    public void render(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
-        if (vbo == null) {
+    public void renderTileEntityFast(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
+        if (vao == null) {
             BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
             ModelManager modelManager = blockRendererDispatcher.getBlockModelShapes().getModelManager();
             if (vertexArray == null) {
@@ -83,22 +83,24 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
                 this.vertexDataArray = new int[size * 28];
 
             }
-            vbo = FixedFunctionVbo.setupVbo(vertexArray);
             vao = Vao.setupVertices(vertexArray);
         }
         GL11.glPushMatrix();
         GL11.glTranslatef((float) x, (float) y, (float) z);
 
-        float[] firstArmCurrRot = tileArmBasic.getAnimationRotation(0);
-        float[] firstArmPrevRot = tileArmBasic.getRotation(0);
+        float[] firstArmCurrRot = tileArmBasic.getRotation(0);
+        float[] firstArmPrevRot = tileArmBasic.getAnimationRotation(0);
 
         Quaternion rot = Quaternion.createIdentity();
+        Matrix4f transformMatrix = new Matrix4f();
+        transformMatrix.setIdentity();
 
+        moveToPivot(transformMatrix, PIVOT_1);
+        rotateY(transformMatrix, (float) (-Math.PI / 2));
         rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
         rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
-
-        mat = Quaternion.createRotateMatrix(rot);
-
+        Quaternion.rotateMatrix(transformMatrix, rot);
+        moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
         base_vao.use();
 
@@ -107,25 +109,23 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         ByteBuffer data = GLAllocation.createDirectByteBuffer(16 * 4);
         data.asFloatBuffer().put(new float[]{
-                mat.m00,
-                mat.m01,
-                mat.m02,
-                mat.m03,
-                mat.m10,
-                mat.m11,
-                mat.m12,
-                mat.m13,
-                mat.m20,
-                mat.m21,
-                mat.m22,
-                mat.m23,
-                mat.m30,
-                mat.m31,
-                mat.m32,
-                mat.m33}
+                transformMatrix.m00,
+                transformMatrix.m01,
+                transformMatrix.m02,
+                transformMatrix.m03,
+                transformMatrix.m10,
+                transformMatrix.m11,
+                transformMatrix.m12,
+                transformMatrix.m13,
+                transformMatrix.m20,
+                transformMatrix.m21,
+                transformMatrix.m22,
+                transformMatrix.m23,
+                transformMatrix.m30,
+                transformMatrix.m31,
+                transformMatrix.m32,
+                transformMatrix.m33}
         );
-
-        mat.setIdentity();
 
         GL20.glUniformMatrix4(rotationLoc, true, data.asFloatBuffer());
 
@@ -136,6 +136,11 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         //vbo.draw();
 
         GL11.glPopMatrix();
+    }
+
+    @Override
+    public void render(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+
     }
 
     void rotateX(Matrix4f matrix, float angle) {
