@@ -24,6 +24,7 @@ import javax.vecmath.Tuple4f;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.util.List;
 
 
@@ -48,6 +49,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     Matrix4f transformMatrix = new Matrix4f();
     Quaternion rot = Quaternion.createIdentity();
 
+    FloatBuffer fb = GLAllocation.createDirectFloatBuffer(16);
 
     Matrix4f mat;
 
@@ -117,9 +119,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         int rotationLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "rotation");
 
-
-        ByteBuffer data = GLAllocation.createDirectByteBuffer(16 * 4);
-        data.asFloatBuffer().put(new float[]{
+        fb.put(new float[]{
                 transformMatrix.m00,
                 transformMatrix.m01,
                 transformMatrix.m02,
@@ -137,8 +137,9 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
                 transformMatrix.m32,
                 transformMatrix.m33}
         );
-
-        GL20.glUniformMatrix4(rotationLoc, true, data.asFloatBuffer());
+        fb.rewind();
+        GL20.glUniformMatrix4(rotationLoc, true, fb);
+        fb.rewind();
 
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
@@ -162,9 +163,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         int rotationLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "rotation");
 
-
-        ByteBuffer data = GLAllocation.createDirectByteBuffer(16 * 4);
-        data.asFloatBuffer().put(new float[]{
+        fb.put(new float[]{
                 transformMatrix.m00,
                 transformMatrix.m01,
                 transformMatrix.m02,
@@ -182,8 +181,9 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
                 transformMatrix.m32,
                 transformMatrix.m33}
         );
-
-        GL20.glUniformMatrix4(rotationLoc, true, data.asFloatBuffer());
+        fb.rewind();
+        GL20.glUniformMatrix4(rotationLoc, true, fb);
+        fb.rewind();
 
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
