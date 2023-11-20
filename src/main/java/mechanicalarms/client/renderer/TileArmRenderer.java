@@ -45,6 +45,10 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     private int[] vertexItemDataArray;
     private int quadCount = 0;
 
+    Matrix4f transformMatrix = new Matrix4f();
+    Quaternion rot = Quaternion.createIdentity();
+
+
     Matrix4f mat;
 
     public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader"))
@@ -59,6 +63,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
     @Override
     public void renderTileEntityFast(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
+
         if (vao == null) {
             BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
             ModelManager modelManager = blockRendererDispatcher.getBlockModelShapes().getModelManager();
@@ -85,14 +90,20 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
             }
             vao = Vao.setupVertices(vertexArray);
         }
+
+        renderFirstArm(tileArmBasic, x, y, z, partialTicks);
+        renderSecondArm(tileArmBasic, x, y, z, partialTicks);
+    }
+
+    void renderFirstArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks){
+
         GL11.glPushMatrix();
         GL11.glTranslatef((float) x, (float) y, (float) z);
 
         float[] firstArmCurrRot = tileArmBasic.getRotation(0);
         float[] firstArmPrevRot = tileArmBasic.getAnimationRotation(0);
 
-        Quaternion rot = Quaternion.createIdentity();
-        Matrix4f transformMatrix = new Matrix4f();
+        rot.setIndentity();
         transformMatrix.setIdentity();
 
         moveToPivot(transformMatrix, PIVOT_1);
@@ -133,11 +144,53 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
         vao.draw();
         base_vao.release();
-        //vbo.draw();
-
-        GL11.glPopMatrix();
     }
 
+    void renderSecondArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks){
+        float[] secondArmCurrRot = tileArmBasic.getRotation(1);
+        float[] secondArmPrevRot = tileArmBasic.getAnimationRotation(1);
+
+        Quaternion rot = Quaternion.createIdentity();
+
+        translate(transformMatrix, new Vector3f(0,0,-(1 + 12 / 16F)));
+        moveToPivot(transformMatrix, PIVOT_2);
+        rot.rotateX(lerp(secondArmPrevRot[0], secondArmCurrRot[0], partialTicks));
+        Quaternion.rotateMatrix(transformMatrix, rot);
+        moveToPivot(transformMatrix, ANTI_PIVOT_2);
+
+        base_vao.use();
+
+        int rotationLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "rotation");
+
+
+        ByteBuffer data = GLAllocation.createDirectByteBuffer(16 * 4);
+        data.asFloatBuffer().put(new float[]{
+                transformMatrix.m00,
+                transformMatrix.m01,
+                transformMatrix.m02,
+                transformMatrix.m03,
+                transformMatrix.m10,
+                transformMatrix.m11,
+                transformMatrix.m12,
+                transformMatrix.m13,
+                transformMatrix.m20,
+                transformMatrix.m21,
+                transformMatrix.m22,
+                transformMatrix.m23,
+                transformMatrix.m30,
+                transformMatrix.m31,
+                transformMatrix.m32,
+                transformMatrix.m33}
+        );
+
+        GL20.glUniformMatrix4(rotationLoc, true, data.asFloatBuffer());
+
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+        Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
+        vao.draw();
+        base_vao.release();
+        GL11.glPopMatrix();
+    }
     @Override
     public void render(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
 
