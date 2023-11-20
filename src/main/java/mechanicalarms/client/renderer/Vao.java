@@ -44,20 +44,22 @@ public class Vao {
                 for (int k = 0; k < 4; ++k) {
                     // Getting the offset for the current arm_shader.vert.
                     int vertexIndex = k * 7;
+                    //POS X,Y,Z
                     data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex]));
                     data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex + 1]));
                     data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex + 2]));
-                    data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex + 4]));
-                    data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex + 5]));
+                    //U,V
+                    data.putFloat(vertexData[vertexIndex + 4]);
+                    data.putFloat(vertexData[vertexIndex + 5]);
                     //Normals don't need as much precision as tex coords or positions
-                    data.put((byte) ((int) (0 * 127) & 0xFF));
-                    data.put((byte) ((int) (0 * 127) & 0xFF));
-                    data.put((byte) ((int) (0 * 127) & 0xFF));
+                    data.put((byte) ((int) (1 * 127) & 0xFF));
+                    data.put((byte) ((int) (1 * 127) & 0xFF));
+                    data.put((byte) ((int) (1 * 127) & 0xFF));
                     //Neither do colors
-                    data.put((byte) (vertexData[vertexIndex + 3] * 255));
-                    data.put((byte) (vertexData[vertexIndex + 3] * 255));
-                    data.put((byte) (vertexData[vertexIndex + 3] * 255));
-                    data.put((byte) (vertexData[vertexIndex + 3] * 255));
+                    data.put((byte) ((vertexData[vertexIndex + 3] >> 16) & 0xFF));
+                    data.put((byte) ((vertexData[vertexIndex + 3] >> 8) & 0xFF));
+                    data.put((byte) (vertexData[vertexIndex + 3] & 0xFF));
+                    data.put((byte) ((vertexData[vertexIndex + 3] >> 24) & 0xFF));
                     v++;
                 }
             }
