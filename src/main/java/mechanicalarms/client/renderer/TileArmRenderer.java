@@ -113,7 +113,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     void renderFirstArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks){
 
         GL11.glPushMatrix();
-        //GL11.glTranslatef((float) x, (float) y, (float) z);
+        GL11.glTranslatef((float) x, (float) y, (float) z);
 
         float[] firstArmCurrRot = tileArmBasic.getRotation(0);
         float[] firstArmPrevRot = tileArmBasic.getAnimationRotation(0);
@@ -127,38 +127,48 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         MODELVIEW_MATRIX_BUFFER.rewind();
         PROJECTION_MATRIX_BUFFER.rewind();
 
-        Matrix4f mm = new Matrix4f(MODELVIEW_MATRIX_BUFFER.array());
-        Matrix4f pm = new Matrix4f(PROJECTION_MATRIX_BUFFER.array());
+        Matrix4f mm = fbToM4f(MODELVIEW_MATRIX_BUFFER, new Matrix4f());
+        Matrix4f pm = fbToM4f(PROJECTION_MATRIX_BUFFER, new Matrix4f());
 
-        moveToPivot(transformMatrix, PIVOT_1);
-        rotateY(transformMatrix, (float) (-Math.PI / 2));
-        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
-        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
-        Quaternion.rotateMatrix(transformMatrix, rot);
-        moveToPivot(transformMatrix, ANTI_PIVOT_1);
+//        moveToPivot(transformMatrix, PIVOT_1);
+//        rotateY(transformMatrix, (float) (-Math.PI / 2));
+//        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
+//        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
+//        Quaternion.rotateMatrix(transformMatrix, rot);
+//        moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
+
+        Matrix4f m = new Matrix4f();
+        m.setIdentity();
+
+        Matrix4f tm = new Matrix4f();
+        tm.setIdentity();
+        tm.setTranslation(new Vector3f((float) x, (float) y + 1, (float) z));
+
+//m.mul(pm);
+       // m.mul(mm);
+        //m.mul(tm);
+
+        //m.mul(transformMatrix);
         int rotationLoc = 4;
 
-        transformMatrix.setTranslation(new Vector3f((float) x, (float) y, (float) z));
-        transformMatrix.setIdentity();
-
         fb.put(new float[]{
-                transformMatrix.m00,
-                transformMatrix.m01,
-                transformMatrix.m02,
-                transformMatrix.m03,
-                transformMatrix.m10,
-                transformMatrix.m11,
-                transformMatrix.m12,
-                transformMatrix.m13,
-                transformMatrix.m20,
-                transformMatrix.m21,
-                transformMatrix.m22,
-                transformMatrix.m23,
-                transformMatrix.m30,
-                transformMatrix.m31,
-                transformMatrix.m32,
-                transformMatrix.m33}
+                m.m00,
+                m.m01,
+                m.m02,
+                m.m03,
+                m.m10,
+                m.m11,
+                m.m12,
+                m.m13,
+                m.m20,
+                m.m21,
+                m.m22,
+                m.m23,
+                m.m30,
+                m.m31,
+                m.m32,
+                m.m33}
         );
         fb.rewind();
 
@@ -170,20 +180,17 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         glBufferSubData(GL_ARRAY_BUFFER, 0, fb);
         fb.rewind();
 
-        GL30.glBindVertexArray(vao.vaoId);
-
         for (int i = 0; i < 4; i++) {
+            GL30.glBindVertexArray(vao.vaoId);
             glVertexAttribPointer(rotationLoc + i, 4, GL_FLOAT, false, 64, i * 16);
             glEnableVertexAttribArray(rotationLoc + i);
             glVertexAttribDivisor(rotationLoc + i, 1);
+            GL30.glBindVertexArray(0);
         }
-
-
 
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
         glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, 1);
-        GL30.glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         //vao.draw();
