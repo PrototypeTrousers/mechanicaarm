@@ -103,7 +103,7 @@ public class Vao {
         GL20.glVertexAttribPointer(3, 4, GL11.GL_UNSIGNED_BYTE, true, Vertex.BYTES_PER_VERTEX, 23);
         GL20.glEnableVertexAttribArray(3);
 
-        GL20.glVertexAttribPointer(4, 16, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 27);
+        GL20.glVertexAttribPointer(4, 4, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 27);
         GL20.glEnableVertexAttribArray(4);
 
         GL30.glBindVertexArray(0);

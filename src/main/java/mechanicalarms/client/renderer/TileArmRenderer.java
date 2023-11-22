@@ -116,13 +116,12 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         rot.setIndentity();
         transformMatrix.setIdentity();
 
-        //moveToPivot(transformMatrix, PIVOT_1);
-        //rotateY(transformMatrix, (float) (-Math.PI / 2));
+        moveToPivot(transformMatrix, PIVOT_1);
+        rotateY(transformMatrix, (float) (-Math.PI / 2));
         rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
         rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
         Quaternion.rotateMatrix(transformMatrix, rot);
-        //moveToPivot(transformMatrix, ANTI_PIVOT_1);
-
+        moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
         int rotationLoc = 4;
 
@@ -162,12 +161,13 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
             glVertexAttribDivisor(rotationLoc + i, 1);
         }
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
         glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, 1);
         GL30.glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         //vao.draw();
         base_vao.release();
