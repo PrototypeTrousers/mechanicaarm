@@ -18,6 +18,7 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Tuple4f;
@@ -26,6 +27,13 @@ import javax.vecmath.Vector4f;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.List;
+
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
+import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.opengl.GL31.glDrawArraysInstanced;
+import static org.lwjgl.opengl.GL33.glVertexAttribDivisor;
 
 
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
@@ -94,7 +102,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         }
 
         renderFirstArm(tileArmBasic, x, y, z, partialTicks);
-        renderSecondArm(tileArmBasic, x, y, z, partialTicks);
+        //renderSecondArm(tileArmBasic, x, y, z, partialTicks);
     }
 
     void renderFirstArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks){
@@ -115,9 +123,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         Quaternion.rotateMatrix(transformMatrix, rot);
         moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
-        base_vao.use();
 
-        int rotationLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "rotation");
+        int rotationLoc = 4;
 
         fb.put(new float[]{
                 transformMatrix.m00,
@@ -138,13 +145,33 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
                 transformMatrix.m33}
         );
         fb.rewind();
-        GL20.glUniformMatrix4(rotationLoc, true, fb);
+
+        base_vao.use();
+
+        int transformVboId = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, transformVboId);
+        glBufferData(GL_ARRAY_BUFFER, GLAllocation.createDirectFloatBuffer(16), GL_STATIC_DRAW);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, fb);
         fb.rewind();
+
+        GL30.glBindVertexArray(vao.vaoId);
+
+        for (int i = 0; i < 4; i++) {
+            glVertexAttribPointer(rotationLoc + i, 4, GL_FLOAT, false, 64, i * 4 * Float.BYTES);
+            glEnableVertexAttribArray(rotationLoc + i);
+            glVertexAttribDivisor(rotationLoc + i, 1);
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
-        vao.draw();
+        glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, 2);
+        GL30.glBindVertexArray(0);
+
+        //vao.draw();
         base_vao.release();
+        glPopMatrix();
     }
 
     void renderSecondArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks){

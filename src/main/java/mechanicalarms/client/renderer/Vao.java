@@ -60,6 +60,22 @@ public class Vao {
                     data.put((byte) ((vertexData[vertexIndex + 3] >> 8) & 0xFF));
                     data.put((byte) (vertexData[vertexIndex + 3] & 0xFF));
                     data.put((byte) ((vertexData[vertexIndex + 3] >> 24) & 0xFF));
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
+                    data.putFloat(0);
                     v++;
                 }
             }
@@ -76,6 +92,7 @@ public class Vao {
         //Pos
         GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 0);
         GL20.glEnableVertexAttribArray(0);
+
         //Texture
         GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 12);
         GL20.glEnableVertexAttribArray(1);
@@ -85,6 +102,9 @@ public class Vao {
         //Color
         GL20.glVertexAttribPointer(3, 4, GL11.GL_UNSIGNED_BYTE, true, Vertex.BYTES_PER_VERTEX, 23);
         GL20.glEnableVertexAttribArray(3);
+
+        GL20.glVertexAttribPointer(4, 4, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 27);
+        GL20.glEnableVertexAttribArray(4);
 
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);

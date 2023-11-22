@@ -4,16 +4,15 @@ layout (location = 0) in vec3 in_pos;
 layout (location = 1) in vec2 in_texcoord;
 layout (location = 2) in vec3 in_normal;
 layout (location = 3) in vec4 in_color;
+layout (location = 4) in mat4 in_transform;
 
 out vec2 texCoord;
 out vec2 lightCoord;
 out vec4 color;
 out vec3 lighting;
 
-uniform mat4 rotation;
-
 void main(){
-	gl_Position = gl_ModelViewProjectionMatrix * rotation * vec4(in_pos, 1);
+	gl_Position = gl_ModelViewProjectionMatrix * in_transform * vec4(in_pos, 1);
 
 	//0 and 1 are used for the p and q coordinates because p defaults to 0 and q defaults to 1
 	texCoord = (gl_TextureMatrix[0] * vec4(in_texcoord, 0, 1)).st;
