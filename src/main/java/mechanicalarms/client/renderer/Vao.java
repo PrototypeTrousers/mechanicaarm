@@ -8,8 +8,15 @@ import org.lwjgl.opengl.GL30;
 
 import java.nio.ByteBuffer;
 
+import static mechanicalarms.client.renderer.TileArmRenderer.totalInstances;
+import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
+import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.opengl.GL33.glVertexAttribDivisor;
+
 public class Vao {
 
+    private static int vboInstance;
     public int vaoId;
     public int drawMode;
     public int vertexCount;
@@ -103,18 +110,23 @@ public class Vao {
         GL20.glVertexAttribPointer(3, 4, GL11.GL_UNSIGNED_BYTE, true, Vertex.BYTES_PER_VERTEX, 23);
         GL20.glEnableVertexAttribArray(3);
 
-        GL20.glVertexAttribPointer(4, 4, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 27);
-        GL20.glEnableVertexAttribArray(4);
-        GL20.glVertexAttribPointer(5, 4, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 43);
-        GL20.glEnableVertexAttribArray(4);
-        GL20.glVertexAttribPointer(6, 4, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 59);
-        GL20.glEnableVertexAttribArray(4);
-        GL20.glVertexAttribPointer(7, 4, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 75);
-        GL20.glEnableVertexAttribArray(4);
+        vboInstance = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboInstance);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 64L * 4 * totalInstances, GL15.GL_DYNAMIC_DRAW);
+
+        for (int i = 0; i < 4; i++) {
+            glVertexAttribPointer(4 + i, 4, GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, i * 16);
+            glEnableVertexAttribArray(4 + i);
+            glVertexAttribDivisor(4 + i, 1);
+        }
 
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
 
         return new Vao(vao, GL11.GL_QUADS, v, false);
+    }
+
+    public int getVboInstance() {
+        return vboInstance;
     }
 }

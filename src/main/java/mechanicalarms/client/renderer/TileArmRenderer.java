@@ -24,21 +24,17 @@ import javax.vecmath.Matrix4f;
 import javax.vecmath.Tuple4f;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.List;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.glPopMatrix;
 import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL31.glDrawArraysInstanced;
-import static org.lwjgl.opengl.GL33.glVertexAttribDivisor;
 
 
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
+    public static int totalInstances = 10;
     private static final Vector3f V3F_ZERO = new Vector3f();
     private static int[][][] vertexArray = null;
     private final Matrix4f tempModelMatrix = new Matrix4f();
@@ -55,8 +51,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     private int[] vertexItemDataArray;
     private int quadCount = 0;
 
-    protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-    protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+    protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);;
+    protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
 
 
     Matrix4f transformMatrix = new Matrix4f();
@@ -115,82 +111,68 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         GL11.glPushMatrix();
         GL11.glTranslatef((float) x, (float) y, (float) z);
 
+        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
+        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
+
         float[] firstArmCurrRot = tileArmBasic.getRotation(0);
         float[] firstArmPrevRot = tileArmBasic.getAnimationRotation(0);
 
         rot.setIndentity();
         transformMatrix.setIdentity();
+        //translate(transformMatrix, (float) -x, (float) -y, (float) -z);
+        Quaternion rot = Quaternion.createIdentity();
 
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
-
-        MODELVIEW_MATRIX_BUFFER.rewind();
-        PROJECTION_MATRIX_BUFFER.rewind();
-
-        Matrix4f mm = fbToM4f(MODELVIEW_MATRIX_BUFFER, new Matrix4f());
-        Matrix4f pm = fbToM4f(PROJECTION_MATRIX_BUFFER, new Matrix4f());
-
-//        moveToPivot(transformMatrix, PIVOT_1);
-//        rotateY(transformMatrix, (float) (-Math.PI / 2));
-//        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
-//        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
-//        Quaternion.rotateMatrix(transformMatrix, rot);
-//        moveToPivot(transformMatrix, ANTI_PIVOT_1);
-
-
-        Matrix4f m = new Matrix4f();
-        m.setIdentity();
-
-        Matrix4f tm = new Matrix4f();
-        tm.setIdentity();
-        tm.setTranslation(new Vector3f((float) x, (float) y + 1, (float) z));
-
-//m.mul(pm);
-       // m.mul(mm);
-        //m.mul(tm);
-
-        //m.mul(transformMatrix);
-        int rotationLoc = 4;
+        //translate(transformMatrix, new Vector3f(0,0,-(1 + 12 / 16F)));
+        //moveToPivot(transformMatrix, PIVOT_2);
+        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
+        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
+        Quaternion.rotateMatrix(transformMatrix, rot);
+        //moveToPivot(transformMatrix, ANTI_PIVOT_2);
 
         fb.put(new float[]{
-                m.m00,
-                m.m01,
-                m.m02,
-                m.m03,
-                m.m10,
-                m.m11,
-                m.m12,
-                m.m13,
-                m.m20,
-                m.m21,
-                m.m22,
-                m.m23,
-                m.m30,
-                m.m31,
-                m.m32,
-                m.m33}
+                transformMatrix.m00,
+                transformMatrix.m01,
+                transformMatrix.m02,
+                transformMatrix.m03,
+                transformMatrix.m10,
+                transformMatrix.m11,
+                transformMatrix.m12,
+                transformMatrix.m13,
+                transformMatrix.m20,
+                transformMatrix.m21,
+                transformMatrix.m22,
+                transformMatrix.m23,
+                transformMatrix.m30,
+                transformMatrix.m31,
+                transformMatrix.m32,
+                transformMatrix.m33}
         );
         fb.rewind();
 
         base_vao.use();
 
-        int transformVboId = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, transformVboId);
-        glBufferData(GL_ARRAY_BUFFER, GLAllocation.createDirectFloatBuffer(16), GL_STATIC_DRAW);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, fb);
-        fb.rewind();
 
-        for (int i = 0; i < 4; i++) {
-            GL30.glBindVertexArray(vao.vaoId);
-            glVertexAttribPointer(rotationLoc + i, 4, GL_FLOAT, false, 64, i * 16);
-            glEnableVertexAttribArray(rotationLoc + i);
-            glVertexAttribDivisor(rotationLoc + i, 1);
-            GL30.glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, vao.getVboInstance());
+        glBufferData(GL_ARRAY_BUFFER, GLAllocation.createDirectFloatBuffer(16*totalInstances), GL_STATIC_DRAW);
+        for (int i= 0; i< totalInstances; i++) {
+            glBufferSubData(GL_ARRAY_BUFFER, i * 64, fb);
+            fb.rewind();
         }
+
+        GL30.glBindVertexArray(vao.vaoId);
+
+        int projectionLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "projection");
+        int viewLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "view");
+
+        GL20.glUniformMatrix4(projectionLoc, false, PROJECTION_MATRIX_BUFFER);
+        GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
 
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
-        glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, 1);
+
+        glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, totalInstances);
+        GL30.glBindVertexArray(0);
+
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         //vao.draw();
@@ -266,6 +248,25 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         mat.m33 = fb.get();
         fb.rewind();
         return mat;
+    }
+
+    public Matrix4f createTranslateMatrix(float x, float y, float z) {
+        Matrix4f matrix = new Matrix4f();
+        matrix.m00 = 1.0F;
+        matrix.m11 = 1.0F;
+        matrix.m22 = 1.0F;
+        matrix.m33 = 1.0F;
+        matrix.m03 = x;
+        matrix.m13 = y;
+        matrix.m23 = z;
+        return matrix;
+    }
+
+    public void translate(Matrix4f mat, float x, float y, float z) {
+        mat.m03 += mat.m00 * x + mat.m01 * y + mat.m02 * z;
+        mat.m13 += mat.m10 * x + mat.m11 * y + mat.m12 * z;
+        mat.m23 += mat.m20 * x + mat.m21 * y + mat.m22 * z;
+        mat.m33 += mat.m30 * x + mat.m31 * y + mat.m32 * z;
     }
 
     void rotateX(Matrix4f matrix, float angle) {
