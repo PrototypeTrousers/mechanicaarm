@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
@@ -34,7 +35,6 @@ import static org.lwjgl.opengl.GL31.glDrawArraysInstanced;
 
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
-    public static int totalInstances = 10;
     private static final Vector3f V3F_ZERO = new Vector3f();
     private static int[][][] vertexArray = null;
     private final Matrix4f tempModelMatrix = new Matrix4f();
@@ -151,13 +151,10 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         base_vao.use();
 
-
-        glBindBuffer(GL_ARRAY_BUFFER, vao.getVboInstance());
-        glBufferData(GL_ARRAY_BUFFER, GLAllocation.createDirectFloatBuffer(16*totalInstances), GL_STATIC_DRAW);
-        for (int i= 0; i< totalInstances; i++) {
-            glBufferSubData(GL_ARRAY_BUFFER, i * 64, fb);
-            fb.rewind();
-        }
+        glBindBuffer(GL_ARRAY_BUFFER, Vao.vboInstance);
+        glBufferData(GL_ARRAY_BUFFER, GLAllocation.createDirectFloatBuffer(16), GL_STATIC_DRAW);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, fb);
+        fb.rewind();
 
         GL30.glBindVertexArray(vao.vaoId);
 
@@ -170,7 +167,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
-        glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, totalInstances);
+        glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, 10);
         GL30.glBindVertexArray(0);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);

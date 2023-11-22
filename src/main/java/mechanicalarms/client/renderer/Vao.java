@@ -8,7 +8,6 @@ import org.lwjgl.opengl.GL30;
 
 import java.nio.ByteBuffer;
 
-import static mechanicalarms.client.renderer.TileArmRenderer.totalInstances;
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
@@ -16,11 +15,12 @@ import static org.lwjgl.opengl.GL33.glVertexAttribDivisor;
 
 public class Vao {
 
-    private static int vboInstance;
     public int vaoId;
     public int drawMode;
     public int vertexCount;
     public boolean useElements;
+
+    public static int vboInstance;
 
     public Vao(int vao, int mode, int length, boolean b) {
         this.vaoId = vao;
@@ -112,7 +112,7 @@ public class Vao {
 
         vboInstance = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboInstance);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 64L * 4 * totalInstances, GL15.GL_DYNAMIC_DRAW);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 16, GL15.GL_DYNAMIC_DRAW);
 
         for (int i = 0; i < 4; i++) {
             glVertexAttribPointer(4 + i, 4, GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, i * 16);
@@ -126,7 +126,5 @@ public class Vao {
         return new Vao(vao, GL11.GL_QUADS, v, false);
     }
 
-    public int getVboInstance() {
-        return vboInstance;
-    }
+
 }
