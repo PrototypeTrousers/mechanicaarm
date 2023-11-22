@@ -105,6 +105,12 @@ public class Vao {
 
         GL20.glVertexAttribPointer(4, 4, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 27);
         GL20.glEnableVertexAttribArray(4);
+        GL20.glVertexAttribPointer(5, 4, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 43);
+        GL20.glEnableVertexAttribArray(4);
+        GL20.glVertexAttribPointer(6, 4, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 59);
+        GL20.glEnableVertexAttribArray(4);
+        GL20.glVertexAttribPointer(7, 4, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 75);
+        GL20.glEnableVertexAttribArray(4);
 
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);

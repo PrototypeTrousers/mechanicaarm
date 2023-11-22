@@ -25,6 +25,7 @@ import javax.vecmath.Tuple4f;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.List;
 
@@ -53,6 +54,10 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     private int[] vertexDataArray;
     private int[] vertexItemDataArray;
     private int quadCount = 0;
+
+    protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+    protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+
 
     Matrix4f transformMatrix = new Matrix4f();
     Quaternion rot = Quaternion.createIdentity();
@@ -108,13 +113,22 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     void renderFirstArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks){
 
         GL11.glPushMatrix();
-        GL11.glTranslatef((float) x, (float) y, (float) z);
+        //GL11.glTranslatef((float) x, (float) y, (float) z);
 
         float[] firstArmCurrRot = tileArmBasic.getRotation(0);
         float[] firstArmPrevRot = tileArmBasic.getAnimationRotation(0);
 
         rot.setIndentity();
         transformMatrix.setIdentity();
+
+        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
+        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
+
+        MODELVIEW_MATRIX_BUFFER.rewind();
+        PROJECTION_MATRIX_BUFFER.rewind();
+
+        Matrix4f mm = new Matrix4f(MODELVIEW_MATRIX_BUFFER.array());
+        Matrix4f pm = new Matrix4f(PROJECTION_MATRIX_BUFFER.array());
 
         moveToPivot(transformMatrix, PIVOT_1);
         rotateY(transformMatrix, (float) (-Math.PI / 2));
@@ -124,6 +138,9 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
         int rotationLoc = 4;
+
+        transformMatrix.setTranslation(new Vector3f((float) x, (float) y, (float) z));
+        transformMatrix.setIdentity();
 
         fb.put(new float[]{
                 transformMatrix.m00,
@@ -221,6 +238,27 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     @Override
     public void render(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
 
+    }
+
+    Matrix4f fbToM4f(FloatBuffer fb, Matrix4f mat) {
+        mat.m00 = fb.get();
+        mat.m01 = fb.get();
+        mat.m02 = fb.get();
+        mat.m03 = fb.get();
+        mat.m10 = fb.get();
+        mat.m11 = fb.get();
+        mat.m12 = fb.get();
+        mat.m13 = fb.get();
+        mat.m20 = fb.get();
+        mat.m21 = fb.get();
+        mat.m22 = fb.get();
+        mat.m23 = fb.get();
+        mat.m30 = fb.get();
+        mat.m31 = fb.get();
+        mat.m32 = fb.get();
+        mat.m33 = fb.get();
+        fb.rewind();
+        return mat;
     }
 
     void rotateX(Matrix4f matrix, float angle) {

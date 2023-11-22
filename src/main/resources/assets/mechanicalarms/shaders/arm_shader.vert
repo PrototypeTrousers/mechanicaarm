@@ -12,7 +12,7 @@ out vec4 color;
 out vec3 lighting;
 
 void main(){
-	vec4 aPos = gl_ModelViewProjectionMatrix * in_transform * vec4(in_pos, 1);
+	vec4 aPos = in_transform * vec4(in_pos, 1);
 	gl_Position = vec4( aPos.x + gl_InstanceID, aPos.yzw);
 
 	//0 and 1 are used for the p and q coordinates because p defaults to 0 and q defaults to 1
