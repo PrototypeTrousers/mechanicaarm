@@ -17,7 +17,6 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
@@ -51,6 +50,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     private int[] vertexItemDataArray;
     private int quadCount = 0;
 
+    int totalInstances = 10;
+
     protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);;
     protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
 
@@ -58,7 +59,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     Matrix4f transformMatrix = new Matrix4f();
     Quaternion rot = Quaternion.createIdentity();
 
-    FloatBuffer fb = GLAllocation.createDirectFloatBuffer(32);
+    FloatBuffer fb = GLAllocation.createDirectFloatBuffer(16 * totalInstances);
 
     Matrix4f mat;
 
@@ -126,23 +127,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         Quaternion.rotateMatrix(transformMatrix, rot);
         moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
-        fb.put(new float[]{
-                transformMatrix.m00,
-                transformMatrix.m10,
-                transformMatrix.m20,
-                transformMatrix.m30,
-                transformMatrix.m01,
-                transformMatrix.m11,
-                transformMatrix.m21,
-                transformMatrix.m31,
-                transformMatrix.m02,
-                transformMatrix.m12,
-                transformMatrix.m22,
-                transformMatrix.m32,
-                transformMatrix.m03,
-                transformMatrix.m13,
-                transformMatrix.m23,
-                transformMatrix.m33,
+        FloatBuffer floatBuffer = GLAllocation.createDirectFloatBuffer(16);
+        floatBuffer.put(new float[]{
                 transformMatrix.m00,
                 transformMatrix.m10,
                 transformMatrix.m20,
@@ -160,7 +146,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
                 transformMatrix.m23,
                 transformMatrix.m33}
         );
-        fb.rewind();
+        floatBuffer.rewind();
 
 
         base_vao.use();
@@ -170,8 +156,10 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         glBindBuffer(GL_ARRAY_BUFFER, Vao.vboInstance);
         glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
 
-        fb.rewind();
-
+        for (int i=0;i < totalInstances; i++) {
+            glBufferSubData(GL_ARRAY_BUFFER, i * 64, floatBuffer);
+            floatBuffer.rewind();
+        }
 
         int projectionLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "projection");
         int viewLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "view");
@@ -182,7 +170,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
-        glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, 60);
+        glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, totalInstances);
         GL30.glBindVertexArray(0);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
