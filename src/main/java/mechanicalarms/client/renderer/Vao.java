@@ -1,12 +1,23 @@
 package mechanicalarms.client.renderer;
 
+import mechanicalarms.MechanicalArms;
+import mechanicalarms.common.proxy.ClientProxy;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.block.model.IBakedModel;
+import net.minecraft.client.renderer.block.model.ModelManager;
+import net.minecraftforge.client.model.IModel;
+import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.model.obj.OBJLoader;
+import net.minecraftforge.client.model.obj.OBJModel;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.LinkedHashSet;
 
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
@@ -41,34 +52,34 @@ public class Vao {
     }
 
     public static Vao setupVertices(int[][][] vertices){
+        IModel im;
+        try {
+            im = OBJLoader.INSTANCE.loadModel(ClientProxy.arm);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        LinkedHashSet<OBJModel.Face> f = ((OBJModel) im).getMatLib().getGroups().get("arm1").getFaces();
         ByteBuffer data = GLAllocation.createDirectByteBuffer(240 * Vertex.BYTES_PER_VERTEX);
         int v = 0;
+        for (OBJModel.Face face : f) {
+            for (OBJModel.Vertex vertex : face.getVertices()){
+                data.putFloat(vertex.getPos().x);
+                data.putFloat(vertex.getPos().y);
+                data.putFloat(vertex.getPos().z);
+                //U,V
+                data.putFloat(vertex.getTextureCoordinate().u);
+                data.putFloat(vertex.getTextureCoordinate().v);
+                //Normals don't need as much precision as tex coords or positions
+                data.put((byte) Float.floatToIntBits(vertex.getNormal().x));
+                data.put((byte) Float.floatToIntBits(vertex.getNormal().y));
+                data.put((byte) Float.floatToIntBits(vertex.getNormal().z));
+                //Neither do colors
 
-        for (int part = 0; part < vertices.length; part++) {
-            int[][] quadData = vertices[part];
-            for (int i = 0; i < quadData.length; i++) {
-                int[] vertexData = quadData[i];
-                for (int k = 0; k < 4; ++k) {
-                    // Getting the offset for the current arm_shader.vert.
-                    int vertexIndex = k * 7;
-                    //POS X,Y,Z
-                    data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex]));
-                    data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex + 1]));
-                    data.putFloat(Float.intBitsToFloat(vertexData[vertexIndex + 2]));
-                    //U,V
-                    data.putFloat(vertexData[vertexIndex + 4]);
-                    data.putFloat(vertexData[vertexIndex + 5]);
-                    //Normals don't need as much precision as tex coords or positions
-                    data.put((byte) ((int) (1 * 127) & 0xFF));
-                    data.put((byte) ((int) (1 * 127) & 0xFF));
-                    data.put((byte) ((int) (1 * 127) & 0xFF));
-                    //Neither do colors
-                    data.put((byte) ((vertexData[vertexIndex + 3] >> 16) & 0xFF));
-                    data.put((byte) ((vertexData[vertexIndex + 3] >> 8) & 0xFF));
-                    data.put((byte) (vertexData[vertexIndex + 3] & 0xFF));
-                    data.put((byte) ((vertexData[vertexIndex + 3] >> 24) & 0xFF));
-                    v++;
-                }
+                data.put((byte) 255);
+                data.put((byte) 255);
+                data.put((byte) 255);
+                data.put((byte) 255);
+                v++;
             }
         }
         data.rewind();

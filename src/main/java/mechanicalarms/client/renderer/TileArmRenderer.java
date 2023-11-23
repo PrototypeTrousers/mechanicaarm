@@ -27,7 +27,7 @@ import javax.vecmath.Vector4f;
 import java.nio.FloatBuffer;
 import java.util.List;
 
-import static org.lwjgl.opengl.GL11.glPopMatrix;
+import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL31.glDrawArraysInstanced;
 
@@ -110,7 +110,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     void renderFirstArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks){
 
         GL11.glPushMatrix();
-
+        GL11.glEnable(GL_DEPTH_TEST);
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
         GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
 
