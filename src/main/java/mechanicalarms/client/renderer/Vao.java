@@ -67,22 +67,6 @@ public class Vao {
                     data.put((byte) ((vertexData[vertexIndex + 3] >> 8) & 0xFF));
                     data.put((byte) (vertexData[vertexIndex + 3] & 0xFF));
                     data.put((byte) ((vertexData[vertexIndex + 3] >> 24) & 0xFF));
-                    data.putFloat(1);
-                    data.putFloat(0);
-                    data.putFloat(0);
-                    data.putFloat(0);
-                    data.putFloat(0);
-                    data.putFloat(1);
-                    data.putFloat(0);
-                    data.putFloat(0);
-                    data.putFloat(0);
-                    data.putFloat(0);
-                    data.putFloat(1);
-                    data.putFloat(0);
-                    data.putFloat(0);
-                    data.putFloat(0);
-                    data.putFloat(0);
-                    data.putFloat(1);
                     v++;
                 }
             }
