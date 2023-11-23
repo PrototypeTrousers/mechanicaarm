@@ -58,7 +58,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     Matrix4f transformMatrix = new Matrix4f();
     Quaternion rot = Quaternion.createIdentity();
 
-    FloatBuffer fb = GLAllocation.createDirectFloatBuffer(16);
+    FloatBuffer fb = GLAllocation.createDirectFloatBuffer(32);
 
     Matrix4f mat;
 
@@ -109,7 +109,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     void renderFirstArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks){
 
         GL11.glPushMatrix();
-        GL11.glTranslatef((float) x, (float) y, (float) z);
 
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
         GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
@@ -119,44 +118,60 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         rot.setIndentity();
         transformMatrix.setIdentity();
-        //translate(transformMatrix, (float) -x, (float) -y, (float) -z);
         Quaternion rot = Quaternion.createIdentity();
-
-        //translate(transformMatrix, new Vector3f(0,0,-(1 + 12 / 16F)));
-        //moveToPivot(transformMatrix, PIVOT_2);
-        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
+        translate(transformMatrix, (float) x, (float) y, (float) z);
+        moveToPivot(transformMatrix, PIVOT_1);
         rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
+        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
         Quaternion.rotateMatrix(transformMatrix, rot);
-        //moveToPivot(transformMatrix, ANTI_PIVOT_2);
+        moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
         fb.put(new float[]{
                 transformMatrix.m00,
-                transformMatrix.m01,
-                transformMatrix.m02,
-                transformMatrix.m03,
                 transformMatrix.m10,
-                transformMatrix.m11,
-                transformMatrix.m12,
-                transformMatrix.m13,
                 transformMatrix.m20,
-                transformMatrix.m21,
-                transformMatrix.m22,
-                transformMatrix.m23,
                 transformMatrix.m30,
+                transformMatrix.m01,
+                transformMatrix.m11,
+                transformMatrix.m21,
                 transformMatrix.m31,
+                transformMatrix.m02,
+                transformMatrix.m12,
+                transformMatrix.m22,
                 transformMatrix.m32,
+                transformMatrix.m03,
+                transformMatrix.m13,
+                transformMatrix.m23,
+                transformMatrix.m33,
+                transformMatrix.m00,
+                transformMatrix.m10,
+                transformMatrix.m20,
+                transformMatrix.m30,
+                transformMatrix.m01,
+                transformMatrix.m11,
+                transformMatrix.m21,
+                transformMatrix.m31,
+                transformMatrix.m02,
+                transformMatrix.m12,
+                transformMatrix.m22,
+                transformMatrix.m32,
+                transformMatrix.m03,
+                transformMatrix.m13,
+                transformMatrix.m23,
                 transformMatrix.m33}
         );
         fb.rewind();
 
+
         base_vao.use();
 
+        GL30.glBindVertexArray(vao.vaoId);
+
         glBindBuffer(GL_ARRAY_BUFFER, Vao.vboInstance);
-        glBufferData(GL_ARRAY_BUFFER, GLAllocation.createDirectFloatBuffer(16), GL_STATIC_DRAW);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, fb);
+        glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
+
         fb.rewind();
 
-        GL30.glBindVertexArray(vao.vaoId);
 
         int projectionLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "projection");
         int viewLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "view");
@@ -167,59 +182,13 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
-        glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, 10);
+        glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, 2);
         GL30.glBindVertexArray(0);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        //vao.draw();
         base_vao.release();
         glPopMatrix();
-    }
-
-    void renderSecondArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks){
-        float[] secondArmCurrRot = tileArmBasic.getRotation(1);
-        float[] secondArmPrevRot = tileArmBasic.getAnimationRotation(1);
-
-        Quaternion rot = Quaternion.createIdentity();
-
-        translate(transformMatrix, new Vector3f(0,0,-(1 + 12 / 16F)));
-        moveToPivot(transformMatrix, PIVOT_2);
-        rot.rotateX(lerp(secondArmPrevRot[0], secondArmCurrRot[0], partialTicks));
-        Quaternion.rotateMatrix(transformMatrix, rot);
-        moveToPivot(transformMatrix, ANTI_PIVOT_2);
-
-        base_vao.use();
-
-        int rotationLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "rotation");
-
-        fb.put(new float[]{
-                transformMatrix.m00,
-                transformMatrix.m01,
-                transformMatrix.m02,
-                transformMatrix.m03,
-                transformMatrix.m10,
-                transformMatrix.m11,
-                transformMatrix.m12,
-                transformMatrix.m13,
-                transformMatrix.m20,
-                transformMatrix.m21,
-                transformMatrix.m22,
-                transformMatrix.m23,
-                transformMatrix.m30,
-                transformMatrix.m31,
-                transformMatrix.m32,
-                transformMatrix.m33}
-        );
-        fb.rewind();
-        GL20.glUniformMatrix4(rotationLoc, true, fb);
-        fb.rewind();
-
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
-        Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
-        vao.draw();
-        base_vao.release();
-        GL11.glPopMatrix();
     }
     @Override
     public void render(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
