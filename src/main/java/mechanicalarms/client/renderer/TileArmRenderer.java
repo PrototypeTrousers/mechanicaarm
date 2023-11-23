@@ -127,8 +127,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         Quaternion.rotateMatrix(transformMatrix, rot);
         moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
-        FloatBuffer floatBuffer = GLAllocation.createDirectFloatBuffer(16);
-        floatBuffer.put(new float[]{
+        float[] fa = new float[]{
                 transformMatrix.m00,
                 transformMatrix.m10,
                 transformMatrix.m20,
@@ -144,22 +143,24 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
                 transformMatrix.m03,
                 transformMatrix.m13,
                 transformMatrix.m23,
-                transformMatrix.m33}
-        );
-        floatBuffer.rewind();
-
+                transformMatrix.m33};
 
         base_vao.use();
 
         GL30.glBindVertexArray(vao.vaoId);
 
         glBindBuffer(GL_ARRAY_BUFFER, Vao.vboInstance);
-        glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
 
         for (int i=0;i < totalInstances; i++) {
-            glBufferSubData(GL_ARRAY_BUFFER, i * 64, floatBuffer);
-            floatBuffer.rewind();
+            if (i==4) {
+                continue;
+            }
+            fb.position(i*16);
+            fb.put(fa, 0, 16);
         }
+        fb.rewind();
+
+        glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
 
         int projectionLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "projection");
         int viewLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "view");
