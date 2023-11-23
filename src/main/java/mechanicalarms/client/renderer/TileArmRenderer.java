@@ -182,7 +182,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
-        glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, 2);
+        glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, 60);
         GL30.glBindVertexArray(0);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
