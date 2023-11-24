@@ -30,6 +30,8 @@ import java.util.List;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL31.glDrawArraysInstanced;
+import static org.lwjgl.opengl.GL40.GL_DRAW_INDIRECT_BUFFER;
+import static org.lwjgl.opengl.GL40.glDrawArraysIndirect;
 
 
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
@@ -50,7 +52,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     private int[] vertexItemDataArray;
     private int quadCount = 0;
 
-    int totalInstances = 10;
+    int totalInstances = 1000;
 
     protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);;
     protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
@@ -171,7 +173,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
-        glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, totalInstances);
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, Vao.indirectBuffer);
+        glDrawArraysIndirect(GL11.GL_QUADS, 0);
         GL30.glBindVertexArray(0);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);

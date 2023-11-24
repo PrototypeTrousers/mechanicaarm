@@ -2,22 +2,18 @@ package mechanicalarms.client.renderer;
 
 import mechanicalarms.MechanicalArms;
 import mechanicalarms.common.proxy.ClientProxy;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GLAllocation;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.block.model.ModelManager;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
-import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.obj.OBJLoader;
 import net.minecraftforge.client.model.obj.OBJModel;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.*;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
@@ -26,6 +22,7 @@ import static org.lwjgl.opengl.GL33.glVertexAttribDivisor;
 
 public class Vao {
 
+    public static int indirectBuffer;
     public int vaoId;
     public int drawMode;
     public int vertexCount;
@@ -54,14 +51,15 @@ public class Vao {
     public static Vao setupVertices(int[][][] vertices){
         IModel im;
         try {
-            im = OBJLoader.INSTANCE.loadModel(ClientProxy.arm);
+            im = OBJLoader.INSTANCE.loadModel(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic.obj"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        LinkedHashSet<OBJModel.Face> f = ((OBJModel) im).getMatLib().getGroups().get("arm1").getFaces();
-        ByteBuffer data = GLAllocation.createDirectByteBuffer(240 * Vertex.BYTES_PER_VERTEX);
+        List<OBJModel.Face> fl = new ArrayList<>();
+        ((OBJModel) im).getMatLib().getGroups().values().forEach(g -> fl.addAll(g.getFaces()));
+        ByteBuffer data = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
         int v = 0;
-        for (OBJModel.Face face : f) {
+        for (OBJModel.Face face : fl) {
             for (OBJModel.Vertex vertex : face.getVertices()){
                 data.putFloat(vertex.getPos().x);
                 data.putFloat(vertex.getPos().y);
@@ -116,6 +114,27 @@ public class Vao {
         }
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL30.glBindVertexArray(0);
+
+        indirectBuffer = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL40.GL_DRAW_INDIRECT_BUFFER, indirectBuffer);
+
+        // Example data for a draw call
+        int vertexCount = 240;
+        int instanceCount = 1000;
+        int firstVertex = 0;
+        int baseInstance = 0;
+
+        // Create a ByteBuffer to hold the draw parameters
+        ByteBuffer drawBuffer = BufferUtils.createByteBuffer(16);
+        drawBuffer.putInt(vertexCount);
+        drawBuffer.putInt(instanceCount);
+        drawBuffer.putInt(firstVertex);
+        drawBuffer.putInt(baseInstance);
+        drawBuffer.flip();
+
+        // Upload the draw parameters to the buffer
+        GL15.glBufferData(GL40.GL_DRAW_INDIRECT_BUFFER, drawBuffer, GL15.GL_STATIC_DRAW);
+
 
         return new Vao(vao, GL11.GL_QUADS, v, false);
     }
