@@ -64,7 +64,7 @@ public class Vao {
         GL30.glBindVertexArray(0);
     }
 
-    public static Vao setupVertices(int[][][] vertices){
+    public static Vao setupVertices(int[][][] vertices) {
 
 
         ResourceLocation file = ClientProxy.arm;
@@ -76,8 +76,6 @@ public class Vao {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-
         indices = ObjData.getFaceVertexIndices(obj, 3);
         FloatBuffer verticex = ObjData.getVertices(obj);
         FloatBuffer texCoords = ObjData.getTexCoords(obj, 2);
@@ -97,21 +95,30 @@ public class Vao {
 
         FloatBuffer data = GLAllocation.createDirectFloatBuffer(indices.capacity() * 27);
 
-        for (int i =0; i< indices.capacity(); i++) {
-            for (int j = 0; j < 2; j++) {
-                data.put(verticex.get());
-            }
-            for (int j = 0; j < 1; j++) {
-                data.put(texCoords.get());
-            }
-            for (int j = 0; j < 2; j++) {
-                data.put((byte)normals.get());
-            }
-            for (int j = 0; j < 3; j++) {
-                data.put((byte)255);
-            }
+        for (int i = 0; i < obj.getNumFaces(); i++) {
+            ObjFace face = obj.getFace(i);
+            for (int j = 0; j < face.getNumVertices(); j++) {
+                FloatTuple vt = obj.getVertex(face.getVertexIndex(j));
+                data.put(vt.getX());
+                data.put(vt.getY());
+                data.put(vt.getZ());
 
+                FloatTuple tx = obj.getTexCoord(face.getTexCoordIndex(j));
+                data.put(tx.getX());
+                data.put(tx.getY());
+
+                FloatTuple nm = obj.getNormal(face.getNormalIndex(j));
+                data.put(nm.getX());
+                data.put(nm.getY());
+                data.put(nm.getZ());
+
+                for (int k = 0; k < 4; k++) {
+                    data.put((byte) 255);
+                }
+            }
         }
+
+        data.rewind();
 
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, data, GL15.GL_STATIC_DRAW);
 

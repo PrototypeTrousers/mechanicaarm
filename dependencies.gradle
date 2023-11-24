@@ -23,4 +23,5 @@
  */
 dependencies {
     //implementation rfg.deobf('curse.maven:MCglTF-591547:4367036')
+    implementation('de.javagl:obj:0.4.0')
 }

@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
@@ -27,9 +28,11 @@ import javax.vecmath.Vector4f;
 import java.nio.FloatBuffer;
 import java.util.List;
 
+import static mechanicalarms.client.renderer.Vao.ebo;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL31.glDrawArraysInstanced;
+import static org.lwjgl.opengl.GL31.glDrawElementsInstanced;
 
 
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
@@ -50,7 +53,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     private int[] vertexItemDataArray;
     private int quadCount = 0;
 
-    int totalInstances = 10;
+    int totalInstances = 10000;
 
     protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);;
     protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
@@ -152,9 +155,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         glBindBuffer(GL_ARRAY_BUFFER, Vao.vboInstance);
 
         for (int i=0;i < totalInstances; i++) {
-            if (i==4) {
-                continue;
-            }
             fb.position(i*16);
             fb.put(fa, 0, 16);
         }
@@ -170,11 +170,14 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
+        GL15.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
-        glDrawArraysInstanced(GL11.GL_QUADS, 0, 240, totalInstances);
+        glDrawElementsInstanced(GL_TRIANGLES, 120, GL_UNSIGNED_INT, 0 ,1);
         GL30.glBindVertexArray(0);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+        GL15.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
 
         base_vao.release();
         glPopMatrix();
