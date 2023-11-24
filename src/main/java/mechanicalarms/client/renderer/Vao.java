@@ -1,25 +1,35 @@
 package mechanicalarms.client.renderer;
 
+import de.javagl.obj.*;
 import mechanicalarms.MechanicalArms;
 import mechanicalarms.common.proxy.ClientProxy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelManager;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.client.model.obj.OBJLoader;
 import net.minecraftforge.client.model.obj.OBJModel;
+import org.apache.commons.io.IOUtils;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashSet;
 
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.glBufferSubData;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL33.glVertexAttribDivisor;
@@ -32,6 +42,9 @@ public class Vao {
     public boolean useElements;
 
     public static int vboInstance;
+    public static int ebo;
+
+    public static IntBuffer indices;
 
     public Vao(int vao, int mode, int length, boolean b) {
         this.vaoId = vao;
@@ -52,44 +65,55 @@ public class Vao {
     }
 
     public static Vao setupVertices(int[][][] vertices){
-        IModel im;
+
+
+        ResourceLocation file = ClientProxy.arm;
+        Obj obj;
         try {
-            im = OBJLoader.INSTANCE.loadModel(ClientProxy.arm);
-        } catch (Exception e) {
+            Mouse.setGrabbed(false);
+            Obj r = ObjReader.read(Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic.obj")).getInputStream());
+            obj = ObjUtils.convertToRenderable(r);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        LinkedHashSet<OBJModel.Face> f = ((OBJModel) im).getMatLib().getGroups().get("arm1").getFaces();
-        ByteBuffer data = GLAllocation.createDirectByteBuffer(240 * Vertex.BYTES_PER_VERTEX);
-        int v = 0;
-        for (OBJModel.Face face : f) {
-            for (OBJModel.Vertex vertex : face.getVertices()){
-                data.putFloat(vertex.getPos().x);
-                data.putFloat(vertex.getPos().y);
-                data.putFloat(vertex.getPos().z);
-                //U,V
-                data.putFloat(vertex.getTextureCoordinate().u);
-                data.putFloat(vertex.getTextureCoordinate().v);
-                //Normals don't need as much precision as tex coords or positions
-                data.put((byte) Float.floatToIntBits(vertex.getNormal().x));
-                data.put((byte) Float.floatToIntBits(vertex.getNormal().y));
-                data.put((byte) Float.floatToIntBits(vertex.getNormal().z));
-                //Neither do colors
 
-                data.put((byte) 255);
-                data.put((byte) 255);
-                data.put((byte) 255);
-                data.put((byte) 255);
-                v++;
-            }
-        }
-        data.rewind();
 
-        int vbo = GL15.glGenBuffers();
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, data, GL15.GL_DYNAMIC_DRAW);
+        indices = ObjData.getFaceVertexIndices(obj, 3);
+        FloatBuffer verticex = ObjData.getVertices(obj);
+        FloatBuffer texCoords = ObjData.getTexCoords(obj, 2);
+        FloatBuffer normals = ObjData.getNormals(obj);
+
 
         int vao = GL30.glGenVertexArrays();
         GL30.glBindVertexArray(vao);
+
+        ebo = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indices, GL15.GL_STATIC_DRAW);
+        GL15.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        int vbo = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
+
+        FloatBuffer data = GLAllocation.createDirectFloatBuffer(indices.capacity() * 27);
+
+        for (int i =0; i< indices.capacity(); i++) {
+            for (int j = 0; j < 2; j++) {
+                data.put(verticex.get());
+            }
+            for (int j = 0; j < 1; j++) {
+                data.put(texCoords.get());
+            }
+            for (int j = 0; j < 2; j++) {
+                data.put((byte)normals.get());
+            }
+            for (int j = 0; j < 3; j++) {
+                data.put((byte)255);
+            }
+
+        }
+
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, data, GL15.GL_STATIC_DRAW);
 
         //Pos
         GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 0);
@@ -115,9 +139,10 @@ public class Vao {
             glVertexAttribDivisor(4 + i, 1);
         }
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+
         GL30.glBindVertexArray(0);
 
-        return new Vao(vao, GL11.GL_QUADS, v, false);
+        return new Vao(vao, GL11.GL_QUADS, 1, false);
     }
 
 
