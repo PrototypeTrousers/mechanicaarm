@@ -52,7 +52,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     private int[] vertexItemDataArray;
     private int quadCount = 0;
 
-    int totalInstances = 1000;
+    int totalInstances = 100;
 
     protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);;
     protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
@@ -173,11 +173,23 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
+        FloatBuffer b = GLAllocation.createDirectFloatBuffer(256);
+        glBindBuffer(GL_ARRAY_BUFFER, Vao.boneBuffer);
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 4; j++) {
+                b.position(i * 64 + j * 16);
+                b.put(fa, 0, 16);
+            }
+        }
+        b.rewind();
+        glBufferData(GL_ARRAY_BUFFER, b, GL_STATIC_DRAW);
+
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, Vao.indirectBuffer);
         glDrawArraysIndirect(GL11.GL_QUADS, 0);
-        GL30.glBindVertexArray(0);
 
+        GL30.glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 
         base_vao.release();
         glPopMatrix();

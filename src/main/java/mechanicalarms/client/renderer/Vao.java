@@ -23,6 +23,7 @@ import static org.lwjgl.opengl.GL33.glVertexAttribDivisor;
 public class Vao {
 
     public static int indirectBuffer;
+    public static int boneBuffer;
     public int vaoId;
     public int drawMode;
     public int vertexCount;
@@ -112,8 +113,24 @@ public class Vao {
             glEnableVertexAttribArray(4 + i);
             glVertexAttribDivisor(4 + i, 1);
         }
+
+        boneBuffer = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, boneBuffer);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 16, GL15.GL_DYNAMIC_DRAW);
+
+        //2 bones
+        for (int i = 0; i < 2; i++) {
+            // 4 floats[4] for each mat4;
+            for (int j = 0; j < 4; j++) {
+                glVertexAttribPointer(i * 4 + 8 + j, 4, GL_FLOAT, false, 64, i * 4 + j * 16);
+                glEnableVertexAttribArray(i * 4 + 8 + j);
+                glVertexAttribDivisor(i * 4 + 8 + j, 1);
+            }
+        }
+
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL30.glBindVertexArray(0);
+
 
         indirectBuffer = GL15.glGenBuffers();
         GL15.glBindBuffer(GL40.GL_DRAW_INDIRECT_BUFFER, indirectBuffer);

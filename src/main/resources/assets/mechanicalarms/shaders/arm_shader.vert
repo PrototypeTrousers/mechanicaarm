@@ -5,6 +5,7 @@ layout (location = 1) in vec2 in_texcoord;
 layout (location = 2) in vec3 in_normal;
 layout (location = 3) in vec4 in_color;
 layout (location = 4) in mat4 in_transform;
+layout (location = 8) in mat4[2] bones;
 
 out vec2 texCoord;
 out vec2 lightCoord;
@@ -21,7 +22,6 @@ void main(){
 
 	x = (gl_InstanceID / 100) * -100;
 	y = (gl_InstanceID / 100);
-
 
 	gl_Position = vec4( aPos.x + gl_InstanceID + x, aPos.y + y, aPos.z, aPos.w);
 
