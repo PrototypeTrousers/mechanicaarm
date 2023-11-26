@@ -27,9 +27,8 @@ void main(){
 
 	//0 and 1 are used for the p and q coordinates because p defaults to 0 and q defaults to 1
 	texCoord = (gl_TextureMatrix[0] * vec4(in_texcoord, 0, 1)).st;
-	float lco = in_light.x * 16.0F;
-	lightCoord = (gl_TextureMatrix[1] * vec4(in_light, 0, 1)).st;
-	color = vec4(lco,lco,lco,lco);
+	lightCoord = (gl_TextureMatrix[1] * vec4(in_light.x *16, in_light.y *16,0, 1)).st;
+	color = vec4(4,4,4,4);
 
 	vec3 totalLighting = vec3(gl_LightModel.ambient) * vec3(gl_FrontMaterial.emission);
 	vec3 normal = (gl_NormalMatrix * in_normal).xyz;

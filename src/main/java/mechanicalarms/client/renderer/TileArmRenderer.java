@@ -59,7 +59,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
     Matrix4f mat;
 
-    public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader"));
+    public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader")).withUniforms(ShaderManager.LIGHTMAP).withUniforms();;
 
     Vao vao;
 
@@ -137,7 +137,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         glBindBuffer(GL_ARRAY_BUFFER, Vao.lightBuffer);
         ByteBuffer byteBuffer = GLAllocation.createDirectByteBuffer(2);
         byteBuffer.put((byte) 1);
-        byteBuffer.put((byte) 1);
+        byteBuffer.put((byte) 12);
         byteBuffer.rewind();
 
         glBufferData(GL_ARRAY_BUFFER, byteBuffer, GL_DYNAMIC_DRAW);
@@ -148,7 +148,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         GL20.glUniformMatrix4(projectionLoc, false, PROJECTION_MATRIX_BUFFER);
         GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
 
-        //OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
