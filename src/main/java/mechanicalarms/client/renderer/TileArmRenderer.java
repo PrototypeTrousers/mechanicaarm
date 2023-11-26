@@ -4,16 +4,10 @@ import mechanicalarms.MechanicalArms;
 import mechanicalarms.client.renderer.shaders.Shader;
 import mechanicalarms.client.renderer.shaders.ShaderManager;
 import mechanicalarms.client.renderer.util.Quaternion;
-import mechanicalarms.common.proxy.ClientProxy;
 import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ModelManager;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
@@ -24,12 +18,12 @@ import javax.vecmath.Matrix4f;
 import javax.vecmath.Tuple4f;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import java.util.List;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.glPopMatrix;
 import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL31.glDrawArraysInstanced;
 import static org.lwjgl.opengl.GL40.GL_DRAW_INDIRECT_BUFFER;
 import static org.lwjgl.opengl.GL40.glDrawArraysIndirect;
 
@@ -52,7 +46,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     private int[] vertexItemDataArray;
     private int quadCount = 0;
 
-    int totalInstances = 100;
+    int totalInstances = 1000;
 
     protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);;
     protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
@@ -65,8 +59,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
     Matrix4f mat;
 
-    public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader"))
-            .withUniforms(ShaderManager.LIGHTMAP).withUniforms();
+    public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader"));
 
     Vao vao;
 
@@ -79,30 +72,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     public void renderTileEntityFast(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
 
         if (vao == null) {
-            BlockRendererDispatcher blockRendererDispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
-            ModelManager modelManager = blockRendererDispatcher.getBlockModelShapes().getModelManager();
-            if (vertexArray == null) {
-                vertexArray = new int[3][][];
-
-                ModelResourceLocation[] mrl = new ModelResourceLocation[]{
-                        ClientProxy.arm,
-                        ClientProxy.hand,
-                        ClientProxy.claw
-                };
-
-                for (int i = 0; i < mrl.length; i++) {
-                    ModelResourceLocation m = mrl[i];
-                    List<BakedQuad> quads = modelManager.getModel(m).getQuads(null, null, 0);
-                    vertexArray[i] = new int[quads.size()][];
-                    for (int j = 0; j < quads.size(); j++) {
-                        vertexArray[i][j] = quads.get(j).getVertexData();
-                    }
-                }
-                int size = vertexArray[0].length * 2 + vertexArray[1].length + vertexArray[2].length;
-                this.vertexDataArray = new int[size * 28];
-
-            }
-            vao = Vao.setupVertices(vertexArray);
+            vao = Vao.setupVAO();
         }
 
         renderFirstArm(tileArmBasic, x, y, z, partialTicks);
@@ -164,13 +134,22 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
 
+        glBindBuffer(GL_ARRAY_BUFFER, Vao.lightBuffer);
+        ByteBuffer byteBuffer = GLAllocation.createDirectByteBuffer(2);
+        byteBuffer.put((byte) 1);
+        byteBuffer.put((byte) 1);
+        byteBuffer.rewind();
+
+        glBufferData(GL_ARRAY_BUFFER, byteBuffer, GL_DYNAMIC_DRAW);
+
         int projectionLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "projection");
         int viewLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "view");
 
         GL20.glUniformMatrix4(projectionLoc, false, PROJECTION_MATRIX_BUFFER);
         GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
 
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+        //OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
+
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
         FloatBuffer b = GLAllocation.createDirectFloatBuffer(256);

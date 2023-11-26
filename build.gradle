@@ -1080,6 +1080,7 @@ boolean performBuildScriptUpdate() {
 }
 
 boolean isNewBuildScriptVersionAvailable() {
+    return false;
     Map parameters = ["connectTimeout": 10000, "readTimeout": 10000]
 
     String currentBuildScript = getFile("build.gradle").getText()

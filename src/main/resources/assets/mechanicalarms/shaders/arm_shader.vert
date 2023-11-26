@@ -3,7 +3,7 @@
 layout (location = 0) in vec3 in_pos;
 layout (location = 1) in vec2 in_texcoord;
 layout (location = 2) in vec3 in_normal;
-layout (location = 3) in vec4 in_color;
+layout (location = 3) in vec2 in_light;
 layout (location = 4) in mat4 in_transform;
 layout (location = 8) in mat4[2] bones;
 
@@ -27,8 +27,9 @@ void main(){
 
 	//0 and 1 are used for the p and q coordinates because p defaults to 0 and q defaults to 1
 	texCoord = (gl_TextureMatrix[0] * vec4(in_texcoord, 0, 1)).st;
-	lightCoord = (gl_TextureMatrix[1] * gl_MultiTexCoord1).st;
-	color = in_color;
+	float lco = in_light.x * 16.0F;
+	lightCoord = (gl_TextureMatrix[1] * vec4(in_light, 0, 1)).st;
+	color = vec4(lco,lco,lco,lco);
 
 	vec3 totalLighting = vec3(gl_LightModel.ambient) * vec3(gl_FrontMaterial.emission);
 	vec3 normal = (gl_NormalMatrix * in_normal).xyz;

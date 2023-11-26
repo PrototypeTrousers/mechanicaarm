@@ -1,7 +1,6 @@
 package mechanicalarms.client.renderer;
 
 import mechanicalarms.MechanicalArms;
-import mechanicalarms.common.proxy.ClientProxy;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
@@ -12,18 +11,13 @@ import org.lwjgl.opengl.*;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-
-import static org.lwjgl.opengl.GL11.GL_FLOAT;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
-import static org.lwjgl.opengl.GL33.glVertexAttribDivisor;
 
 public class Vao {
 
     public static int indirectBuffer;
     public static int boneBuffer;
+    public static int lightBuffer;
     public int vaoId;
     public int drawMode;
     public int vertexCount;
@@ -49,10 +43,10 @@ public class Vao {
         GL30.glBindVertexArray(0);
     }
 
-    public static Vao setupVertices(int[][][] vertices){
+    public static Vao setupVAO(){
         IModel im;
         try {
-            im = OBJLoader.INSTANCE.loadModel(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic.obj"));
+            im = OBJLoader.INSTANCE.loadModel(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_arm.obj"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -68,16 +62,10 @@ public class Vao {
                 //U,V
                 data.putFloat(vertex.getTextureCoordinate().u);
                 data.putFloat(vertex.getTextureCoordinate().v);
-                //Normals don't need as much precision as tex coords or positions
+                //Normals
                 data.put((byte) Float.floatToIntBits(vertex.getNormal().x));
                 data.put((byte) Float.floatToIntBits(vertex.getNormal().y));
                 data.put((byte) Float.floatToIntBits(vertex.getNormal().z));
-                //Neither do colors
-
-                data.put((byte) 255);
-                data.put((byte) 255);
-                data.put((byte) 255);
-                data.put((byte) 255);
                 v++;
             }
         }
@@ -100,18 +88,25 @@ public class Vao {
         //Normal
         GL20.glVertexAttribPointer(2, 3, GL11.GL_BYTE, true, Vertex.BYTES_PER_VERTEX, 20);
         GL20.glEnableVertexAttribArray(2);
-        //Color
-        GL20.glVertexAttribPointer(3, 4, GL11.GL_UNSIGNED_BYTE, true, Vertex.BYTES_PER_VERTEX, 23);
+
+        lightBuffer = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, lightBuffer);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 2, GL15.GL_DYNAMIC_DRAW);
+
+        //Light
+        GL20.glVertexAttribPointer(3, 2, GL11.GL_UNSIGNED_BYTE, false, 2, 0);
         GL20.glEnableVertexAttribArray(3);
+        GL33.glVertexAttribDivisor(3, 1);
+
 
         vboInstance = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboInstance);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 16, GL15.GL_DYNAMIC_DRAW);
 
         for (int i = 0; i < 4; i++) {
-            glVertexAttribPointer(4 + i, 4, GL_FLOAT, false, 64, i * 16);
-            glEnableVertexAttribArray(4 + i);
-            glVertexAttribDivisor(4 + i, 1);
+            GL20.glVertexAttribPointer(4 + i, 4, GL11.GL_FLOAT, false, 64, i * 16);
+            GL20.glEnableVertexAttribArray(4 + i);
+            GL33.glVertexAttribDivisor(4 + i, 1);
         }
 
         boneBuffer = GL15.glGenBuffers();
@@ -122,9 +117,9 @@ public class Vao {
         for (int i = 0; i < 2; i++) {
             // 4 floats[4] for each mat4;
             for (int j = 0; j < 4; j++) {
-                glVertexAttribPointer(i * 4 + 8 + j, 4, GL_FLOAT, false, 64, i * 4 + j * 16);
-                glEnableVertexAttribArray(i * 4 + 8 + j);
-                glVertexAttribDivisor(i * 4 + 8 + j, 1);
+                GL20.glVertexAttribPointer(i * 4 + 8 + j, 4, GL11.GL_FLOAT, false, 64, i * 4 + j * 16);
+                GL20.glEnableVertexAttribArray(i * 4 + 8 + j);
+                GL33.glVertexAttribDivisor(i * 4 + 8 + j, 1);
             }
         }
 
