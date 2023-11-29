@@ -24,6 +24,7 @@ public class Vao {
     public boolean useElements;
 
     public static int vboInstance;
+    public static ByteBuffer data = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
 
     public Vao(int vao, int mode, int length, boolean b) {
         this.vaoId = vao;
@@ -52,7 +53,6 @@ public class Vao {
         }
         List<OBJModel.Face> fl = new ArrayList<>();
         ((OBJModel) im).getMatLib().getGroups().values().forEach(g -> fl.addAll(g.getFaces()));
-        ByteBuffer data = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
         int v = 0;
         for (OBJModel.Face face : fl) {
             for (OBJModel.Vertex vertex : face.getVertices()){

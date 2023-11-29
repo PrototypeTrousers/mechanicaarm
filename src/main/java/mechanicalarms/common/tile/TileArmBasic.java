@@ -7,6 +7,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
@@ -74,4 +75,8 @@ public class TileArmBasic extends TileArmBase {
         return itemHandler.getStackInSlot(0);
     }
 
+    @Override
+    public AxisAlignedBB getRenderBoundingBox() {
+        return super.getRenderBoundingBox().expand(4,4,4);
+    }
 }

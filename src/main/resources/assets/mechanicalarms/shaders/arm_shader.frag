@@ -11,5 +11,5 @@ uniform sampler2D lightmap;
 
 void main(){
 	vec4 col = color * texture2D(texture, texCoord) * texture2D(lightmap, lightCoord);
-	FragColor = vec4(col.rgb * lighting, col.a);
+	FragColor = vec4(col.rgb * lighting, 1);
 }

@@ -8,8 +8,14 @@ import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.chunk.Chunk;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
@@ -18,10 +24,10 @@ import javax.vecmath.Matrix4f;
 import javax.vecmath.Tuple4f;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
 import static org.lwjgl.opengl.GL11.glPopMatrix;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL40.GL_DRAW_INDIRECT_BUFFER;
@@ -42,14 +48,12 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
     private final Vector3f PIVOT_3 = new Vector3f(0.5F, 1 + 7 / 16F, 0);
     private final Vector3f ANTI_PIVOT_3 = new Vector3f(-0.5F, -(1 + 7 / 16F), 0);
-    private int[] vertexDataArray;
-    private int[] vertexItemDataArray;
-    private int quadCount = 0;
-
     int totalInstances = 1000;
 
     protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);;
     protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
+
+    Field isShadowField = null;
 
 
     Matrix4f transformMatrix = new Matrix4f();
@@ -65,7 +69,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
     public TileArmRenderer() {
         super();
-
     }
 
     @Override
@@ -80,9 +83,56 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     }
 
     void renderFirstArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks){
+        boolean isShadowPass = false;
+        /*if (isShadowField == null) {
+            try {
+                // Dynamically load the class
+                Class<?> shaderClass = Class.forName("net.optifine.shaders.Shaders");
+
+                // Get the field named "isShadowPass"
+                isShadowField = shaderClass.getDeclaredField("isShadowPass");
+
+                // Make the private field accessible
+                isShadowField.setAccessible(true);
+
+                // Get the value of the field
+                isShadowPass = (boolean) isShadowField.get(null);
+
+            } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                isShadowPass = isShadowField.getBoolean(null);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (isShadowPass) {
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(x, y, z);
+
+            Tessellator tessellator = Tessellator.getInstance();
+            BufferBuilder buffer = tessellator.getBuffer();
+
+            Vao.data.rewind();
+            VertexFormat v = new VertexFormat();
+            v.addElement(DefaultVertexFormats.POSITION_3F);
+            v.addElement(DefaultVertexFormats.TEX_2F);
+            v.addElement(DefaultVertexFormats.NORMAL_3B);
+
+            buffer.begin(GL11.GL_QUADS, v);
+            buffer.putBulkData(Vao.data);
+            Vao.data.rewind();
+
+            tessellator.draw();
+            GL11.glPopMatrix();
+            return;
+        }
+*/
 
         GL11.glPushMatrix();
-        GL11.glEnable(GL_DEPTH_TEST);
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
         GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
 
@@ -136,8 +186,12 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         glBindBuffer(GL_ARRAY_BUFFER, Vao.lightBuffer);
         ByteBuffer byteBuffer = GLAllocation.createDirectByteBuffer(2);
-        byteBuffer.put((byte) 1);
-        byteBuffer.put((byte) 12);
+        Chunk c = tileArmBasic.getWorld().getChunk(tileArmBasic.getPos());
+        int s = c.getLightFor(EnumSkyBlock.SKY, tileArmBasic.getPos());
+        int b = c.getLightFor(EnumSkyBlock.BLOCK, tileArmBasic.getPos());
+
+        byteBuffer.put((byte) s);
+        byteBuffer.put((byte) b);
         byteBuffer.rewind();
 
         glBufferData(GL_ARRAY_BUFFER, byteBuffer, GL_DYNAMIC_DRAW);
@@ -151,16 +205,16 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
-        FloatBuffer b = GLAllocation.createDirectFloatBuffer(256);
+        FloatBuffer buffer = GLAllocation.createDirectFloatBuffer(256);
         glBindBuffer(GL_ARRAY_BUFFER, Vao.boneBuffer);
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 4; j++) {
-                b.position(i * 64 + j * 16);
-                b.put(fa, 0, 16);
+                buffer.position(i * 64 + j * 16);
+                buffer.put(fa, 0, 16);
             }
         }
-        b.rewind();
-        glBufferData(GL_ARRAY_BUFFER, b, GL_STATIC_DRAW);
+        buffer.rewind();
+        glBufferData(GL_ARRAY_BUFFER, buffer, GL_STATIC_DRAW);
 
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, Vao.indirectBuffer);
         glDrawArraysIndirect(GL11.GL_QUADS, 0);
@@ -171,10 +225,26 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         base_vao.release();
         glPopMatrix();
+
+
     }
     @Override
     public void render(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+        int currentProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
 
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        GL11.glShadeModel(GL11.GL_SMOOTH);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+        if (vao == null) {
+            vao = Vao.setupVAO();
+        }
+
+        renderFirstArm(tileArmBasic, x, y, z, partialTicks);
+        GL11.glPopAttrib();
+
+        GL20.glUseProgram(currentProgram);
     }
 
     Matrix4f fbToM4f(FloatBuffer fb, Matrix4f mat) {
