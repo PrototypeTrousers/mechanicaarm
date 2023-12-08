@@ -1,7 +1,10 @@
 package mechanicalarms.client.renderer;
 
+import colladamodel.client.model.collada.ColladaModelLoader;
 import mechanicalarms.MechanicalArms;
 import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.obj.OBJLoader;
@@ -48,6 +51,13 @@ public class Vao {
         IModel im;
         try {
             im = OBJLoader.INSTANCE.loadModel(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_arm.obj"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        IModel dae;
+        try {
+            im = ColladaModelLoader.INSTANCE.loadModel(new ResourceLocation(MechanicalArms.MODID, "models/block/arm.dae"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

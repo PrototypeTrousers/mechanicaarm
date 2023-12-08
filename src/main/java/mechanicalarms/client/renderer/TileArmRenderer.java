@@ -5,14 +5,9 @@ import mechanicalarms.client.renderer.shaders.Shader;
 import mechanicalarms.client.renderer.shaders.ShaderManager;
 import mechanicalarms.client.renderer.util.Quaternion;
 import mechanicalarms.common.tile.TileArmBasic;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
@@ -50,7 +45,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     private final Vector3f ANTI_PIVOT_3 = new Vector3f(-0.5F, -(1 + 7 / 16F), 0);
     int totalInstances = 1000;
 
-    protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);;
+    protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
+    ;
     protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
 
     Field isShadowField = null;
@@ -63,7 +59,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
     Matrix4f mat;
 
-    public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader")).withUniforms(ShaderManager.LIGHTMAP).withUniforms();;
+    public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader")).withUniforms(ShaderManager.LIGHTMAP).withUniforms();
+    ;
 
     Vao vao;
 
@@ -82,7 +79,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         //renderSecondArm(tileArmBasic, x, y, z, partialTicks);
     }
 
-    void renderFirstArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks){
+    void renderFirstArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks) {
         boolean isShadowPass = false;
         /*if (isShadowField == null) {
             try {
@@ -131,9 +128,11 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
             return;
         }
 */
-
         GL11.glPushMatrix();
+        // Get the current model view matrix and store it in the buffer
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
+
+        // Get the current projection matrix and store it in the buffer
         GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
 
         float[] firstArmCurrRot = tileArmBasic.getRotation(0);
@@ -173,11 +172,11 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         glBindBuffer(GL_ARRAY_BUFFER, Vao.vboInstance);
 
-        for (int i=0;i < totalInstances; i++) {
-            if (i==4) {
+        for (int i = 0; i < totalInstances; i++) {
+            if (i == 4) {
                 continue;
             }
-            fb.position(i*16);
+            fb.position(i * 16);
             fb.put(fa, 0, 16);
         }
         fb.rewind();
@@ -203,7 +202,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
 
 
-        Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
+        //Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
         FloatBuffer buffer = GLAllocation.createDirectFloatBuffer(256);
         glBindBuffer(GL_ARRAY_BUFFER, Vao.boneBuffer);
@@ -228,6 +227,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
 
     }
+
     @Override
     public void render(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
         int currentProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
@@ -384,6 +384,4 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         matrix4f.m31 = f30 * r01 + f31 * r11 + f32 * r21;
         matrix4f.m32 = f30 * r02 + f31 * r12 + f32 * r22;
     }
-
-
 }
