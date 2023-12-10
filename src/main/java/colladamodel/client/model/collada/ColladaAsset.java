@@ -120,20 +120,30 @@ public class ColladaAsset {
 
 	private Collection<Element> getXPathElementList(Element node, String path) throws ModelLoaderRegistry.LoaderException {
 		try {
-			LinkedList<Element> result = new LinkedList<Element>();
-			Queue<NodeList> nL = new ArrayDeque<>();
-			nL.add((NodeList) xpath.compile(path).evaluate(node,
-					XPathConstants.NODESET));
-			while (!nL.isEmpty()) {
-				NodeList nodes = nL.poll();
-				for (int i = 0; i < nodes.getLength(); i++) {
-					result.add((Element) nodes.item(i));
-					if (path.equals("node")) {
-						nL.add((NodeList) xpath.evaluate(path, nodes.item(i),
-								XPathConstants.NODESET));
+			LinkedList<Element> result = new LinkedList<>();
+
+			NodeList nodeList = (NodeList) xpath.evaluate(path, node, XPathConstants.NODESET);
+
+			// Create a List to store nodes and their children
+			List<Node> nodesList = new ArrayList<>();
+
+			// Iterate through the nodes and their children recursively
+			for (int i = 0; i < nodeList.getLength(); i++) {
+				Node n = nodeList.item(i);
+				addNodeAndChildrenToList(n, nodesList);
+			}
+
+			// Now, 'nodesList' contains all nodes and their children
+			for (Node n : nodesList) {
+				NodeList children = n.getChildNodes();
+				for (int j = 0; j < children.getLength(); j++) {
+					Node child = children.item(j);
+					if (child.getNodeType() == Node.ELEMENT_NODE) {
+						result.add((Element) child);
 					}
 				}
 			}
+
 			return result;
 
 
@@ -141,6 +151,18 @@ public class ColladaAsset {
 			throw new ModelLoaderRegistry.LoaderException(
 					"Could not get the node list for the path '" + path + "'",
 					e);
+		}
+	}
+
+	private static void addNodeAndChildrenToList(Node node, List<Node> nodesList) {
+		nodesList.add(node);
+
+		NodeList children = node.getChildNodes();
+		for (int j = 0; j < children.getLength(); j++) {
+			Node child = children.item(j);
+			if (child.getNodeType() == Node.ELEMENT_NODE) {
+				addNodeAndChildrenToList(child, nodesList);
+			}
 		}
 	}
 
@@ -202,43 +224,46 @@ public class ColladaAsset {
 	}
 
 	private Geometry parseSceneNode(Element nodeElem) {
-		try {
-		String geomURL = getXPathString(nodeElem, "instance_geometry/@url");
-		if (geomURL.isEmpty())
-			return null;
-		Geometry geom = getGeometry(parseURL(geomURL));
 
+		String nodeType = nodeElem.getAttribute("type");
 		String nodeId = nodeElem.getAttribute("id");
-		geom.setName(nodeId);
+		String nodeName = nodeElem.getNodeName();
 
+		try {
+			if (nodeName.equals("instance_geometry")) {
+				String geomURL = nodeElem.getAttribute("url");
+				Geometry geom = getGeometry(parseURL(geomURL));
+				geom.setName(((Element)nodeElem.getParentNode()).getAttribute("id"));
 
-			for (Element child : getXmlChildren(nodeElem)) {
-				Transform trans = null;
-				String transId = null;
-				if (child.getTagName().equals("translate")) {
-					trans = parseTranslation(child);
-					transId = child.getAttribute("sid");
-				} else if (child.getTagName().equals("rotate")) {
-					trans = parseRotation(child);
-					transId = child.getAttribute("sid");
-				} else if (child.getTagName().equals("scale")) {
-					trans = parseScale(child);
-					transId = child.getAttribute("sid");
-				} else if (child.getTagName().equals("matrix")) {
-					// TODO:
-					trans = parseMatrix(child);
-					transId = child.getAttribute("sid");
+				for (Element child : getXmlChildren(nodeElem)) {
+					Transform trans = null;
+					String transId = null;
+					if (child.getTagName().equals("translate")) {
+						trans = parseTranslation(child);
+						transId = child.getAttribute("sid");
+					} else if (child.getTagName().equals("rotate")) {
+						trans = parseRotation(child);
+						transId = child.getAttribute("sid");
+					} else if (child.getTagName().equals("scale")) {
+						trans = parseScale(child);
+						transId = child.getAttribute("sid");
+					} else if (child.getTagName().equals("matrix")) {
+						// TODO:
+						trans = parseMatrix(child);
+						transId = child.getAttribute("sid");
+					}
+
+					if (trans != null)
+						geom.addTransform(trans);
 				}
 
-				if (trans != null)
-					geom.addTransform(trans);
+				return geom;
 			}
 
-			return geom;
-
 		} catch (ModelLoaderRegistry.LoaderException e) {
-            throw new RuntimeException(e);
-        }
+			throw new RuntimeException(e);
+		}
+		return null;
 	}
 
 	private Translation parseTranslation(Element transElem) throws ModelLoaderRegistry.LoaderException {

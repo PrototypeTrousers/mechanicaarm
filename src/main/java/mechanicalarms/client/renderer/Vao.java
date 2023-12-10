@@ -57,7 +57,7 @@ public class Vao {
 
         IModel dae;
         try {
-            im = ColladaModelLoader.INSTANCE.loadModel(new ResourceLocation(MechanicalArms.MODID, "models/block/arm.dae"));
+            dae = ColladaModelLoader.INSTANCE.loadModel(new ResourceLocation(MechanicalArms.MODID, "models/block/arm.dae"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

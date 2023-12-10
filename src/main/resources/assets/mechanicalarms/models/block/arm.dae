@@ -5,32 +5,11 @@
       <author>Blender User</author>
       <authoring_tool>Blender 4.0.2 commit date:2023-12-05, commit time:07:41, hash:9be62e85b727</authoring_tool>
     </contributor>
-    <created>2023-12-08T14:14:26</created>
-    <modified>2023-12-08T14:14:26</modified>
+    <created>2023-12-09T22:03:48</created>
+    <modified>2023-12-09T22:03:48</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
-  <library_cameras>
-    <camera id="Camera-camera" name="Camera">
-      <optics>
-        <technique_common>
-          <perspective>
-            <xfov sid="xfov">39.59775</xfov>
-            <aspect_ratio>1.777778</aspect_ratio>
-            <znear sid="znear">0.1</znear>
-            <zfar sid="zfar">100</zfar>
-          </perspective>
-        </technique_common>
-      </optics>
-      <extra>
-        <technique profile="blender">
-          <shiftx sid="shiftx" type="float">0</shiftx>
-          <shifty sid="shifty" type="float">0</shifty>
-          <dof_distance sid="dof_distance" type="float">10</dof_distance>
-        </technique>
-      </extra>
-    </camera>
-  </library_cameras>
   <library_lights>
     <light id="Light-light" name="Light">
       <technique_common>
@@ -220,53 +199,49 @@
       </mesh>
     </geometry>
   </library_geometries>
-  <library_controllers>
-    <controller id="Armature_firstArm-skin" name="Armature">
-      <skin source="#arm1_003-mesh">
-        <bind_shape_matrix>1 2.22045e-16 0 0 0 -1 -1.50996e-7 0 -2.22045e-16 1.50996e-7 -1 0 0 0 0 1</bind_shape_matrix>
-        <source id="Armature_firstArm-skin-joints">
-          <Name_array id="Armature_firstArm-skin-joints-array" count="1">Bone</Name_array>
-          <technique_common>
-            <accessor source="#Armature_firstArm-skin-joints-array" count="1" stride="1">
-              <param name="JOINT" type="name"/>
-            </accessor>
-          </technique_common>
-        </source>
-        <source id="Armature_firstArm-skin-bind_poses">
-          <float_array id="Armature_firstArm-skin-bind_poses-array" count="16">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</float_array>
-          <technique_common>
-            <accessor source="#Armature_firstArm-skin-bind_poses-array" count="1" stride="16">
-              <param name="TRANSFORM" type="float4x4"/>
-            </accessor>
-          </technique_common>
-        </source>
-        <source id="Armature_firstArm-skin-weights">
-          <float_array id="Armature_firstArm-skin-weights-array" count="32">1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1</float_array>
-          <technique_common>
-            <accessor source="#Armature_firstArm-skin-weights-array" count="32" stride="1">
-              <param name="WEIGHT" type="float"/>
-            </accessor>
-          </technique_common>
-        </source>
-        <joints>
-          <input semantic="JOINT" source="#Armature_firstArm-skin-joints"/>
-          <input semantic="INV_BIND_MATRIX" source="#Armature_firstArm-skin-bind_poses"/>
-        </joints>
-        <vertex_weights count="32">
-          <input semantic="JOINT" source="#Armature_firstArm-skin-joints" offset="0"/>
-          <input semantic="WEIGHT" source="#Armature_firstArm-skin-weights" offset="1"/>
-          <vcount>1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 </vcount>
-          <v>0 0 0 1 0 2 0 3 0 4 0 5 0 6 0 7 0 8 0 9 0 10 0 11 0 12 0 13 0 14 0 15 0 16 0 17 0 18 0 19 0 20 0 21 0 22 0 23 0 24 0 25 0 26 0 27 0 28 0 29 0 30 0 31</v>
-        </vertex_weights>
-      </skin>
-    </controller>
-  </library_controllers>
+  <library_controllers/>
   <library_visual_scenes>
     <visual_scene id="Scene" name="Scene">
       <node id="Armature" name="Armature" type="NODE">
         <matrix sid="transform">1 0 -2.22045e-16 0 0 7.54979e-8 1 0 2.22045e-16 -1 7.54979e-8 0 0 0 0 1</matrix>
         <node id="Armature_Bone" name="Bone" sid="Bone" type="JOINT">
           <matrix sid="transform">1 0 0 0 0 0 -1 0 0 1 0 0 0 0 0 1</matrix>
+          <node id="firstArm" name="firstArm" type="NODE">
+            <matrix sid="transform">1 2.22045e-16 0 0 -2.22045e-16 1.50996e-7 -1 -1 0 1 1.50996e-7 0 0 0 0 1</matrix>
+            <instance_geometry url="#arm1_003-mesh" name="firstArm">
+              <bind_material>
+                <technique_common>
+                  <instance_material symbol="none-material" target="#none-material">
+                    <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+                  </instance_material>
+                </technique_common>
+              </bind_material>
+            </instance_geometry>
+            <node id="secondArm" name="secondArm" type="NODE">
+              <matrix sid="transform">1 0 0 0 0 1 0 1.50996e-7 0 0 1 -2 0 0 0 1</matrix>
+              <instance_geometry url="#arm2_001-mesh" name="secondArm">
+                <bind_material>
+                  <technique_common>
+                    <instance_material symbol="none-material" target="#none-material">
+                      <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+                    </instance_material>
+                  </technique_common>
+                </bind_material>
+              </instance_geometry>
+              <node id="claw" name="claw" type="NODE">
+                <matrix sid="transform">1 0 0 0 0 1 0 1.35896e-7 0 0 1 -1.8 0 0 0 1</matrix>
+                <instance_geometry url="#hand_001-mesh" name="claw">
+                  <bind_material>
+                    <technique_common>
+                      <instance_material symbol="none-material" target="#none-material">
+                        <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+                      </instance_material>
+                    </technique_common>
+                  </bind_material>
+                </instance_geometry>
+              </node>
+            </node>
+          </node>
           <extra>
             <technique profile="blender">
               <collections type="string">Bones</collections>
@@ -276,43 +251,6 @@
             </technique>
           </extra>
         </node>
-        <node id="firstArm" name="firstArm" type="NODE">
-          <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
-          <instance_controller url="#Armature_firstArm-skin">
-            <skeleton>#Armature_Bone</skeleton>
-            <bind_material>
-              <technique_common>
-                <instance_material symbol="none-material" target="#none-material">
-                  <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
-                </instance_material>
-              </technique_common>
-            </bind_material>
-          </instance_controller>
-          <node id="secondArm" name="secondArm" type="NODE">
-            <matrix sid="transform">1 0 0 0 0 1 0 1.50996e-7 0 0 1 -2 0 0 0 1</matrix>
-            <instance_geometry url="#arm2_001-mesh" name="secondArm">
-              <bind_material>
-                <technique_common>
-                  <instance_material symbol="none-material" target="#none-material">
-                    <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
-                  </instance_material>
-                </technique_common>
-              </bind_material>
-            </instance_geometry>
-            <node id="claw" name="claw" type="NODE">
-              <matrix sid="transform">1 0 0 0 0 1 0 1.35896e-7 0 0 1 -1.8 0 0 0 1</matrix>
-              <instance_geometry url="#hand_001-mesh" name="claw">
-                <bind_material>
-                  <technique_common>
-                    <instance_material symbol="none-material" target="#none-material">
-                      <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
-                    </instance_material>
-                  </technique_common>
-                </bind_material>
-              </instance_geometry>
-            </node>
-          </node>
-        </node>
         <extra>
           <technique profile="blender">
             <collections sid="collections" type="string">Bones</collections>
@@ -320,10 +258,6 @@
             <active_collection sid="active_collection" type="string">Bones</active_collection>
           </technique>
         </extra>
-      </node>
-      <node id="Camera" name="Camera" type="NODE">
-        <matrix sid="transform">0.6859207 -0.3240135 0.6515582 7.358891 0.7276763 0.3054208 -0.6141704 -6.925791 0 0.8953956 0.4452714 4.958309 0 0 0 1</matrix>
-        <instance_camera url="#Camera-camera"/>
       </node>
       <node id="Light" name="Light" type="NODE">
         <matrix sid="transform">-0.2908646 -0.7711008 0.5663932 4.076245 0.9551712 -0.1998834 0.2183912 1.005454 -0.05518906 0.6045247 0.7946723 5.903862 0 0 0 1</matrix>
