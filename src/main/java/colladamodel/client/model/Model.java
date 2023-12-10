@@ -38,14 +38,20 @@ import net.minecraftforge.common.model.IModelState;
 
 public class Model implements IModel {
 
-	private Map<String, Geometry> geometries;
+	private final Map<String, Geometry> geometries;
+	private final Map<String, Bone> bones;
 
 	public Model() {
-		geometries = new HashMap<String, Geometry>();
+		geometries = new HashMap<>();
+		bones = new HashMap<>();
 	}
 
 	public void addGeometry(Geometry geom) {
 		geometries.put(geom.getName(), geom);
+	}
+
+	public void addBone(Bone bone) {
+		bones.put(bone.getName(), bone);
 	}
 
 	public Geometry getGeometry(String geomId) {

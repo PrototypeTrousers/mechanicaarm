@@ -216,14 +216,12 @@ public class ColladaAsset {
 	private Model parseScene(Element sceneElem) throws ModelLoaderRegistry.LoaderException {
 		Model model = new Model();
 		for (Element nodeElem : getXPathElementList(sceneElem, "node")) {
-			Geometry geom = parseSceneNode(nodeElem);
-			if (geom != null)
-				model.addGeometry(geom);
+			parseSceneNode(model, nodeElem);
 		}
 		return model;
 	}
 
-	private Geometry parseSceneNode(Element nodeElem) {
+	private void parseSceneNode(Model model, Element nodeElem) {
 
 		String nodeType = nodeElem.getAttribute("type");
 		String nodeId = nodeElem.getAttribute("id");
@@ -257,13 +255,13 @@ public class ColladaAsset {
 						geom.addTransform(trans);
 				}
 
-				return geom;
+				model.addGeometry(geom);
 			}
 
 		} catch (ModelLoaderRegistry.LoaderException e) {
 			throw new RuntimeException(e);
 		}
-		return null;
+
 	}
 
 	private Translation parseTranslation(Element transElem) throws ModelLoaderRegistry.LoaderException {
