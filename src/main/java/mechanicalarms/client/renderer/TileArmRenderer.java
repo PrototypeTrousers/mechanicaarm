@@ -145,8 +145,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         translate(transformMatrix, (float) x, (float) y, (float) z);
         moveToPivot(transformMatrix, PIVOT_1);
 
-        rot.rotateZ(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
-        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
+        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
+        rot.rotateZ(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
 
         Quaternion.rotateMatrix(transformMatrix, rot);
         moveToPivot(transformMatrix, ANTI_PIVOT_1);
