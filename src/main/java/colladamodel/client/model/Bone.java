@@ -7,11 +7,15 @@ import java.util.Map;
 
 public class Bone implements Transformable {
     private String name;
-    private final Map<String, Transform> transforms;
+    Transformable parent;
+    private final Map<String, Transform> transforms = new LinkedHashMap<>();
 
+    public Bone(String name, Transformable parent) {
+        this.name = name;
+        this.parent = parent;
+    }
     public Bone(String name) {
         this.name = name;
-        this.transforms = new LinkedHashMap<String, Transform>();
     }
 
     @Override

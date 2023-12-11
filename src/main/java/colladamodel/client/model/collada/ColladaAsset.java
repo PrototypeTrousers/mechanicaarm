@@ -253,7 +253,8 @@ public class ColladaAsset {
                 t.setName(nodeElem.getAttribute("name"));
                 nodeTransformableMap.put(nodeElem, t);
             } else if (nodeElem.getAttribute("type").equals("JOINT")) {
-                t = new Bone(nodeElem.getAttribute("name"));
+                Transformable parent = nodeTransformableMap.get(nodeElem.getParentNode());
+                t = new Bone(nodeElem.getAttribute("name"), parent);
                 nodeTransformableMap.put(nodeElem, t);
             }
 
