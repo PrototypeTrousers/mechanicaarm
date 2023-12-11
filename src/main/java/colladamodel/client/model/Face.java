@@ -92,4 +92,16 @@ public class Face {
         this.vertexNormals = normal;
         this.vertexTexCoord = texCoords;
     }
+
+    public Vector3f[] getVertex() {
+        return vertex;
+    }
+
+    public Vector3f[] getVertexNormals() {
+        return vertexNormals;
+    }
+
+    public Vector3f[] getVertexTexCoord() {
+        return vertexTexCoord;
+    }
 }

@@ -104,4 +104,7 @@ public class Geometry implements Transformable {
 //		return animationLength;
     }
 
+    public List<Face> getFaces() {
+        return faces;
+    }
 }

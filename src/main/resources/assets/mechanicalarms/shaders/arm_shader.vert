@@ -23,12 +23,12 @@ void main(){
 	x = (gl_InstanceID / 100) * -100;
 	y = (gl_InstanceID / 100);
 
-	gl_Position = vec4( aPos.x, aPos.y + y, aPos.z + gl_InstanceID + x, aPos.w);
+	gl_Position = vec4(aPos.x + gl_InstanceID + x, aPos.y + y, aPos.z, aPos.w);
 
 	//0 and 1 are used for the p and q coordinates because p defaults to 0 and q defaults to 1
 	texCoord = (gl_TextureMatrix[0] * vec4(in_texcoord, 0, 1)).st;
-	lightCoord = (gl_TextureMatrix[1] * vec4(in_light.x *16, in_light.y *16,0, 1)).st;
-	color = vec4(4,4,4,4);
+	lightCoord = (gl_TextureMatrix[1] * vec4(in_light.x *16, in_light.y *16, 0, 1)).st;
+	color = vec4(4, 4, 4, 4);
 
 	vec3 totalLighting = vec3(gl_LightModel.ambient) * vec3(gl_FrontMaterial.emission);
 	vec3 normal = (gl_NormalMatrix * in_normal).xyz;
@@ -36,7 +36,7 @@ void main(){
 
 	for (int i = 0; i < gl_MaxLights; i ++){
 
-		vec4 diff = gl_FrontLightProduct[i].diffuse * max(dot(normal,gl_LightSource[i].position.xyz), 0.0f);
+		vec4 diff = gl_FrontLightProduct[i].diffuse * max(dot(normal, gl_LightSource[i].position.xyz), 0.0f);
 		diff = clamp(diff, 0.0F, 1.0F);
 
 		difftot += diff;

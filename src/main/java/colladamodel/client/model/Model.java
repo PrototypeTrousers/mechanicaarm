@@ -60,6 +60,10 @@ public class Model implements IModel {
         return geometries.get(geomId);
     }
 
+    public Map<String, Geometry> getGeometries() {
+        return Collections.unmodifiableMap(geometries);
+    }
+
     public void renderAll() {
         Tessellator tessellator = Tessellator.getInstance();
 

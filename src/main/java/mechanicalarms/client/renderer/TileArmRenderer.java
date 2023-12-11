@@ -5,6 +5,7 @@ import mechanicalarms.client.renderer.shaders.Shader;
 import mechanicalarms.client.renderer.shaders.ShaderManager;
 import mechanicalarms.client.renderer.util.Quaternion;
 import mechanicalarms.common.tile.TileArmBasic;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -143,8 +144,10 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         Quaternion rot = Quaternion.createIdentity();
         translate(transformMatrix, (float) x, (float) y, (float) z);
         moveToPivot(transformMatrix, PIVOT_1);
-        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
+
+        rot.rotateZ(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
         rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
+
         Quaternion.rotateMatrix(transformMatrix, rot);
         moveToPivot(transformMatrix, ANTI_PIVOT_1);
 
@@ -202,7 +205,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
 
 
-        //Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
+        Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
         FloatBuffer buffer = GLAllocation.createDirectFloatBuffer(256);
         glBindBuffer(GL_ARRAY_BUFFER, Vao.boneBuffer);
@@ -216,7 +219,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         glBufferData(GL_ARRAY_BUFFER, buffer, GL_STATIC_DRAW);
 
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, Vao.indirectBuffer);
-        glDrawArraysIndirect(GL11.GL_QUADS, 0);
+        glDrawArraysIndirect(GL11.GL_TRIANGLES, 0);
 
         GL30.glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);

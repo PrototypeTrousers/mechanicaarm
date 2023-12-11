@@ -1,5 +1,8 @@
 package mechanicalarms.client.renderer;
 
+import colladamodel.client.model.Face;
+import colladamodel.client.model.Geometry;
+import colladamodel.client.model.Model;
 import colladamodel.client.model.collada.ColladaModelLoader;
 import mechanicalarms.MechanicalArms;
 import net.minecraft.client.renderer.GLAllocation;
@@ -11,6 +14,7 @@ import net.minecraftforge.client.model.obj.OBJLoader;
 import net.minecraftforge.client.model.obj.OBJModel;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.*;
+import org.lwjgl.util.vector.Vector3f;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -61,24 +65,32 @@ public class Vao {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        List<OBJModel.Face> fl = new ArrayList<>();
-        ((OBJModel) im).getMatLib().getGroups().values().forEach(g -> fl.addAll(g.getFaces()));
+
+        List<Face> faces = new ArrayList<>();
+        for (Geometry g : ((Model) dae).getGeometries().values()) {
+            faces.addAll(g.getFaces());
+        }
+        //List<Face> faces = ((Model) dae).getGeometry("firstArm").getFaces();
         int v = 0;
-        for (OBJModel.Face face : fl) {
-            for (OBJModel.Vertex vertex : face.getVertices()){
-                data.putFloat(vertex.getPos().x);
-                data.putFloat(vertex.getPos().y);
-                data.putFloat(vertex.getPos().z);
+
+        for (Face f : faces) {
+            Vector3f[] vertex = f.getVertex();
+            for (int i = 0; i < vertex.length; i++) {
+                Vector3f vec = vertex[i];
+                data.putFloat(vec.x);
+                data.putFloat(vec.y);
+                data.putFloat(vec.z);
                 //U,V
-                data.putFloat(vertex.getTextureCoordinate().u);
-                data.putFloat(vertex.getTextureCoordinate().v);
+                data.putFloat(f.getVertexTexCoord()[i].x);
+                data.putFloat(f.getVertexTexCoord()[i].y);
                 //Normals
-                data.put((byte) Float.floatToIntBits(vertex.getNormal().x));
-                data.put((byte) Float.floatToIntBits(vertex.getNormal().y));
-                data.put((byte) Float.floatToIntBits(vertex.getNormal().z));
+                data.put((byte) Float.floatToIntBits(f.getVertexNormals()[i].x));
+                data.put((byte) Float.floatToIntBits(f.getVertexNormals()[i].y));
+                data.put((byte) Float.floatToIntBits(f.getVertexNormals()[i].z));
                 v++;
             }
         }
+
         data.rewind();
 
         int vbo = GL15.glGenBuffers();
@@ -141,8 +153,8 @@ public class Vao {
         GL15.glBindBuffer(GL40.GL_DRAW_INDIRECT_BUFFER, indirectBuffer);
 
         // Example data for a draw call
-        int vertexCount = 240;
-        int instanceCount = 1000;
+        int vertexCount = v;
+        int instanceCount = 1;
         int firstVertex = 0;
         int baseInstance = 0;
 
@@ -158,7 +170,7 @@ public class Vao {
         GL15.glBufferData(GL40.GL_DRAW_INDIRECT_BUFFER, drawBuffer, GL15.GL_STATIC_DRAW);
 
 
-        return new Vao(vao, GL11.GL_QUADS, v, false);
+        return new Vao(vao, GL11.GL_TRIANGLES, v, false);
     }
 
 
