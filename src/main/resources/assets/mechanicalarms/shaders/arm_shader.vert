@@ -23,7 +23,7 @@ void main(){
 	x = (gl_InstanceID / 100) * -100;
 	y = (gl_InstanceID / 100);
 
-	gl_Position = vec4( aPos.x + gl_InstanceID + x, aPos.y + y, aPos.z, aPos.w);
+	gl_Position = vec4( aPos.x, aPos.y + y, aPos.z + gl_InstanceID + x, aPos.w);
 
 	//0 and 1 are used for the p and q coordinates because p defaults to 0 and q defaults to 1
 	texCoord = (gl_TextureMatrix[0] * vec4(in_texcoord, 0, 1)).st;

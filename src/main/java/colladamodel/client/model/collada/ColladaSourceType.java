@@ -1,7 +1,7 @@
 package colladamodel.client.model.collada;
 
 public enum ColladaSourceType {
-	FLOAT,
-	NAME,
-	FLOAT4x4
+    FLOAT,
+    NAME,
+    FLOAT4x4
 }
