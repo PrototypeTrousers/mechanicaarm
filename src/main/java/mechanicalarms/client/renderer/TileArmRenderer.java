@@ -1,5 +1,8 @@
 package mechanicalarms.client.renderer;
 
+import colladamodel.client.model.Bone;
+import colladamodel.client.model.transform.Matrix;
+import colladamodel.client.model.transform.Transform;
 import mechanicalarms.MechanicalArms;
 import mechanicalarms.client.renderer.shaders.Shader;
 import mechanicalarms.client.renderer.shaders.ShaderManager;
@@ -143,13 +146,21 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         transformMatrix.setIdentity();
         Quaternion rot = Quaternion.createIdentity();
         translate(transformMatrix, (float) x, (float) y, (float) z);
-        moveToPivot(transformMatrix, PIVOT_1);
 
+        Matrix firstArm = (Matrix) Vao.dae.getBones().get("firstArmBone").getTransform("transform");
+        float mx = (float) firstArm.getMatrix().get(12);
+        float my = (float) firstArm.getMatrix().get(13);
+        float mz = (float) firstArm.getMatrix().get(14);
+
+        moveToPivot(transformMatrix, new Vector3f(mx,my,-mz));
+
+        rot.rotateY((float) (-Math.PI/2));
         rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
-        rot.rotateZ(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
-
+        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
         Quaternion.rotateMatrix(transformMatrix, rot);
-        moveToPivot(transformMatrix, ANTI_PIVOT_1);
+
+        moveToPivot(transformMatrix, new Vector3f(-mx,-my,mz));
+
 
         float[] fa = new float[]{
                 transformMatrix.m00,

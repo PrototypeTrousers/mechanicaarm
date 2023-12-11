@@ -56,6 +56,10 @@ public class Model implements IModel {
         bones.put(bone.getName(), bone);
     }
 
+    public Map<String, Bone> getBones() {
+        return bones;
+    }
+
     public Geometry getGeometry(String geomId) {
         return geometries.get(geomId);
     }

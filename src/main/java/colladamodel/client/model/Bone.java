@@ -32,4 +32,8 @@ public class Bone implements Transformable {
     public void addTransform(Transform transform) {
         this.transforms.put(transform.getName(), transform);
     }
+
+    public Transform getTransform(String name) {
+        return transforms.get(name);
+    }
 }

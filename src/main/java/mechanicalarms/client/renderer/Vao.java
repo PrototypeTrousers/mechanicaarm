@@ -33,6 +33,8 @@ public class Vao {
     public static int vboInstance;
     public static ByteBuffer data = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
 
+    public static Model dae;
+
     public Vao(int vao, int mode, int length, boolean b) {
         this.vaoId = vao;
         this.drawMode = mode;
@@ -59,15 +61,14 @@ public class Vao {
             throw new RuntimeException(e);
         }
 
-        IModel dae;
         try {
-            dae = ColladaModelLoader.INSTANCE.loadModel(new ResourceLocation(MechanicalArms.MODID, "models/block/arm.dae"));
+            dae = (Model) ColladaModelLoader.INSTANCE.loadModel(new ResourceLocation(MechanicalArms.MODID, "models/block/arm.dae"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
         List<Face> faces = new ArrayList<>();
-        for (Geometry g : ((Model) dae).getGeometries().values()) {
+        for (Geometry g : dae.getGeometries().values()) {
             faces.addAll(g.getFaces());
         }
         //List<Face> faces = ((Model) dae).getGeometry("firstArm").getFaces();
