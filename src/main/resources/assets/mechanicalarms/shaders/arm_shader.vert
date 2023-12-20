@@ -4,8 +4,8 @@ layout (location = 0) in vec3 in_pos;
 layout (location = 1) in vec2 in_texcoord;
 layout (location = 2) in vec3 in_normal;
 layout (location = 3) in vec2 in_light;
-layout (location = 4) in mat4 in_transform;
-layout (location = 8) in mat4[2] bones;
+layout (location = 4) in vec4[3] in_transform_quat;
+layout (location = 7) in int in_bone_idx;
 
 out vec2 texCoord;
 out vec2 lightCoord;
@@ -16,14 +16,9 @@ uniform mat4 projection;
 uniform mat4 view;
 
 void main(){
-	vec4 aPos = projection * view * in_transform * vec4(in_pos, 1);
-	int y = 0;
-	int x = 0;
 
-	x = (gl_InstanceID / 100) * -100;
-	y = (gl_InstanceID / 100);
 
-	gl_Position = vec4(aPos.x + gl_InstanceID + x, aPos.y + y, aPos.z, aPos.w);
+	gl_Position = projection * view * in_transform * vec4(in_pos, 1);
 
 	//0 and 1 are used for the p and q coordinates because p defaults to 0 and q defaults to 1
 	texCoord = (gl_TextureMatrix[0] * vec4(in_texcoord, 0, 1)).st;

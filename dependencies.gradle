@@ -24,4 +24,5 @@
 dependencies {
     //implementation rfg.deobf('curse.maven:MCglTF-591547:4367036')
     //compileOnly rfg.deobf(files("libs/OptiFine_1.12.2_HD_U_G5.jar"))
+    shadowImplementation files("libs/assimp-all.jar")
 }

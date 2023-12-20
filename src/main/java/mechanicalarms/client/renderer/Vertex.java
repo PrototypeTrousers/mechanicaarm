@@ -3,7 +3,7 @@ package mechanicalarms.client.renderer;
 public class Vertex {
 
     //Pos, tex, normal, color
-    public static final int BYTES_PER_VERTEX = 5 * 4 + 3;
+    public static final int BYTES_PER_VERTEX = 5 * 4 + 3 + 1;
 
     public float x;
     public float y;
@@ -13,11 +13,5 @@ public class Vertex {
     public byte normalX;
     public byte normalY;
     public byte normalZ;
-    public byte r;
-    public byte g;
-    public byte b;
-    public byte a;
-
-    float[] mtx; //16 floats
-
+    public byte boneidx;
 }

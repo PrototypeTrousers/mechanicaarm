@@ -1,5 +1,7 @@
 package mechanicalarms;
 
+import assimp.AiScene;
+import assimp.Importer;
 import com.google.common.collect.Lists;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;

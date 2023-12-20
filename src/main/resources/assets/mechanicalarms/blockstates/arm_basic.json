@@ -13,10 +13,6 @@
 
   "variants": {
     "normal": [{}],
-    "inventory": [{}],
-    "arm_part=0": {"model": "mechanicalarms:arm_base.obj"},
-    "arm_part=1": {"model": "mechanicalarms:arm_arm.obj"},
-    "arm_part=2": {"model": "mechanicalarms:arm_hand.obj"},
-    "arm_part=3": {"model": "mechanicalarms:arm_claw.obj"}
+    "inventory": [{}]
   }
 }

@@ -1,8 +1,5 @@
 package mechanicalarms.client.renderer;
 
-import colladamodel.client.model.Bone;
-import colladamodel.client.model.transform.Matrix;
-import colladamodel.client.model.transform.Transform;
 import mechanicalarms.MechanicalArms;
 import mechanicalarms.client.renderer.shaders.Shader;
 import mechanicalarms.client.renderer.shaders.ShaderManager;
@@ -147,7 +144,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         Quaternion rot = Quaternion.createIdentity();
         translate(transformMatrix, (float) x, (float) y, (float) z);
 
-        Matrix firstArm = (Matrix) Vao.dae.getBones().get("firstArmBone").getTransform("transform");
+/*        Matrix firstArm = (Matrix) Vao.dae.getBones().get("firstArmBone").getTransform("transform");
         float mx = (float) firstArm.getMatrix().get(12);
         float my = (float) firstArm.getMatrix().get(13);
         float mz = (float) firstArm.getMatrix().get(14);
@@ -160,6 +157,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         Quaternion.rotateMatrix(transformMatrix, rot);
 
         moveToPivot(transformMatrix, new Vector3f(-mx,-my,mz));
+
+ */
 
 
         float[] fa = new float[]{
@@ -184,12 +183,9 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         GL30.glBindVertexArray(vao.vaoId);
 
-        glBindBuffer(GL_ARRAY_BUFFER, Vao.vboInstance);
+        glBindBuffer(GL_ARRAY_BUFFER, Vao.boneBuffer);
 
-        for (int i = 0; i < totalInstances; i++) {
-            if (i == 4) {
-                continue;
-            }
+        for (int i = 0; i < 3; i++) {
             fb.position(i * 16);
             fb.put(fa, 0, 16);
         }
@@ -215,19 +211,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         GL20.glUniformMatrix4(projectionLoc, false, PROJECTION_MATRIX_BUFFER);
         GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
 
-
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
-        FloatBuffer buffer = GLAllocation.createDirectFloatBuffer(256);
-        glBindBuffer(GL_ARRAY_BUFFER, Vao.boneBuffer);
-        for (int i = 0; i < 2; i++) {
-            for (int j = 0; j < 4; j++) {
-                buffer.position(i * 64 + j * 16);
-                buffer.put(fa, 0, 16);
-            }
-        }
-        buffer.rewind();
-        glBufferData(GL_ARRAY_BUFFER, buffer, GL_STATIC_DRAW);
 
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, Vao.indirectBuffer);
         glDrawArraysIndirect(GL11.GL_TRIANGLES, 0);
