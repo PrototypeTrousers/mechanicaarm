@@ -146,7 +146,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
         rot.setIndentity();
         transformMatrix.setIdentity();
         Quaternion rot = Quaternion.createIdentity();
-        translate(transformMatrix, (float) x, (float) y + 1, (float) z);
+        translate(transformMatrix, (float) x, (float) y + 2  , (float) z);
 /*
 
         rot.rotateY((float) (-Math.PI/2));

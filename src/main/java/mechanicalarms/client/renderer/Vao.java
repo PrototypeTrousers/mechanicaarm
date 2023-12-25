@@ -25,6 +25,10 @@ public class Vao {
     public static int boneBuffer;
     public static int lightBuffer;
     public static int vboInstance;
+
+    public static int posBuffer;
+    public static int normalBuffer;
+    public static int texBuffer;
     public int vaoId;
     public int drawMode;
     public int vertexCount;
@@ -58,10 +62,6 @@ public class Vao {
             throw new RuntimeException(e);
         }
 
-
-        int vbo = GL15.glGenBuffers();
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
-
         DefaultGltfModel dm = (DefaultGltfModel) model;
         NodeModel nodeModel = dm.getSceneModel(0).getNodeModels().get(0);
 
@@ -71,9 +71,18 @@ public class Vao {
                     for (MeshPrimitiveModel meshPrimitiveModel : meshModel.getMeshPrimitiveModels()) {
                         Map<String, AccessorModel> attributes = meshPrimitiveModel.getAttributes();
                         AccessorModel position = attributes.get("POSITION");
+                        posBuffer = GL15.glGenBuffers();
+                        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, posBuffer);
                         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, position.getBufferViewModel().getBufferViewData(), GL15.GL_STATIC_DRAW);
+
+                        texBuffer = GL15.glGenBuffers();
+                        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, texBuffer);
+
                         AccessorModel texUAccessorModel = attributes.get("TEXCOORD_0");
                         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, texUAccessorModel.getBufferViewModel().getBufferViewData(), GL15.GL_STATIC_DRAW);
+
+                        normalBuffer = GL15.glGenBuffers();
+                        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, normalBuffer);
                         AccessorModel normal = attributes.get("NORMAL");
                         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, normal.getBufferViewModel().getBufferViewData(), GL15.GL_STATIC_DRAW);
                         break;
@@ -81,20 +90,22 @@ public class Vao {
                 }
             }
         }
-        int v = 30000;
 
         int vao = GL30.glGenVertexArrays();
         GL30.glBindVertexArray(vao);
 
         //Pos
-        GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 0);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, posBuffer);
+        GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 12, 0);
         GL20.glEnableVertexAttribArray(0);
 
         //Texture
-        GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 12);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, texBuffer);
+        GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, 8, 0);
         GL20.glEnableVertexAttribArray(1);
         //Normal
-        GL20.glVertexAttribPointer(2, 3, GL11.GL_FLOAT, true, Vertex.BYTES_PER_VERTEX, 20);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, normalBuffer);
+        GL20.glVertexAttribPointer(2, 3, GL11.GL_FLOAT, true, 12, 0);
         GL20.glEnableVertexAttribArray(2);
 
         lightBuffer = GL15.glGenBuffers();
@@ -122,7 +133,7 @@ public class Vao {
         GL15.glBindBuffer(GL40.GL_DRAW_INDIRECT_BUFFER, indirectBuffer);
 
         // Example data for a draw call
-        int vertexCount = v;
+        int vertexCount = 96;
         int instanceCount = 1;
         int firstVertex = 0;
         int baseInstance = 0;
@@ -139,6 +150,6 @@ public class Vao {
 
         GL15.glBufferData(GL40.GL_DRAW_INDIRECT_BUFFER, drawBuffer, GL15.GL_STATIC_DRAW);
 
-        return new Vao(vao, GL11.GL_TRIANGLES, v, false);
+        return new Vao(vao, GL11.GL_TRIANGLES, 96, false);
     }
 }
