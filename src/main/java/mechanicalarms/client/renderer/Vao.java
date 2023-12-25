@@ -76,11 +76,12 @@ public class Vao {
                         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, texUAccessorModel.getBufferViewModel().getBufferViewData(), GL15.GL_STATIC_DRAW);
                         AccessorModel normal = attributes.get("NORMAL");
                         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, normal.getBufferViewModel().getBufferViewData(), GL15.GL_STATIC_DRAW);
+                        break;
                     }
                 }
             }
         }
-        int v = 240;
+        int v = 30000;
 
         int vao = GL30.glGenVertexArrays();
         GL30.glBindVertexArray(vao);
@@ -93,7 +94,7 @@ public class Vao {
         GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, Vertex.BYTES_PER_VERTEX, 12);
         GL20.glEnableVertexAttribArray(1);
         //Normal
-        GL20.glVertexAttribPointer(2, 3, GL11.GL_BYTE, true, Vertex.BYTES_PER_VERTEX, 20);
+        GL20.glVertexAttribPointer(2, 3, GL11.GL_FLOAT, true, Vertex.BYTES_PER_VERTEX, 20);
         GL20.glEnableVertexAttribArray(2);
 
         lightBuffer = GL15.glGenBuffers();
@@ -107,16 +108,13 @@ public class Vao {
 
         vboInstance = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboInstance);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 16, GL15.GL_DYNAMIC_DRAW);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 64, GL15.GL_DYNAMIC_DRAW);
 
         for (int i = 0; i < 4; i++) {
             glVertexAttribPointer(4 + i, 4, GL_FLOAT, false, 64, i * 16);
             glEnableVertexAttribArray(4 + i);
             glVertexAttribDivisor(4 + i, 1);
         }
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-        GL30.glBindVertexArray(0);
-
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL30.glBindVertexArray(0);
 
@@ -138,10 +136,9 @@ public class Vao {
         drawBuffer.flip();
 
         // Upload the draw parameters to the buffer
+
         GL15.glBufferData(GL40.GL_DRAW_INDIRECT_BUFFER, drawBuffer, GL15.GL_STATIC_DRAW);
 
         return new Vao(vao, GL11.GL_TRIANGLES, v, false);
     }
-
-
 }

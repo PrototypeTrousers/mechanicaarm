@@ -28,7 +28,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.List;
 
-import static org.lwjgl.opengl.GL11.glPopMatrix;
+import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL40.GL_DRAW_INDIRECT_BUFFER;
 import static org.lwjgl.opengl.GL40.glDrawArraysIndirect;
@@ -84,6 +84,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
     }
 
     void renderFirstArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks) {
+
+
         boolean isShadowPass = false;
         /*if (isShadowField == null) {
             try {
@@ -132,7 +134,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
             return;
         }
 */
-        GL11.glPushMatrix();
         // Get the current model view matrix and store it in the buffer
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
 
@@ -145,14 +146,14 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
         rot.setIndentity();
         transformMatrix.setIdentity();
         Quaternion rot = Quaternion.createIdentity();
-        translate(transformMatrix, (float) x, (float) y, (float) z);
-
+        translate(transformMatrix, (float) x, (float) y + 1, (float) z);
+/*
 
         rot.rotateY((float) (-Math.PI/2));
         rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
         rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
         Quaternion.rotateMatrix(transformMatrix, rot);
-
+*/
 
 
         float[] fa = new float[]{
@@ -179,7 +180,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
 
         glBindBuffer(GL_ARRAY_BUFFER, Vao.vboInstance);
 
-        for (int i=0;i < totalInstances; i++) {
+        for (int i=0;i < 1; i++) {
             if (i==4) {
                 continue;
             }
@@ -219,7 +220,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 
         base_vao.release();
-        glPopMatrix();
 
 
     }

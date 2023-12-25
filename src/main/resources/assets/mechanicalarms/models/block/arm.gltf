@@ -203,7 +203,7 @@
 						"NORMAL":9,
 						"TEXCOORD_0":10
 					},
-					"indices":7,
+					"indices":11,
 					"material":0
 				}
 			]
@@ -211,7 +211,7 @@
 	],
 	"skins":[
 		{
-			"inverseBindMatrices":11,
+			"inverseBindMatrices":12,
 			"joints":[
 				5,
 				3,
@@ -319,6 +319,12 @@
 		},
 		{
 			"bufferView":11,
+			"componentType":5123,
+			"count":144,
+			"type":"SCALAR"
+		},
+		{
+			"bufferView":12,
 			"componentType":5126,
 			"count":3,
 			"type":"MAT4"
@@ -393,13 +399,19 @@
 		},
 		{
 			"buffer":0,
+			"byteLength":288,
+			"byteOffset":11332,
+			"target":34963
+		},
+		{
+			"buffer":0,
 			"byteLength":192,
-			"byteOffset":11332
+			"byteOffset":11620
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":11524,
+			"byteLength":11812,
 			"uri":"arm.bin",
 			"extras": {
 				"resourceLocation": "mechanicalarms:models/block/arm.bin"
