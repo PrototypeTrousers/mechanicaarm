@@ -1,18 +1,16 @@
 package mechanicalarms.client.renderer.shaders;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-
 import mechanicalarms.MechanicalArms;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.ResourceLocation;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.ResourceLocation;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 public class ShaderManager {
 

@@ -1,0 +1,34 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.Basic",
+				"texture_width": 16,
+				"texture_height": 16,
+				"visible_bounds_width": 12,
+				"visible_bounds_height": 4.5,
+				"visible_bounds_offset": [0, 1.75, 0]
+			},
+			"bones": [
+				{
+					"name": "FirstArmBone",
+					"pivot": [0, 24, 0],
+					"cubes": [
+						{"origin": [-7, 17, -7], "size": [14, 14, 14], "uv": [-12, -12]},
+						{"origin": [-6, 18, -39], "size": [12, 12, 32], "uv": [-30, -30]}
+					]
+				},
+				{
+					"name": "SecondArmBone",
+					"parent": "FirstArmBone",
+					"pivot": [0, 24, -46],
+					"cubes": [
+						{"origin": [-7, 17, -53], "size": [14, 14, 14], "uv": [-12, -12]},
+						{"origin": [-6, 18, -85], "size": [12, 12, 32], "uv": [-30, -30]}
+					]
+				}
+			]
+		}
+	]
+}

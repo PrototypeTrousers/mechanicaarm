@@ -1,47 +1,34 @@
 package mechanicalarms.client.renderer;
 
-import assimp.AiScene;
-import assimp.Importer;
-import colladamodel.client.model.Face;
-import colladamodel.client.model.Geometry;
-import colladamodel.client.model.Model;
-import colladamodel.client.model.collada.ColladaModelLoader;
-import mechanicalarms.MechanicalArms;
+import de.javagl.jgltf.model.*;
+import de.javagl.jgltf.model.impl.DefaultGltfModel;
+import de.javagl.jgltf.model.io.GltfModelReader;
+import mechanicalarms.Tags;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GLAllocation;
-import net.minecraft.client.resources.IResource;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.model.IModel;
-import net.minecraftforge.client.model.ModelLoaderRegistry;
-import net.minecraftforge.client.model.obj.OBJLoader;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.*;
-import org.lwjgl.util.vector.Vector3f;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
-import static org.lwjgl.opengl.GL30.glBindBufferBase;
+import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
+import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.opengl.GL33.glVertexAttribDivisor;
 
 public class Vao {
 
     public static int indirectBuffer;
     public static int boneBuffer;
     public static int lightBuffer;
+    public static int vboInstance;
     public int vaoId;
     public int drawMode;
     public int vertexCount;
     public boolean useElements;
-    public static ByteBuffer data = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
-
-    public static Model dae;
 
     public Vao(int vao, int mode, int length, boolean b) {
         this.vaoId = vao;
@@ -63,49 +50,37 @@ public class Vao {
 
     public static Vao setupVAO() {
 
-
-            AiScene scene = new Importer().readFile(FileSystems.getDefault().getPath("/mnt/ldata/git/mechanicalarms/src/main/resources/assets/mechanicalarms/models/block/dragon.dae"));
-scene.getAnimations();
-scene.getMeshes().get(0).getBones()
-
-
+        GltfModelReader reader = new GltfModelReader();
+        GltfModel model;
         try {
-            dae = (Model) ColladaModelLoader.INSTANCE.loadModel(new ResourceLocation(MechanicalArms.MODID, "models/block/dragon.dae"));
-        } catch (Exception e) {
+            model = reader.readWithoutReferences(new BufferedInputStream(Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation(Tags.MODID, "models/block/arm.gltf")).getInputStream()));
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        List<Face> faces = new ArrayList<>();
-        for (Geometry g : dae.getGeometries().values()) {
-            faces.addAll(g.getFaces());
-        }
-        //List<Face> faces = ((Model) dae).getGeometry("firstArm").getFaces();
-        int v = 0;
-
-        for (Face f : faces) {
-            Vector3f[] vertex = f.getVertex();
-            for (int i = 0; i < vertex.length; i++) {
-                Vector3f vec = vertex[i];
-                data.putFloat(vec.x);
-                data.putFloat(vec.y);
-                data.putFloat(vec.z);
-                //U,V
-                data.putFloat(f.getVertexTexCoord()[i].x);
-                data.putFloat(f.getVertexTexCoord()[i].y);
-                //Normals
-                data.put((byte) Float.floatToIntBits(f.getVertexNormals()[i].x));
-                data.put((byte) Float.floatToIntBits(f.getVertexNormals()[i].y));
-                data.put((byte) Float.floatToIntBits(f.getVertexNormals()[i].z));
-                data.put((byte) 0);
-                v++;
-            }
-        }
-
-        data.rewind();
 
         int vbo = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, data, GL15.GL_DYNAMIC_DRAW);
+
+        DefaultGltfModel dm = (DefaultGltfModel) model;
+        NodeModel nodeModel = dm.getSceneModel(0).getNodeModels().get(0);
+
+        for (NodeModel child : nodeModel.getChildren()) {
+            for (NodeModel child2 : child.getChildren()) {
+                for (MeshModel meshModel : child2.getMeshModels()) {
+                    for (MeshPrimitiveModel meshPrimitiveModel : meshModel.getMeshPrimitiveModels()) {
+                        Map<String, AccessorModel> attributes = meshPrimitiveModel.getAttributes();
+                        AccessorModel position = attributes.get("POSITION");
+                        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, position.getBufferViewModel().getBufferViewData(), GL15.GL_STATIC_DRAW);
+                        AccessorModel texUAccessorModel = attributes.get("TEXCOORD_0");
+                        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, texUAccessorModel.getBufferViewModel().getBufferViewData(), GL15.GL_STATIC_DRAW);
+                        AccessorModel normal = attributes.get("NORMAL");
+                        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, normal.getBufferViewModel().getBufferViewData(), GL15.GL_STATIC_DRAW);
+                    }
+                }
+            }
+        }
+        int v = 240;
 
         int vao = GL30.glGenVertexArrays();
         GL30.glBindVertexArray(vao);
@@ -121,10 +96,6 @@ scene.getMeshes().get(0).getBones()
         GL20.glVertexAttribPointer(2, 3, GL11.GL_BYTE, true, Vertex.BYTES_PER_VERTEX, 20);
         GL20.glEnableVertexAttribArray(2);
 
-        //Bone index
-        GL20.glVertexAttribPointer(7, 1, GL11.GL_UNSIGNED_BYTE, false, Vertex.BYTES_PER_VERTEX, 23);
-        GL20.glEnableVertexAttribArray(7);
-
         lightBuffer = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, lightBuffer);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 2, GL15.GL_DYNAMIC_DRAW);
@@ -134,22 +105,20 @@ scene.getMeshes().get(0).getBones()
         GL20.glEnableVertexAttribArray(3);
         GL33.glVertexAttribDivisor(3, 1);
 
-        boneBuffer = GL15.glGenBuffers();
-        glBindBufferBase(GL15.GL_ARRAY_BUFFER, 0, boneBuffer);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, boneBuffer);
+        vboInstance = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboInstance);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 16, GL15.GL_DYNAMIC_DRAW);
 
-
-        //3 bones transform as Quaternion
-        for (int i = 0; i < 3; i++) {
-            GL20.glVertexAttribPointer(i + 4, 4, GL11.GL_FLOAT, false, 64, i * 4);
-            GL20.glEnableVertexAttribArray(i + 4);
-            GL33.glVertexAttribDivisor(i + 4, 1);
+        for (int i = 0; i < 4; i++) {
+            glVertexAttribPointer(4 + i, 4, GL_FLOAT, false, 64, i * 16);
+            glEnableVertexAttribArray(4 + i);
+            glVertexAttribDivisor(4 + i, 1);
         }
-
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL30.glBindVertexArray(0);
 
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        GL30.glBindVertexArray(0);
 
         indirectBuffer = GL15.glGenBuffers();
         GL15.glBindBuffer(GL40.GL_DRAW_INDIRECT_BUFFER, indirectBuffer);
@@ -170,7 +139,6 @@ scene.getMeshes().get(0).getBones()
 
         // Upload the draw parameters to the buffer
         GL15.glBufferData(GL40.GL_DRAW_INDIRECT_BUFFER, drawBuffer, GL15.GL_STATIC_DRAW);
-
 
         return new Vao(vao, GL11.GL_TRIANGLES, v, false);
     }

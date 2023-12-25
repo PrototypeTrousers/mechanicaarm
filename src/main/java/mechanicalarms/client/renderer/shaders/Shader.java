@@ -1,9 +1,9 @@
 package mechanicalarms.client.renderer.shaders;
 
+import org.lwjgl.opengl.GL20;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.lwjgl.opengl.GL20;
 
 public class Shader {
 

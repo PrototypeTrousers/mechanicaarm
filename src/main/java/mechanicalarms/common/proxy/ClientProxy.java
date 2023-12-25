@@ -1,19 +1,15 @@
 package mechanicalarms.common.proxy;
 
-import colladamodel.client.model.ModelManager;
-import colladamodel.client.model.collada.ColladaModelLoader;
+import com.modularmods.mcgltf.MCglTF;
 import mechanicalarms.MechanicalArms;
 import mechanicalarms.client.renderer.TileArmRenderer;
 import mechanicalarms.common.item.Items;
 import mechanicalarms.common.tile.TileArmBasic;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.client.model.obj.OBJLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
@@ -23,7 +19,6 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod.EventBusSubscriber(Side.CLIENT)
 public class ClientProxy extends CommonProxy {
 
-    private static ModelManager modelManager;
     public static final ModelResourceLocation base = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_base.obj"), "base");
     public static final ModelResourceLocation arm = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_arm.obj"), "arm");
     public static final ModelResourceLocation hand = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_hand.obj"), "hand");
@@ -40,19 +35,11 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void preInit() {
-        ModelLoaderRegistry.registerLoader(ColladaModelLoader.INSTANCE);
-
-        modelManager = new ModelManager();
-        ((IReloadableResourceManager) Minecraft.getMinecraft()
-                .getResourceManager()).registerReloadListener(modelManager);
-
         OBJLoader.INSTANCE.addDomain(MechanicalArms.MODID);
+        TileArmRenderer tesr = new TileArmRenderer();
+        MCglTF.getInstance().addGltfModelReceiver(tesr);
         ClientRegistry.bindTileEntitySpecialRenderer(TileArmBasic.class, new TileArmRenderer());
         super.preInit();
-    }
-
-    public static ModelManager getModelManager() {
-        return modelManager;
     }
 
 }

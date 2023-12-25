@@ -1,6 +1,9 @@
 package mechanicalarms.client.renderer;
 
+import com.modularmods.mcgltf.IGltfModelReceiver;
+import de.javagl.jgltf.model.GltfModel;
 import mechanicalarms.MechanicalArms;
+import mechanicalarms.Tags;
 import mechanicalarms.client.renderer.shaders.Shader;
 import mechanicalarms.client.renderer.shaders.ShaderManager;
 import mechanicalarms.client.renderer.util.Quaternion;
@@ -23,6 +26,7 @@ import javax.vecmath.Vector4f;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.List;
 
 import static org.lwjgl.opengl.GL11.glPopMatrix;
 import static org.lwjgl.opengl.GL15.*;
@@ -30,7 +34,7 @@ import static org.lwjgl.opengl.GL40.GL_DRAW_INDIRECT_BUFFER;
 import static org.lwjgl.opengl.GL40.glDrawArraysIndirect;
 
 
-public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
+public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> implements IGltfModelReceiver {
 
     private static final Vector3f V3F_ZERO = new Vector3f();
     private static int[][][] vertexArray = null;
@@ -47,7 +51,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     int totalInstances = 1000;
 
     protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
-    ;
     protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
 
     Field isShadowField = null;
@@ -144,21 +147,12 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         Quaternion rot = Quaternion.createIdentity();
         translate(transformMatrix, (float) x, (float) y, (float) z);
 
-/*        Matrix firstArm = (Matrix) Vao.dae.getBones().get("firstArmBone").getTransform("transform");
-        float mx = (float) firstArm.getMatrix().get(12);
-        float my = (float) firstArm.getMatrix().get(13);
-        float mz = (float) firstArm.getMatrix().get(14);
-
-        moveToPivot(transformMatrix, new Vector3f(mx,my,-mz));
 
         rot.rotateY((float) (-Math.PI/2));
         rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
         rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
         Quaternion.rotateMatrix(transformMatrix, rot);
 
-        moveToPivot(transformMatrix, new Vector3f(-mx,-my,mz));
-
- */
 
 
         float[] fa = new float[]{
@@ -183,10 +177,13 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         GL30.glBindVertexArray(vao.vaoId);
 
-        glBindBuffer(GL_ARRAY_BUFFER, Vao.boneBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, Vao.vboInstance);
 
-        for (int i = 0; i < 3; i++) {
-            fb.position(i * 16);
+        for (int i=0;i < totalInstances; i++) {
+            if (i==4) {
+                continue;
+            }
+            fb.position(i*16);
             fb.put(fa, 0, 16);
         }
         fb.rewind();
@@ -382,5 +379,15 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         matrix4f.m30 = f30 * r00 + f31 * r10 + f32 * r20;
         matrix4f.m31 = f30 * r01 + f31 * r11 + f32 * r21;
         matrix4f.m32 = f30 * r02 + f31 * r12 + f32 * r22;
+    }
+
+    @Override
+    public ResourceLocation getModelLocation() {
+        return new ResourceLocation(Tags.MODID, "models/block/arm.gltf");
+    }
+
+    @Override
+    public boolean isReceiveSharedModel(GltfModel gltfModel, List<Runnable> gltfRenderDatas) {
+        return false;
     }
 }

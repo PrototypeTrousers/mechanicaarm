@@ -22,7 +22,7 @@
  * For more details, see https://docs.gradle.org/8.0.1/userguide/java_library_plugin.html#sec:java_library_configurations_graph
  */
 dependencies {
-    //implementation rfg.deobf('curse.maven:MCglTF-591547:4367036')
+    implementation rfg.deobf('curse.maven:MCglTF-591547:4367036')
     //compileOnly rfg.deobf(files("libs/OptiFine_1.12.2_HD_U_G5.jar"))
-    shadowImplementation files("libs/assimp-all.jar")
+    //shadowImplementation files("libs/assimp-all.jar")
 }
