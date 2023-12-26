@@ -16,6 +16,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
@@ -30,6 +31,7 @@ import java.util.List;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL31.glDrawArraysInstanced;
 import static org.lwjgl.opengl.GL40.GL_DRAW_INDIRECT_BUFFER;
 import static org.lwjgl.opengl.GL40.glDrawArraysIndirect;
 
@@ -84,56 +86,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
     }
 
     void renderFirstArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks) {
-
-
-        boolean isShadowPass = false;
-        /*if (isShadowField == null) {
-            try {
-                // Dynamically load the class
-                Class<?> shaderClass = Class.forName("net.optifine.shaders.Shaders");
-
-                // Get the field named "isShadowPass"
-                isShadowField = shaderClass.getDeclaredField("isShadowPass");
-
-                // Make the private field accessible
-                isShadowField.setAccessible(true);
-
-                // Get the value of the field
-                isShadowPass = (boolean) isShadowField.get(null);
-
-            } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                isShadowPass = isShadowField.getBoolean(null);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        if (isShadowPass) {
-            GlStateManager.pushMatrix();
-            GlStateManager.translate(x, y, z);
-
-            Tessellator tessellator = Tessellator.getInstance();
-            BufferBuilder buffer = tessellator.getBuffer();
-
-            Vao.data.rewind();
-            VertexFormat v = new VertexFormat();
-            v.addElement(DefaultVertexFormats.POSITION_3F);
-            v.addElement(DefaultVertexFormats.TEX_2F);
-            v.addElement(DefaultVertexFormats.NORMAL_3B);
-
-            buffer.begin(GL11.GL_QUADS, v);
-            buffer.putBulkData(Vao.data);
-            Vao.data.rewind();
-
-            tessellator.draw();
-            GL11.glPopMatrix();
-            return;
-        }
-*/
         // Get the current model view matrix and store it in the buffer
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
 
@@ -146,7 +98,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
         rot.setIndentity();
         transformMatrix.setIdentity();
         Quaternion rot = Quaternion.createIdentity();
-        translate(transformMatrix, (float) x, (float) y + 2  , (float) z);
+        translate(transformMatrix, (float) x, (float) y +2 , (float) z);
 /*
 
         rot.rotateY((float) (-Math.PI/2));
@@ -178,17 +130,13 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
 
         GL30.glBindVertexArray(vao.vaoId);
 
-        glBindBuffer(GL_ARRAY_BUFFER, Vao.vboInstance);
-
         for (int i=0;i < 1; i++) {
-            if (i==4) {
-                continue;
-            }
-            fb.position(i*16);
+            fb.position(0);
             fb.put(fa, 0, 16);
         }
         fb.rewind();
 
+        glBindBuffer(GL_ARRAY_BUFFER, Vao.vboInstance);
         glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
 
         glBindBuffer(GL_ARRAY_BUFFER, Vao.lightBuffer);
@@ -211,17 +159,12 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
-
-        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, Vao.indirectBuffer);
-        glDrawArraysIndirect(GL11.GL_TRIANGLES, 0);
+        glDrawArraysInstanced(GL11.GL_QUADS, 0, 296, 1);
 
         GL30.glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 
         base_vao.release();
-
-
     }
 
     @Override
