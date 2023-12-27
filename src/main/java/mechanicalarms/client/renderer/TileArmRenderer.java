@@ -1,9 +1,6 @@
 package mechanicalarms.client.renderer;
 
-import com.modularmods.mcgltf.IGltfModelReceiver;
-import de.javagl.jgltf.model.GltfModel;
 import mechanicalarms.MechanicalArms;
-import mechanicalarms.Tags;
 import mechanicalarms.client.renderer.shaders.Shader;
 import mechanicalarms.client.renderer.shaders.ShaderManager;
 import mechanicalarms.client.renderer.util.Quaternion;
@@ -16,7 +13,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
@@ -27,16 +23,12 @@ import javax.vecmath.Vector4f;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import java.util.List;
 
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL31.glDrawArraysInstanced;
-import static org.lwjgl.opengl.GL40.GL_DRAW_INDIRECT_BUFFER;
-import static org.lwjgl.opengl.GL40.glDrawArraysIndirect;
 
 
-public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> implements IGltfModelReceiver {
+public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
     private static final Vector3f V3F_ZERO = new Vector3f();
     private static int[][][] vertexArray = null;
@@ -159,7 +151,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
-        glDrawArraysInstanced(GL11.GL_QUADS, 0, 296, 1);
+        glDrawArraysInstanced(GL11.GL_QUADS, 0, 2000, 1);
 
         GL30.glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -322,15 +314,5 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> imp
         matrix4f.m30 = f30 * r00 + f31 * r10 + f32 * r20;
         matrix4f.m31 = f30 * r01 + f31 * r11 + f32 * r21;
         matrix4f.m32 = f30 * r02 + f31 * r12 + f32 * r22;
-    }
-
-    @Override
-    public ResourceLocation getModelLocation() {
-        return new ResourceLocation(Tags.MODID, "models/block/arm.gltf");
-    }
-
-    @Override
-    public boolean isReceiveSharedModel(GltfModel gltfModel, List<Runnable> gltfRenderDatas) {
-        return false;
     }
 }

@@ -51,65 +51,9 @@ public class Vao {
         int vao = GL30.glGenVertexArrays();
         GL30.glBindVertexArray(vao);
 
-        /*GltfModelReader reader = new GltfModelReader();
-        GltfModel model;
-        try {
-            model = reader.readWithoutReferences(new BufferedInputStream(Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation(Tags.MODID, "models/block/arm.gltf")).getInputStream()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        int vao = GL30.glGenVertexArrays();
-        GL30.glBindVertexArray(vao);
-
-
-        DefaultGltfModel dm = (DefaultGltfModel) model;
-        NodeModel nodeModel = dm.getSceneModel(0).getNodeModels().get(0);
-
-        for (NodeModel child : nodeModel.getChildren()) {
-            for (NodeModel child2 : child.getChildren()) {
-                for (MeshModel meshModel : child2.getMeshModels()) {
-                    for (MeshPrimitiveModel meshPrimitiveModel : meshModel.getMeshPrimitiveModels()) {
-                        Map<String, AccessorModel> attributes = meshPrimitiveModel.getAttributes();
-
-                        AccessorModel position = attributes.get("POSITION");
-                        posBuffer = GL15.glGenBuffers();
-                        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, posBuffer);
-                        positionBuffer = position.getBufferViewModel().getBufferViewData();
-                        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, position.getBufferViewModel().getBufferViewData(), GL15.GL_STATIC_DRAW);
-                        GL20.glVertexAttribPointer(0,
-                                position.getElementType().getNumComponents(),
-                                position.getComponentType(),
-                                false,
-                                position.getByteStride(),
-                                position.getByteOffset());
-                        GL20.glEnableVertexAttribArray(0);
-
-                        AccessorModel texUAccessorModel = attributes.get("TEXCOORD_0");
-                        texBuffer = GL15.glGenBuffers();
-                        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, texBuffer);
-                        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, texUAccessorModel.getBufferViewModel().getBufferViewData(), GL15.GL_STATIC_DRAW);
-                        GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, true, 8, 0);
-                        GL20.glEnableVertexAttribArray(1);
-
-
-                        AccessorModel normal = attributes.get("NORMAL");
-                        normalBuffer = GL15.glGenBuffers();
-                        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, normalBuffer);
-                        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, normal.getBufferViewModel().getBufferViewData(), GL15.GL_STATIC_DRAW);
-                        GL20.glVertexAttribPointer(2, 3, GL11.GL_FLOAT, true, 12, 0);
-                        GL20.glEnableVertexAttribArray(2);
-                        break;
-                    }
-                }
-            }
-        }
-
-        */
-
         IModel im;
         try {
-            im = OBJLoader.INSTANCE.loadModel(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_basic.obj"));
+            im = OBJLoader.INSTANCE.loadModel(new ResourceLocation(MechanicalArms.MODID, "models/block/completearm.obj"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -183,6 +127,6 @@ public class Vao {
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL30.glBindVertexArray(0);
 
-        return new Vao(vao, GL11.GL_TRIANGLES, v, false);
+        return new Vao(vao, GL11.GL_QUADS, v, false);
     }
 }
