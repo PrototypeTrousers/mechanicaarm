@@ -12,9 +12,7 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.*;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Tuple4f;
@@ -23,9 +21,6 @@ import javax.vecmath.Vector4f;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL31.glDrawArraysInstanced;
 
 
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
@@ -58,7 +53,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     Matrix4f mat;
 
     public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader")).withUniforms(ShaderManager.LIGHTMAP).withUniforms();
-    ;
 
     Vao vao;
 
@@ -128,10 +122,10 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         }
         fb.rewind();
 
-        glBindBuffer(GL_ARRAY_BUFFER, Vao.vboInstance);
-        glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, Vao.vboInstance);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, fb, GL15.GL_STATIC_DRAW);
 
-        glBindBuffer(GL_ARRAY_BUFFER, Vao.lightBuffer);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, Vao.lightBuffer);
         ByteBuffer byteBuffer = GLAllocation.createDirectByteBuffer(2);
         Chunk c = tileArmBasic.getWorld().getChunk(tileArmBasic.getPos());
         int s = c.getLightFor(EnumSkyBlock.SKY, tileArmBasic.getPos());
@@ -141,7 +135,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         byteBuffer.put((byte) b);
         byteBuffer.rewind();
 
-        glBufferData(GL_ARRAY_BUFFER, byteBuffer, GL_DYNAMIC_DRAW);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, byteBuffer, GL15.GL_DYNAMIC_DRAW);
 
         int projectionLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "projection");
         int viewLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "view");
@@ -151,10 +145,10 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
-        glDrawArraysInstanced(GL11.GL_QUADS, 0, 2000, 1);
+        GL31.glDrawArraysInstanced(GL11.GL_QUADS, 0, 2000, 1);
 
         GL30.glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
 
         base_vao.release();
     }
