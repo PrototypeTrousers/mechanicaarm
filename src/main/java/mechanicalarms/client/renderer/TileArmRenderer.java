@@ -145,7 +145,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 
-        GL31.glDrawArraysInstanced(GL11.GL_QUADS, 0, 2000, 1);
+        GL31.glDrawArraysInstanced(GL11.GL_QUADS, 0, 5380, 1);
 
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
