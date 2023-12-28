@@ -129,4 +129,8 @@ public class Vao {
 
         return new Vao(vao, GL11.GL_QUADS, v, false);
     }
+
+    public int getVertexCount() {
+        return vertexCount;
+    }
 }

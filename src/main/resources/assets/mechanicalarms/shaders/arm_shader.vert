@@ -20,10 +20,15 @@ void main(){
 	//0 and 1 are used for the p and q coordinates because p defaults to 0 and q defaults to 1
 	texCoord = (gl_TextureMatrix[0] * vec4(in_texcoord, 0, 1)).st;
 	lightCoord = (gl_TextureMatrix[1] * vec4(in_light.x *16, in_light.y *16, 0, 1)).st;
-	color = vec4(4, 4, 4, 4);
+
+	// Calculate ambient occlusion based on vertex normals
+	vec3 normal = normalize(mat3(view) * in_normal); // Transform normal to view space
+	float aoFactor = dot(normal, vec3(0.0, 0.0, 1.0)); // Example: Use Y-axis as the up direction
+
+	// Map the ambient occlusion factor to a color
+	color = vec4(aoFactor, aoFactor, aoFactor, 4.0);
 
 	vec3 totalLighting = vec3(gl_LightModel.ambient) * vec3(gl_FrontMaterial.emission);
-	vec3 normal = (gl_NormalMatrix * in_normal).xyz;
 	vec4 difftot = vec4(0.0F);
 
 	for (int i = 0; i < gl_MaxLights; i ++){
