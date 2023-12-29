@@ -8,8 +8,8 @@ layout (location = 4) in mat4 in_transform;
 
 out vec2 texCoord;
 out vec2 lightCoord;
-out vec4 color;
-out vec3 lighting;
+out vec3 fragNorm;
+out vec3 fragPos;
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -17,26 +17,10 @@ uniform mat4 view;
 void main(){
 	gl_Position = projection * view * in_transform * vec4(in_pos, 1);
 
+	fragPos = vec3(view * in_transform * vec4(in_pos, 1));
+	fragNorm = normalize(in_normal);
+
 	//0 and 1 are used for the p and q coordinates because p defaults to 0 and q defaults to 1
 	texCoord = (gl_TextureMatrix[0] * vec4(in_texcoord, 0, 1)).st;
-	lightCoord = (gl_TextureMatrix[1] * vec4(in_light.x *16, in_light.y *16, 0, 1)).st;
-
-	// Calculate ambient occlusion based on vertex normals
-	vec3 normal = normalize(mat3(view) * in_normal); // Transform normal to view space
-	float aoFactor = dot(normal, vec3(0.0, 0.0, 1.0)); // Example: Use Y-axis as the up direction
-
-	// Map the ambient occlusion factor to a color
-	color = vec4(aoFactor, aoFactor, aoFactor, 4.0);
-
-	vec3 totalLighting = vec3(gl_LightModel.ambient) * vec3(gl_FrontMaterial.emission);
-	vec4 difftot = vec4(0.0F);
-
-	for (int i = 0; i < gl_MaxLights; i ++){
-
-		vec4 diff = gl_FrontLightProduct[i].diffuse * max(dot(normal, gl_LightSource[i].position.xyz), 0.0f);
-		diff = clamp(diff, 0.0F, 1.0F);
-
-		difftot += diff;
-	}
-	lighting = clamp((difftot + gl_LightModel.ambient).rgb, 0.0F, 1.0F);
+	lightCoord = (gl_TextureMatrix[1] * vec4(in_light.x * 16, in_light.y * 16, 0, 1)).st;
 }
