@@ -27,5 +27,5 @@ void main(){
 	vec4 Ispec = gl_FrontLightProduct[0].specular * pow(max(dot(R,E),0.0),0.3*gl_FrontMaterial.shininess);
 	Ispec = clamp(Ispec, 0.0, 1.0);
 	// write Total Color:
-	FragColor = texture2D(texture, texCoord) * texture2D(lightmap, lightCoord) + Iamb + Idiff + Ispec;
+	FragColor = texture2D(texture, texCoord) * texture2D(lightmap, lightCoord) *(Iamb + Idiff + Ispec);
 }

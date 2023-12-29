@@ -18,7 +18,7 @@ void main(){
 	gl_Position = projection * view * in_transform * vec4(in_pos, 1);
 
 	fragPos = vec3(view * in_transform * vec4(in_pos, 1));
-	fragNorm = normalize(in_normal);
+	fragNorm = normalize(gl_NormalMatrix * in_normal);
 
 	//0 and 1 are used for the p and q coordinates because p defaults to 0 and q defaults to 1
 	texCoord = (gl_TextureMatrix[0] * vec4(in_texcoord, 0, 1)).st;

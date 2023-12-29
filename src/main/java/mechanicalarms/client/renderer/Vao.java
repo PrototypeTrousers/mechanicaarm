@@ -72,9 +72,9 @@ public class Vao {
                 tex.putFloat(vertex.getTextureCoordinate().u);
                 tex.putFloat(vertex.getTextureCoordinate().v);
                 //Normals don't need as much precision as tex coords or positions
-                norm.put((byte) Float.floatToIntBits(vertex.getNormal().x));
-                norm.put((byte) Float.floatToIntBits(vertex.getNormal().y));
-                norm.put((byte) Float.floatToIntBits(vertex.getNormal().z));
+                norm.putFloat(vertex.getNormal().x);
+                norm.putFloat(vertex.getNormal().y);
+                norm.putFloat(vertex.getNormal().z);
                 v++;
             }
         }
