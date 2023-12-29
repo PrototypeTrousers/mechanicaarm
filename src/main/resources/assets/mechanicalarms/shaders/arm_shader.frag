@@ -16,13 +16,13 @@ void main(){
 	// ambient
 	vec3 ambient = 0.05 * color;
 	// diffuse
-	vec3 lightDir = normalize(vec3(0,1,0) - fragPos);
+	vec3 lightDir = normalize( vec3( 4,4,0)- fragPos);
 	vec3 normal = normalize(fragNorm);
 	float diff = max(dot(lightDir, normal), 0.0);
 	vec3 diffuse = diff * color;
 	// specular
 	//vec3 viewDir = normalize(viewPos (Eyes, so 0,0,0 ?)- fragPos);
-	vec3 viewDir = normalize(- fragPos);
+	vec3 viewDir = normalize(-fragPos);
 	vec3 reflectDir = reflect(-lightDir, normal);
 	float spec = 0.0;
 
