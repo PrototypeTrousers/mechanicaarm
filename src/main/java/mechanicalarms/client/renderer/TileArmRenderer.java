@@ -13,6 +13,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 import org.lwjgl.opengl.*;
+import org.lwjgl.util.vector.Matrix;
+import org.lwjgl.util.vector.Matrix3f;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Tuple4f;
@@ -41,6 +43,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
     protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
     protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
+    protected static final FloatBuffer NORMAL_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
 
     Field isShadowField = null;
 
@@ -77,6 +80,23 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         // Get the current projection matrix and store it in the buffer
         GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
+
+        Matrix3f normalMatrix = (Matrix3f) new Matrix3f().load(MODELVIEW_MATRIX_BUFFER);
+        MODELVIEW_MATRIX_BUFFER.rewind();
+        normalMatrix.invert().transpose();
+
+        NORMAL_MATRIX_BUFFER.put(new float[]{
+                normalMatrix.m00,
+                normalMatrix.m10,
+                normalMatrix.m20,
+                normalMatrix.m01,
+                normalMatrix.m11,
+                normalMatrix.m21,
+                normalMatrix.m02,
+                normalMatrix.m12,
+                normalMatrix.m22,
+        }).rewind();
+
 
         float[] firstArmCurrRot = tileArmBasic.getRotation(0);
         float[] firstArmPrevRot = tileArmBasic.getAnimationRotation(0);
@@ -139,9 +159,12 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         int projectionLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "projection");
         int viewLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "view");
+        int matrixLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "normalMatrix");
+
 
         GL20.glUniformMatrix4(projectionLoc, false, PROJECTION_MATRIX_BUFFER);
         GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
+        GL20.glUniformMatrix3(matrixLoc, false, NORMAL_MATRIX_BUFFER);
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
 

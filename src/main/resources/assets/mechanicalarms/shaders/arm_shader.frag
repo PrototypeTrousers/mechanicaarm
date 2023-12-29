@@ -11,21 +11,25 @@ uniform sampler2D texture;
 uniform sampler2D lightmap;
 
 void main(){
-	//vec3 L = normalize(gl_LightSource[0].position.xyz - fragPos);
-	vec3 L = normalize(gl_LightSource[0].position.xyz - fragPos);
-	vec3 E = normalize(-fragPos); // we are in Eye Coordinates, so EyePos is (0,0,0)
-	vec3 R = normalize(-reflect(L,fragNorm));
 
-	//calculate Ambient Term:
-	vec4 Iamb = gl_FrontLightProduct[0].ambient;
+	vec3 color = (texture2D(texture, texCoord) * texture2D(lightmap, lightCoord)).rgb;
+	// ambient
+	vec3 ambient = 0.05 * color;
+	// diffuse
+	vec3 lightDir = normalize(vec3(0,1,0) - fragPos);
+	vec3 normal = normalize(fragNorm);
+	float diff = max(dot(lightDir, normal), 0.0);
+	vec3 diffuse = diff * color;
+	// specular
+	//vec3 viewDir = normalize(viewPos (Eyes, so 0,0,0 ?)- fragPos);
+	vec3 viewDir = normalize(- fragPos);
+	vec3 reflectDir = reflect(-lightDir, normal);
+	float spec = 0.0;
 
-	//calculate Diffuse Term:
-	vec4 Idiff = gl_FrontLightProduct[0].diffuse * max(dot(fragNorm,L), 0.0);
-	Idiff = clamp(Idiff, 0.0, 1.0);
+	vec3 halfwayDir = normalize(lightDir + viewDir);
+	spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
 
-	// calculate Specular Term:
-	vec4 Ispec = gl_FrontLightProduct[0].specular * pow(max(dot(R,E),0.0),0.3*gl_FrontMaterial.shininess);
-	Ispec = clamp(Ispec, 0.0, 1.0);
-	// write Total Color:
-	FragColor = texture2D(texture, texCoord) * texture2D(lightmap, lightCoord) *(Iamb + Idiff + Ispec);
+	vec3 specular = vec3(0.3) * spec; // assuming bright white light color
+	FragColor = vec4(ambient + diffuse + specular, 1.0);
+
 }
