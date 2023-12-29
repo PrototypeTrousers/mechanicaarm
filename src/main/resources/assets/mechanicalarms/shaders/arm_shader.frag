@@ -14,10 +14,11 @@ void main(){
 
 	vec3 color = (texture2D(texture, texCoord) * texture2D(lightmap, lightCoord)).rgb;
 	// ambient
-	vec3 ambient = 0.05 * color;
+	vec3 ambient = 0.2 * color;
 	// diffuse
-	vec3 lightDir = normalize( vec3( 4,4,0)- fragPos);
 	vec3 normal = normalize(fragNorm);
+	vec3 lightDir = normalize( normal - fragPos);
+
 	float diff = max(dot(lightDir, normal), 0.0);
 	vec3 diffuse = diff * color;
 	// specular
