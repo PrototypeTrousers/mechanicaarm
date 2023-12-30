@@ -47,8 +47,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
     protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
     protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
-    protected static final FloatBuffer NORMAL_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
-
     Field isShadowField = null;
 
 
@@ -87,23 +85,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         // Get the current projection matrix and store it in the buffer
         GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
 
-        Matrix3f normalMatrix = (Matrix3f) new Matrix3f().load(MODELVIEW_MATRIX_BUFFER);
-        MODELVIEW_MATRIX_BUFFER.rewind();
-        normalMatrix.invert().transpose();
-
-        NORMAL_MATRIX_BUFFER.put(new float[]{
-                normalMatrix.m00,
-                normalMatrix.m10,
-                normalMatrix.m20,
-                normalMatrix.m01,
-                normalMatrix.m11,
-                normalMatrix.m21,
-                normalMatrix.m02,
-                normalMatrix.m12,
-                normalMatrix.m22,
-        }).rewind();
-
-
         float[] firstArmCurrRot = tileArmBasic.getRotation(0);
         float[] firstArmPrevRot = tileArmBasic.getAnimationRotation(0);
 
@@ -113,10 +94,10 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         translate(transformMatrix, (float) x, (float) y + 2, (float) z);
 
 
-        rot.rotateY((float) (-Math.PI/2));
-        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
-        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
-        Quaternion.rotateMatrix(transformMatrix, rot);
+//        rot.rotateY((float) (-Math.PI/2));
+//        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
+//        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
+//        Quaternion.rotateMatrix(transformMatrix, rot);
 
         float[] fa = new float[]{
                 transformMatrix.m00,
@@ -146,10 +127,10 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         }
         fb.rewind();
 
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, Vao.vboInstance);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, Vao2.vboInstance);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, fb, GL15.GL_STATIC_DRAW);
 
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, Vao.lightBuffer);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, Vao2.lightBuffer);
         ByteBuffer byteBuffer = GLAllocation.createDirectByteBuffer(2);
         Chunk c = tileArmBasic.getWorld().getChunk(tileArmBasic.getPos());
         int s = c.getLightFor(EnumSkyBlock.SKY, tileArmBasic.getPos());
@@ -163,14 +144,11 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         int projectionLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "projection");
         int viewLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "view");
-        int matrixLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "normalMatrix");
-
 
         GL20.glUniformMatrix4(projectionLoc, false, PROJECTION_MATRIX_BUFFER);
         GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
-        GL20.glUniformMatrix3(matrixLoc, false, NORMAL_MATRIX_BUFFER);
 
-        Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mechanicalarms:textures/arm_arm.png"));
+        Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("textures/entity/chest/normal.png"));
 
         GL31.glDrawArraysInstanced(GL11.GL_TRIANGLES, 0, vao2.getVertexCount(), 1);
 

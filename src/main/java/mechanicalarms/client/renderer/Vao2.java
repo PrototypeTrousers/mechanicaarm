@@ -8,11 +8,18 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import org.lwjgl.opengl.*;
+import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector3f;
+import org.lwjgl.util.vector.Vector4f;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
 public class Vao2 {
+
+
+    protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
+    protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
 
     public static int lightBuffer;
     public static int vboInstance;
@@ -33,9 +40,35 @@ public class Vao2 {
 
 
     public static Vao2 setupVAO() {
-        GL11.glPushMatrix();
         GL11.glDisable(GL11.GL_CULL_FACE);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPushMatrix();
         GL11.glLoadIdentity();
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        GL11.glViewport(0,0,1,1);
+
+        MODELVIEW_MATRIX_BUFFER.rewind();
+        PROJECTION_MATRIX_BUFFER.rewind();
+
+        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
+
+        // Get the current projection matrix and store it in the buffer
+        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
+        MODELVIEW_MATRIX_BUFFER.rewind();
+        PROJECTION_MATRIX_BUFFER.rewind();
+
+
+        Matrix4f mv = (Matrix4f) new Matrix4f().load(MODELVIEW_MATRIX_BUFFER);
+        Matrix4f p = (Matrix4f) new Matrix4f().load(PROJECTION_MATRIX_BUFFER);
+        mv.invert();
+        p.invert();
+        mv.transpose();
+        p.transpose();
+
+        Matrix4f.mul(mv, p, p);
+
         GlStateManager.translate(0, 0, 0);
 
         // Allocate buffer for feedback data
@@ -51,7 +84,12 @@ public class Vao2 {
 
         // Return to normal rendering mode
         GL11.glRenderMode(GL11.GL_RENDER);
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+
         GL11.glPopMatrix();
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPopMatrix();
+
 
         int vao2 = GL30.glGenVertexArrays();
         GL30.glBindVertexArray(vao2);
@@ -61,6 +99,10 @@ public class Vao2 {
         ByteBuffer norm = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
         ByteBuffer tex = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
 
+        float[] f = new float[3000];
+        feedbackBuffer.get(f);
+
+        feedbackBuffer.rewind();
 
         boolean end = false;
         int v =0;
@@ -70,9 +112,16 @@ public class Vao2 {
                 boolean triangle = feedbackBuffer.get() == 3;
                 for (int j = 0; j < 3; j++) {
                     v++;
-                    pos.putFloat(feedbackBuffer.get()); //x
-                    pos.putFloat(feedbackBuffer.get()); //y
-                    pos.putFloat(feedbackBuffer.get()); //z
+                    float x = feedbackBuffer.get();
+                    float y = feedbackBuffer.get();
+                    float z = feedbackBuffer.get();
+
+                    pos.putFloat(x); //x
+                    pos.putFloat(y); //y
+                    pos.putFloat(z); //z
+
+                    Vector4f vPre = new Vector4f(x, y, z, 1);
+                    Vector4f vPos = Matrix4f.transform(p, vPre, new Vector4f());
                     feedbackBuffer.get();//r
                     feedbackBuffer.get();//g
                     feedbackBuffer.get();//b
