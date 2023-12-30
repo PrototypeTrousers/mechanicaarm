@@ -49,29 +49,13 @@ public class Vao2 {
         GL11.glLoadIdentity();
         GL11.glViewport(0,0,1,1);
 
-        MODELVIEW_MATRIX_BUFFER.rewind();
-        PROJECTION_MATRIX_BUFFER.rewind();
 
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
-
-        // Get the current projection matrix and store it in the buffer
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
-        MODELVIEW_MATRIX_BUFFER.rewind();
-        PROJECTION_MATRIX_BUFFER.rewind();
-
-
-        Matrix4f mv = (Matrix4f) new Matrix4f().load(MODELVIEW_MATRIX_BUFFER);
-        Matrix4f p = (Matrix4f) new Matrix4f().load(PROJECTION_MATRIX_BUFFER);
-        mv.invert();
-        p.invert();
-        mv.transpose();
-        p.transpose();
-
-        Matrix4f.mul(mv, p, p);
-
-        GlStateManager.translate(0, 0, 0);
 
         // Allocate buffer for feedback data
+        ByteBuffer pos = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
+        ByteBuffer norm = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
+        ByteBuffer tex = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
+
         FloatBuffer feedbackBuffer = GLAllocation.createDirectFloatBuffer(3000);
 
         // Retrieve feedback data
@@ -95,14 +79,6 @@ public class Vao2 {
         GL30.glBindVertexArray(vao2);
 
 
-        ByteBuffer pos = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
-        ByteBuffer norm = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
-        ByteBuffer tex = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
-
-        float[] f = new float[3000];
-        feedbackBuffer.get(f);
-
-        feedbackBuffer.rewind();
 
         boolean end = false;
         int v =0;
@@ -120,8 +96,6 @@ public class Vao2 {
                     pos.putFloat(y); //y
                     pos.putFloat(z); //z
 
-                    Vector4f vPre = new Vector4f(x, y, z, 1);
-                    Vector4f vPos = Matrix4f.transform(p, vPre, new Vector4f());
                     feedbackBuffer.get();//r
                     feedbackBuffer.get();//g
                     feedbackBuffer.get();//b
