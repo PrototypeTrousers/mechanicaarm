@@ -5,15 +5,19 @@ import mechanicalarms.client.renderer.shaders.Shader;
 import mechanicalarms.client.renderer.shaders.ShaderManager;
 import mechanicalarms.client.renderer.util.Quaternion;
 import mechanicalarms.common.tile.TileArmBasic;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import org.lwjgl.opengl.*;
-import org.lwjgl.util.vector.Matrix;
 import org.lwjgl.util.vector.Matrix3f;
 
 import javax.vecmath.Matrix4f;
@@ -58,6 +62,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader")).withUniforms(ShaderManager.LIGHTMAP).withUniforms();
 
     Vao vao;
+    private Vao2 vao2;
 
     public TileArmRenderer() {
         super();
@@ -68,6 +73,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         if (vao == null) {
             vao = Vao.setupVAO();
+            vao2 = Vao2.setupVAO();
         }
 
         renderFirstArm(tileArmBasic, x, y, z, partialTicks);
@@ -105,14 +111,12 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         transformMatrix.setIdentity();
         Quaternion rot = Quaternion.createIdentity();
         translate(transformMatrix, (float) x, (float) y , (float) z);
-/*
+
 
         rot.rotateY((float) (-Math.PI/2));
         rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
         rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
         Quaternion.rotateMatrix(transformMatrix, rot);
-*/
-
 
         float[] fa = new float[]{
                 transformMatrix.m00,
