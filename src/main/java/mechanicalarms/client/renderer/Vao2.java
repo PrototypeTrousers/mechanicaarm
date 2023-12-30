@@ -36,7 +36,7 @@ public class Vao2 {
         GL11.glPushMatrix();
         GL11.glDisable(GL11.GL_CULL_FACE);
         GL11.glLoadIdentity();
-        GlStateManager.translate(0, 0, -5);
+        GlStateManager.translate(0, 0, 0);
 
         // Allocate buffer for feedback data
         FloatBuffer feedbackBuffer = GLAllocation.createDirectFloatBuffer(3000);
@@ -63,14 +63,13 @@ public class Vao2 {
 
 
         boolean end = false;
-        int i = 0;
         int v =0;
         while (!end) {
-            float cur = feedbackBuffer.get(i);
+            float cur = feedbackBuffer.get();
             if ((int) cur == GL11.GL_POLYGON_TOKEN) {
-                for (int j = 0; j < 4; j++) {
+                boolean triangle = feedbackBuffer.get() == 3;
+                for (int j = 0; j < 3; j++) {
                     v++;
-                    boolean triangle = feedbackBuffer.get() == 3;
                     pos.putFloat(feedbackBuffer.get()); //x
                     pos.putFloat(feedbackBuffer.get()); //y
                     pos.putFloat(feedbackBuffer.get()); //z
@@ -78,12 +77,14 @@ public class Vao2 {
                     feedbackBuffer.get();//g
                     feedbackBuffer.get();//b
                     feedbackBuffer.get();//a
+                    norm.putFloat(1);
+                    norm.putFloat(1);
+                    norm.putFloat(1);
                     tex.putFloat(feedbackBuffer.get()); // u
                     tex.putFloat(feedbackBuffer.get()); // v
-                    tex.putFloat(feedbackBuffer.get()); // unused
-                    tex.putFloat(feedbackBuffer.get()); // unused
+                    feedbackBuffer.get(); // unused
+                    feedbackBuffer.get(); // unused
                 }
-                i += 35;
             } else {
                 end = true;
             }
@@ -138,7 +139,12 @@ public class Vao2 {
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL30.glBindVertexArray(0);
 
-        return new Vao2(vao2, GL11.GL_QUADS, v, false);
+        return new Vao2(vao2, GL11.GL_TRIANGLES, v, false);
 
     }
+
+    public int getVertexCount() {
+        return vertexCount;
+    }
+
 }
