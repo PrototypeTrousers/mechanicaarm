@@ -3,9 +3,18 @@ package mechanicalarms.client.renderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.Vec3i;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
+import net.minecraftforge.client.model.pipeline.UnpackedBakedQuad;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import org.lwjgl.opengl.*;
 import org.lwjgl.util.vector.Matrix4f;
@@ -14,6 +23,7 @@ import org.lwjgl.util.vector.Vector4f;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.List;
 
 public class Vao2 {
 
@@ -40,78 +50,141 @@ public class Vao2 {
 
 
     public static Vao2 setupVAO() {
-        GL11.glDisable(GL11.GL_CULL_FACE);
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
-        GL11.glViewport(0,0,1,1);
-
-
-
-        // Allocate buffer for feedback data
-        ByteBuffer pos = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
-        ByteBuffer norm = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
-        ByteBuffer tex = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
-
-        FloatBuffer feedbackBuffer = GLAllocation.createDirectFloatBuffer(3000);
-
-        // Retrieve feedback data
-        GL11.glFeedbackBuffer(GL11.GL_3D_COLOR_TEXTURE, feedbackBuffer);
-        GL11.glRenderMode(GL11.GL_FEEDBACK);
 
         // Render your Minecraft model here
-        ItemStack chestStack = new ItemStack(ForgeRegistries.BLOCKS.getValue(new ResourceLocation("minecraft:chest")));
-        Minecraft.getMinecraft().getRenderItem().renderItem(chestStack, ItemCameraTransforms.TransformType.NONE);
+        //ItemStack stack = new ItemStack(Blocks.PISTON);
+        ItemStack stack = new ItemStack(Items.STICK);
+        IBakedModel model = Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getItemModel(stack);
 
-        // Return to normal rendering mode
-        GL11.glRenderMode(GL11.GL_RENDER);
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        ByteBuffer pos = GLAllocation.createDirectByteBuffer(2400000 );
+        ByteBuffer norm = GLAllocation.createDirectByteBuffer(2400000 );
+        ByteBuffer tex = GLAllocation.createDirectByteBuffer(2400000 );
 
-        GL11.glPopMatrix();
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPopMatrix();
+        int v =0;
+
+        if (model.isBuiltInRenderer()) {
+
+            GL11.glDisable(GL11.GL_CULL_FACE);
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glPushMatrix();
+            GL11.glLoadIdentity();
+            GL11.glMatrixMode(GL11.GL_PROJECTION);
+            GL11.glPushMatrix();
+            GL11.glLoadIdentity();
+            GL11.glViewport(0, 0, 1, 1);
+
+            // Allocate buffer for feedback data
+
+
+            FloatBuffer feedbackBuffer = GLAllocation.createDirectFloatBuffer(3000);
+
+            // Retrieve feedback data
+            GL11.glFeedbackBuffer(GL11.GL_3D_COLOR_TEXTURE, feedbackBuffer);
+            GL11.glRenderMode(GL11.GL_FEEDBACK);
+
+
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.enableRescaleNormal();
+            stack.getItem().getTileEntityItemStackRenderer().renderByItem(stack);
+
+
+            // Return to normal rendering mode
+            GL11.glRenderMode(GL11.GL_RENDER);
+            GL11.glMatrixMode(GL11.GL_PROJECTION);
+
+            GL11.glPopMatrix();
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glPopMatrix();
+
+            boolean end = false;
+            while (!end) {
+                float cur = feedbackBuffer.get();
+                if ((int) cur == GL11.GL_POLYGON_TOKEN) {
+                    boolean triangle = feedbackBuffer.get() == 3;
+                    for (int j = 0; j < 3; j++) {
+                        v++;
+                        float x = feedbackBuffer.get();
+                        float y = feedbackBuffer.get();
+                        float z = feedbackBuffer.get();
+
+                        pos.putFloat(x); //x
+                        pos.putFloat(y); //y
+                        pos.putFloat(z); //z
+
+                        feedbackBuffer.get();//r
+                        feedbackBuffer.get();//g
+                        feedbackBuffer.get();//b
+                        feedbackBuffer.get();//a
+                        tex.putFloat(feedbackBuffer.get()); // u
+                        tex.putFloat(feedbackBuffer.get()); // v
+                        feedbackBuffer.get(); // unused
+                        feedbackBuffer.get(); // unused
+                    }
+                } else {
+                    end = true;
+                }
+            }
+            GL11.glEnable(GL11.GL_CULL_FACE);
+        }
+        else {
+            List<BakedQuad> loq = model.getQuads(null, null, 0);
+            for (BakedQuad bq : loq) {
+                int[] quadData = bq.getVertexData();
+                Vec3i vec3i = bq.getFace().getDirectionVec();
+                for (int k = 0; k < 3; ++k) {
+                    v++;
+                    // Getting the offset for the current vertex.
+                    int vertexIndex = k * 7;
+                    pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex]));
+                    pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 1]));
+                    pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 2]));
+
+                    tex.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 4])); //texture
+                    tex.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 5])); //texture
+
+                    int packedNormal = quadData[vertexIndex + 6];
+                    norm.putFloat( ((packedNormal) & 255) / 127.0F);
+                    norm.putFloat( ((packedNormal >> 8) & 255) / 127.0F);
+                    norm.putFloat( ((packedNormal >> 16) & 255) / 127.0F);
+
+                }
+                for (int k = 2; k < 4; ++k) {
+                    v++;
+                    // Getting the offset for the current vertex.
+                    int vertexIndex = k * 7;
+                    pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex]));
+                    pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 1]));
+                    pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 2]));
+
+                    tex.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 4])); //texture
+                    tex.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 5])); //texture
+
+                    int packedNormal = quadData[vertexIndex + 6];
+                    norm.putFloat( ((packedNormal) & 255) / 127.0F);
+                    norm.putFloat( ((packedNormal >> 8) & 255) / 127.0F);
+                    norm.putFloat( ((packedNormal >> 16) & 255) / 127.0F);
+                }
+                v++;
+                // Getting the offset for the current vertex.
+                int vertexIndex = 0;
+                pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex]));
+                pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 1]));
+                pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 2]));
+
+                tex.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 4])); //texture
+                tex.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 5])); //texture
+
+                int packedNormal = quadData[vertexIndex + 6];
+                norm.putFloat( ((packedNormal) & 255) / 127.0F);
+                norm.putFloat( ((packedNormal >> 8) & 255) / 127.0F);
+                norm.putFloat( ((packedNormal >> 16) & 255) / 127.0F);
+            }
+        }
+
 
 
         int vao2 = GL30.glGenVertexArrays();
         GL30.glBindVertexArray(vao2);
-
-
-
-        boolean end = false;
-        int v =0;
-        while (!end) {
-            float cur = feedbackBuffer.get();
-            if ((int) cur == GL11.GL_POLYGON_TOKEN) {
-                boolean triangle = feedbackBuffer.get() == 3;
-                for (int j = 0; j < 3; j++) {
-                    v++;
-                    float x = feedbackBuffer.get();
-                    float y = feedbackBuffer.get();
-                    float z = feedbackBuffer.get();
-
-                    pos.putFloat(x); //x
-                    pos.putFloat(y); //y
-                    pos.putFloat(z); //z
-
-                    feedbackBuffer.get();//r
-                    feedbackBuffer.get();//g
-                    feedbackBuffer.get();//b
-                    feedbackBuffer.get();//a
-                    norm.putFloat(1);
-                    norm.putFloat(1);
-                    norm.putFloat(1);
-                    tex.putFloat(feedbackBuffer.get()); // u
-                    tex.putFloat(feedbackBuffer.get()); // v
-                    feedbackBuffer.get(); // unused
-                    feedbackBuffer.get(); // unused
-                }
-            } else {
-                end = true;
-            }
-        }
 
         pos.rewind();
         norm.rewind();
