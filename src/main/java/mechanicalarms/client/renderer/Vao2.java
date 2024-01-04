@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3i;
@@ -53,7 +54,14 @@ public class Vao2 {
 
         // Render your Minecraft model here
         //ItemStack stack = new ItemStack(Blocks.PISTON);
-        ItemStack stack = new ItemStack(Items.STICK);
+        //ItemStack stack = new ItemStack(Items.STICK);
+
+        NBTTagCompound data = new NBTTagCompound();
+        data.setString("id","minecraft:enchanted_book");
+        data.setByte("Count", (byte) 1);
+        //data.setShort("Damage", (short) 324);
+        ItemStack stack = new ItemStack(data);
+
         IBakedModel model = Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getItemModel(stack);
 
         ByteBuffer pos = GLAllocation.createDirectByteBuffer(2400000 );
