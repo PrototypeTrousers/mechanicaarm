@@ -5,25 +5,18 @@ import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3i;
-import net.minecraftforge.client.model.ModelLoaderRegistry;
-import net.minecraftforge.client.model.pipeline.UnpackedBakedQuad;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import org.lwjgl.opengl.*;
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector3f;
-import org.lwjgl.util.vector.Vector4f;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Vao2 {
@@ -31,6 +24,7 @@ public class Vao2 {
 
     protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
     protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
+    protected static final IntBuffer texGL = GLAllocation.createDirectIntBuffer(16);
 
     public static int lightBuffer;
     public static int vboInstance;
@@ -54,13 +48,13 @@ public class Vao2 {
 
         // Render your Minecraft model here
         //ItemStack stack = new ItemStack(Blocks.PISTON);
-        //ItemStack stack = new ItemStack(Items.STICK);
+        ItemStack stack = new ItemStack(Items.STICK);
 
         NBTTagCompound data = new NBTTagCompound();
         data.setString("id","minecraft:enchanted_book");
         data.setByte("Count", (byte) 1);
         //data.setShort("Damage", (short) 324);
-        ItemStack stack = new ItemStack(data);
+        //ItemStack stack = new ItemStack(Blocks.CHEST);
 
         IBakedModel model = Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getItemModel(stack);
 
@@ -95,6 +89,7 @@ public class Vao2 {
             GlStateManager.enableRescaleNormal();
             stack.getItem().getTileEntityItemStackRenderer().renderByItem(stack);
 
+            GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D, texGL);
 
             // Return to normal rendering mode
             GL11.glRenderMode(GL11.GL_RENDER);
@@ -135,7 +130,11 @@ public class Vao2 {
             GL11.glEnable(GL11.GL_CULL_FACE);
         }
         else {
-            List<BakedQuad> loq = model.getQuads(null, null, 0);
+            List<BakedQuad> loq = new ArrayList<>();
+            loq.addAll(model.getQuads(null, null, 0));
+            for (EnumFacing e : EnumFacing.VALUES) {
+                loq.addAll(model.getQuads(null,e,0));
+            }
             for (BakedQuad bq : loq) {
                 int[] quadData = bq.getVertexData();
                 Vec3i vec3i = bq.getFace().getDirectionVec();
@@ -251,4 +250,8 @@ public class Vao2 {
         return vertexCount;
     }
 
+    public static int getTexGl() {
+        texGL.rewind();
+        return texGL.get(0);
+    }
 }

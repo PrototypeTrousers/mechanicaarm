@@ -17,8 +17,8 @@ uniform mat4 view;
 void main(){
 	gl_Position = projection * view * in_transform * vec4(in_pos, 1);
 
-	fragPos = in_pos;
-	fragNorm = in_normal;
+	fragPos = vec3(in_transform * vec4(in_pos, 1.0));
+	fragNorm = mat3(transpose(inverse(in_transform))) * in_normal;
 
 	//0 and 1 are used for the p and q coordinates because p defaults to 0 and q defaults to 1
 	texCoord = (gl_TextureMatrix[0] * vec4(in_texcoord, 0, 1)).st;

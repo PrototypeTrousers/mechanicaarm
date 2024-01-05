@@ -5,21 +5,15 @@ import mechanicalarms.client.renderer.shaders.Shader;
 import mechanicalarms.client.renderer.shaders.ShaderManager;
 import mechanicalarms.client.renderer.util.Quaternion;
 import mechanicalarms.common.tile.TileArmBasic;
-import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import org.lwjgl.opengl.*;
-import org.lwjgl.util.vector.Matrix3f;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Tuple4f;
@@ -28,6 +22,8 @@ import javax.vecmath.Vector4f;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+
+import static org.lwjgl.opengl.GL11.GL_CURRENT_COLOR;
 
 
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
@@ -128,6 +124,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         }
         fb.rewind();
 
+        FloatBuffer colorBuffer = GLAllocation.createDirectFloatBuffer(16);
+
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, Vao2.vboInstance);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, fb, GL15.GL_STATIC_DRAW);
 
@@ -149,7 +147,12 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         GL20.glUniformMatrix4(projectionLoc, false, PROJECTION_MATRIX_BUFFER);
         GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
 
-        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        int t = Vao2.getTexGl();
+        if (t==0) {
+            Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        } else {
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, t);
+        }
 
         GL31.glDrawArraysInstanced(GL11.GL_TRIANGLES, 0, vao2.getVertexCount(), 1);
 
