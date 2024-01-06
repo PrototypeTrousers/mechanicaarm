@@ -5,27 +5,20 @@ import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.Vec3i;
 import org.lwjgl.opengl.*;
+import org.lwjgl.util.vector.Vector3f;
 
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Vao2 {
-
-
-    protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
-    protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
     protected static final IntBuffer texGL = GLAllocation.createDirectIntBuffer(16);
-
     public static int lightBuffer;
     public static int vboInstance;
 
@@ -36,13 +29,13 @@ public class Vao2 {
     public int drawMode;
     public int vertexCount;
     public boolean useElements;
+
     public Vao2(int vao, int mode, int length, boolean b) {
         this.vaoId = vao;
         this.drawMode = mode;
         this.vertexCount = length;
         this.useElements = b;
     }
-
 
     public static Vao2 setupVAO() {
 
@@ -51,21 +44,20 @@ public class Vao2 {
         ItemStack stack = new ItemStack(Items.STICK);
 
         NBTTagCompound data = new NBTTagCompound();
-        data.setString("id","minecraft:enchanted_book");
+        data.setString("id", "minecraft:enchanted_book");
         data.setByte("Count", (byte) 1);
         //data.setShort("Damage", (short) 324);
         //ItemStack stack = new ItemStack(Blocks.CHEST);
 
         IBakedModel model = Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getItemModel(stack);
 
-        ByteBuffer pos = GLAllocation.createDirectByteBuffer(2400000 );
-        ByteBuffer norm = GLAllocation.createDirectByteBuffer(2400000 );
-        ByteBuffer tex = GLAllocation.createDirectByteBuffer(2400000 );
+        FloatBuffer pos = GLAllocation.createDirectFloatBuffer(3000);
+        FloatBuffer norm = GLAllocation.createDirectFloatBuffer(3000);
+        FloatBuffer tex = GLAllocation.createDirectFloatBuffer(3000);
 
-        int v =0;
+        int v = 0;
 
         if (model.isBuiltInRenderer()) {
-
             GL11.glDisable(GL11.GL_CULL_FACE);
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glPushMatrix();
@@ -100,6 +92,7 @@ public class Vao2 {
             GL11.glPopMatrix();
 
             boolean end = false;
+            float[] posv = new float[9];
             while (!end) {
                 float cur = feedbackBuffer.get();
                 if ((int) cur == GL11.GL_POLYGON_TOKEN) {
@@ -110,84 +103,99 @@ public class Vao2 {
                         float y = feedbackBuffer.get();
                         float z = feedbackBuffer.get();
 
-                        pos.putFloat(x); //x
-                        pos.putFloat(y); //y
-                        pos.putFloat(z); //z
+                        pos.put(x); //x
+                        pos.put(y); //y
+                        pos.put(z); //z
 
                         feedbackBuffer.get();//r
                         feedbackBuffer.get();//g
                         feedbackBuffer.get();//b
                         feedbackBuffer.get();//a
-                        tex.putFloat(feedbackBuffer.get()); // u
-                        tex.putFloat(feedbackBuffer.get()); // v
+                        tex.put(feedbackBuffer.get()); // u
+                        tex.put(feedbackBuffer.get()); // v
                         feedbackBuffer.get(); // unused
                         feedbackBuffer.get(); // unused
+                    }
+
+                    //face normal:
+                    pos.position(pos.position() - 9);
+                    pos.get(posv);
+                    Vector3f v0 = new Vector3f(posv[0], posv[1], posv[2]);
+                    Vector3f v1 = new Vector3f(posv[3], posv[4], posv[5]);
+                    Vector3f v2 = new Vector3f(posv[6], posv[7], posv[8]);
+
+                    Vector3f edge1 = Vector3f.sub(v2, v1, new Vector3f());
+                    Vector3f edge2 = Vector3f.sub(v0, v1, new Vector3f());
+
+                    Vector3f crsProd = Vector3f.cross(edge1, edge2, new Vector3f()); // Cross product between edge1 and edge2
+
+                    Vector3f normal = (Vector3f) crsProd.normalise(); // Normalization of the vector
+                    for (int i = 0; i < 3; i++) {
+                        norm.put(normal.x);
+                        norm.put(normal.y);
+                        norm.put(normal.z);
                     }
                 } else {
                     end = true;
                 }
             }
             GL11.glEnable(GL11.GL_CULL_FACE);
-        }
-        else {
-            List<BakedQuad> loq = new ArrayList<>();
-            loq.addAll(model.getQuads(null, null, 0));
+        } else {
+            List<BakedQuad> loq = new ArrayList<>(model.getQuads(null, null, 0));
             for (EnumFacing e : EnumFacing.VALUES) {
-                loq.addAll(model.getQuads(null,e,0));
+                loq.addAll(model.getQuads(null, e, 0));
             }
             for (BakedQuad bq : loq) {
                 int[] quadData = bq.getVertexData();
-                Vec3i vec3i = bq.getFace().getDirectionVec();
                 for (int k = 0; k < 3; ++k) {
                     v++;
                     // Getting the offset for the current vertex.
                     int vertexIndex = k * 7;
-                    pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex]));
-                    pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 1]));
-                    pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 2]));
+                    pos.put(Float.intBitsToFloat(quadData[vertexIndex]));
+                    pos.put(Float.intBitsToFloat(quadData[vertexIndex + 1]));
+                    pos.put(Float.intBitsToFloat(quadData[vertexIndex + 2]));
 
-                    tex.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 4])); //texture
-                    tex.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 5])); //texture
+                    tex.put(Float.intBitsToFloat(quadData[vertexIndex + 4])); //texture
+                    tex.put(Float.intBitsToFloat(quadData[vertexIndex + 5])); //texture
 
                     int packedNormal = quadData[vertexIndex + 6];
-                    norm.putFloat( ((packedNormal) & 255) / 127.0F);
-                    norm.putFloat( ((packedNormal >> 8) & 255) / 127.0F);
-                    norm.putFloat( ((packedNormal >> 16) & 255) / 127.0F);
+                    norm.put(((packedNormal) & 255) / 127.0F);
+                    norm.put(((packedNormal >> 8) & 255) / 127.0F);
+                    norm.put(((packedNormal >> 16) & 255) / 127.0F);
 
                 }
                 for (int k = 2; k < 4; ++k) {
                     v++;
                     // Getting the offset for the current vertex.
                     int vertexIndex = k * 7;
-                    pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex]));
-                    pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 1]));
-                    pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 2]));
+                    pos.put(Float.intBitsToFloat(quadData[vertexIndex]));
+                    pos.put(Float.intBitsToFloat(quadData[vertexIndex + 1]));
+                    pos.put(Float.intBitsToFloat(quadData[vertexIndex + 2]));
 
-                    tex.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 4])); //texture
-                    tex.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 5])); //texture
+                    tex.put(Float.intBitsToFloat(quadData[vertexIndex + 4])); //texture
+                    tex.put(Float.intBitsToFloat(quadData[vertexIndex + 5])); //texture
 
                     int packedNormal = quadData[vertexIndex + 6];
-                    norm.putFloat( ((packedNormal) & 255) / 127.0F);
-                    norm.putFloat( ((packedNormal >> 8) & 255) / 127.0F);
-                    norm.putFloat( ((packedNormal >> 16) & 255) / 127.0F);
+                    norm.put(((packedNormal) & 255) / 127.0F);
+                    norm.put(((packedNormal >> 8) & 255) / 127.0F);
+                    norm.put(((packedNormal >> 16) & 255) / 127.0F);
                 }
                 v++;
                 // Getting the offset for the current vertex.
                 int vertexIndex = 0;
-                pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex]));
-                pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 1]));
-                pos.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 2]));
+                pos.put(Float.intBitsToFloat(quadData[vertexIndex]));
+                pos.put(Float.intBitsToFloat(quadData[vertexIndex + 1]));
+                pos.put(Float.intBitsToFloat(quadData[vertexIndex + 2]));
 
-                tex.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 4])); //texture
-                tex.putFloat(Float.intBitsToFloat(quadData[vertexIndex + 5])); //texture
+                tex.put(Float.intBitsToFloat(quadData[vertexIndex + 4])); //texture
+                tex.put(Float.intBitsToFloat(quadData[vertexIndex + 5])); //texture
 
                 int packedNormal = quadData[vertexIndex + 6];
-                norm.putFloat( ((packedNormal) & 255) / 127.0F);
-                norm.putFloat( ((packedNormal >> 8) & 255) / 127.0F);
-                norm.putFloat( ((packedNormal >> 16) & 255) / 127.0F);
+                norm.put(((packedNormal) & 255) / 127.0F);
+                norm.put(((packedNormal >> 8) & 255) / 127.0F);
+                norm.put(((packedNormal >> 16) & 255) / 127.0F);
             }
         }
-
 
 
         int vao2 = GL30.glGenVertexArrays();
@@ -246,12 +254,12 @@ public class Vao2 {
 
     }
 
-    public int getVertexCount() {
-        return vertexCount;
-    }
-
     public static int getTexGl() {
         texGL.rewind();
         return texGL.get(0);
+    }
+
+    public int getVertexCount() {
+        return vertexCount;
     }
 }

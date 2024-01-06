@@ -23,13 +23,14 @@ import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
-import static org.lwjgl.opengl.GL11.GL_CURRENT_COLOR;
-
 
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
+    public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader")).withUniforms(ShaderManager.LIGHTMAP).withUniforms();
+    protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
+    protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
     private static final Vector3f V3F_ZERO = new Vector3f();
-    private static int[][][] vertexArray = null;
+    private static final int[][][] vertexArray = null;
     private final Matrix4f tempModelMatrix = new Matrix4f();
     private final Tuple4f vertexTransformingVec = new Vector4f();
     private final Vector3f V3F_POS = new Vector3f();
@@ -37,25 +38,14 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     private final Vector3f ANTI_PIVOT_1 = new Vector3f(-.5F, -(1 + 7 / 16F), -.5F);
     private final Vector3f PIVOT_2 = new Vector3f(0.5F, 1 + 7 / 16F, .5F);
     private final Vector3f ANTI_PIVOT_2 = new Vector3f(-0.5F, -(1 + 7 / 16F), -.5F);
-
     private final Vector3f PIVOT_3 = new Vector3f(0.5F, 1 + 7 / 16F, 0);
     private final Vector3f ANTI_PIVOT_3 = new Vector3f(-0.5F, -(1 + 7 / 16F), 0);
     int totalInstances = 1000;
-
-    protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
-    protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
     Field isShadowField = null;
-
-
     Matrix4f transformMatrix = new Matrix4f();
     Quaternion rot = Quaternion.createIdentity();
-
     FloatBuffer fb = GLAllocation.createDirectFloatBuffer(16 * totalInstances);
-
     Matrix4f mat;
-
-    public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader")).withUniforms(ShaderManager.LIGHTMAP).withUniforms();
-
     Vao vao;
     private Vao2 vao2;
 
@@ -118,7 +108,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         GL30.glBindVertexArray(vao2.vaoId);
 
-        for (int i=0;i < 1; i++) {
+        for (int i = 0; i < 1; i++) {
             fb.position(0);
             fb.put(fa, 0, 16);
         }
@@ -148,7 +138,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
 
         int t = Vao2.getTexGl();
-        if (t==0) {
+        if (t == 0) {
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         } else {
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, t);
