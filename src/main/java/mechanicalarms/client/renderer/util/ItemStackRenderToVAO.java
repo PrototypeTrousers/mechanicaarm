@@ -1,13 +1,12 @@
-package mechanicalarms.client.renderer;
+package mechanicalarms.client.renderer.util;
 
+import mechanicalarms.client.renderer.InstanceableModel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import org.lwjgl.opengl.*;
 import org.lwjgl.util.vector.Vector3f;
@@ -17,47 +16,43 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Vao2 {
-    protected static final IntBuffer texGL = GLAllocation.createDirectIntBuffer(16);
-    public static int lightBuffer;
-    public static int vboInstance;
+public class ItemStackRenderToVAO implements InstanceableModel {
 
-    public static int posBuffer;
-    public static int normalBuffer;
-    public static int texBuffer;
-    public int vaoId;
-    public int drawMode;
-    public int vertexCount;
-    public boolean useElements;
+    private final IntBuffer texGL = GLAllocation.createDirectByteBuffer(16).asIntBuffer();
+    private int posBuffer;
+    private int texBuffer;
+    private int normalBuffer;
+    private int lightBuffer;
+    private int modelTransform;
+    private int vertexCount;
 
-    public Vao2(int vao, int mode, int length, boolean b) {
-        this.vaoId = vao;
-        this.drawMode = mode;
-        this.vertexCount = length;
-        this.useElements = b;
+    private int vertexArrayBuffer;
+
+    private ItemStack stack;
+
+    public ItemStackRenderToVAO(ItemStack stack) {
+        this.stack = stack.copy();
+        this.setupVAO(this.stack);
     }
 
-    public static Vao2 setupVAO() {
-
-        // Render your Minecraft model here
-        //ItemStack stack = new ItemStack(Blocks.PISTON);
-        ItemStack stack = new ItemStack(Items.STICK);
-
-        NBTTagCompound data = new NBTTagCompound();
-        data.setString("id", "minecraft:enchanted_book");
-        data.setByte("Count", (byte) 1);
-        //data.setShort("Damage", (short) 324);
-        //ItemStack stack = new ItemStack(Blocks.CHEST);
-
+    public void setupVAO(ItemStack stack) {
         IBakedModel model = Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getItemModel(stack);
 
         FloatBuffer pos = GLAllocation.createDirectFloatBuffer(3000);
         FloatBuffer norm = GLAllocation.createDirectFloatBuffer(3000);
-        FloatBuffer tex = GLAllocation.createDirectFloatBuffer(3000);
+        FloatBuffer tex = GLAllocation.createDirectFloatBuffer(2000);
 
         int v = 0;
 
-        if (model.isBuiltInRenderer()) {
+        List<BakedQuad> loq = new ArrayList<>(model.getQuads(null, null, 0));
+        for (EnumFacing e : EnumFacing.VALUES) {
+            loq.addAll(model.getQuads(null, e, 0));
+        }
+
+        //if an item model has no quads, attempt to capture its rendering
+        //a missing item model has quads.
+
+        if (loq.isEmpty()) {
             GL11.glDisable(GL11.GL_CULL_FACE);
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glPushMatrix();
@@ -69,17 +64,28 @@ public class Vao2 {
 
             // Allocate buffer for feedback data
 
+            boolean overflowed = false;
+            int bufferMultiplier = 1;
+            FloatBuffer feedbackBuffer = GLAllocation.createDirectFloatBuffer(3000 * bufferMultiplier);
 
-            FloatBuffer feedbackBuffer = GLAllocation.createDirectFloatBuffer(3000);
+            while (!overflowed) {
 
-            // Retrieve feedback data
-            GL11.glFeedbackBuffer(GL11.GL_3D_COLOR_TEXTURE, feedbackBuffer);
-            GL11.glRenderMode(GL11.GL_FEEDBACK);
+                // Retrieve feedback data
+                GL11.glFeedbackBuffer(GL11.GL_3D_COLOR_TEXTURE, feedbackBuffer);
+                GL11.glRenderMode(GL11.GL_FEEDBACK);
 
+                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                GlStateManager.enableRescaleNormal();
+                stack.getItem().getTileEntityItemStackRenderer().renderByItem(stack);
+                overflowed = GL11.glGetError() == 0;
+                if (overflowed) {
+                    bufferMultiplier++;
+                    feedbackBuffer = GLAllocation.createDirectFloatBuffer(3000 * bufferMultiplier);
+                }
+            }
 
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            GlStateManager.enableRescaleNormal();
-            stack.getItem().getTileEntityItemStackRenderer().renderByItem(stack);
+            //save the current bound texture for later.
+            //maybe mixin to GlStateManager bindTexture
 
             GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D, texGL);
 
@@ -96,7 +102,12 @@ public class Vao2 {
             while (!end) {
                 float cur = feedbackBuffer.get();
                 if ((int) cur == GL11.GL_POLYGON_TOKEN) {
-                    boolean triangle = feedbackBuffer.get() == 3;
+                    // 3 floats for pos, 3 floats for normal and 2 floats for texture UV, per vertex. always.
+                    if (pos.remaining() == 0) {
+                        pos = GLAllocation.createDirectFloatBuffer(pos.capacity() * 2).put(pos);
+                        norm = GLAllocation.createDirectFloatBuffer(norm.capacity() * 2).put(norm);
+                        tex = GLAllocation.createDirectFloatBuffer(tex.capacity() * 2).put(tex);
+                    }
                     for (int j = 0; j < 3; j++) {
                         v++;
                         float x = feedbackBuffer.get();
@@ -140,11 +151,8 @@ public class Vao2 {
                 }
             }
             GL11.glEnable(GL11.GL_CULL_FACE);
-        } else {
-            List<BakedQuad> loq = new ArrayList<>(model.getQuads(null, null, 0));
-            for (EnumFacing e : EnumFacing.VALUES) {
-                loq.addAll(model.getQuads(null, e, 0));
-            }
+        }
+        else {
             for (BakedQuad bq : loq) {
                 int[] quadData = bq.getVertexData();
                 for (int k = 0; k < 3; ++k) {
@@ -197,9 +205,8 @@ public class Vao2 {
             }
         }
 
-
-        int vao2 = GL30.glGenVertexArrays();
-        GL30.glBindVertexArray(vao2);
+        vertexArrayBuffer = GL30.glGenVertexArrays();
+        GL30.glBindVertexArray(vertexArrayBuffer);
 
         pos.rewind();
         norm.rewind();
@@ -238,8 +245,8 @@ public class Vao2 {
         GL20.glEnableVertexAttribArray(3);
         GL33.glVertexAttribDivisor(3, 1);
 
-        vboInstance = GL15.glGenBuffers();
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboInstance);
+        modelTransform = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, modelTransform);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 64, GL15.GL_DYNAMIC_DRAW);
 
         for (int k = 0; k < 4; k++) {
@@ -249,17 +256,36 @@ public class Vao2 {
         }
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL30.glBindVertexArray(0);
-
-        return new Vao2(vao2, GL11.GL_TRIANGLES, v, false);
-
+        this.vertexCount = v;
     }
 
-    public static int getTexGl() {
+    @Override
+    public int getTexGl() {
         texGL.rewind();
         return texGL.get(0);
     }
 
+    @Override
+    public int getBlockLightBuffer() {
+        return lightBuffer;
+    }
+
+    @Override
+    public int getVertexArrayBuffer() {
+        return vertexArrayBuffer;
+    }
+
+    @Override
+    public int getModelTransformBuffer() {
+        return modelTransform;
+    }
+
+    @Override
     public int getVertexCount() {
         return vertexCount;
+    }
+
+    public ItemStack getStack() {
+        return stack;
     }
 }

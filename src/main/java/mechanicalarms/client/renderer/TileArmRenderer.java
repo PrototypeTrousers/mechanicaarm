@@ -3,6 +3,7 @@ package mechanicalarms.client.renderer;
 import mechanicalarms.MechanicalArms;
 import mechanicalarms.client.renderer.shaders.Shader;
 import mechanicalarms.client.renderer.shaders.ShaderManager;
+import mechanicalarms.client.renderer.util.ItemStackRenderToVAO;
 import mechanicalarms.client.renderer.util.Quaternion;
 import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.client.Minecraft;
@@ -10,6 +11,8 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
@@ -27,6 +30,7 @@ import java.nio.FloatBuffer;
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
     public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader")).withUniforms(ShaderManager.LIGHTMAP).withUniforms();
+    private final ResourceLocation armModelLocation = new ResourceLocation(MechanicalArms.MODID, "models/block/completearm.obj");
     protected static final FloatBuffer MODELVIEW_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
     protected static final FloatBuffer PROJECTION_MATRIX_BUFFER = GLAllocation.createDirectFloatBuffer(16);
     private static final Vector3f V3F_ZERO = new Vector3f();
@@ -47,7 +51,9 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     FloatBuffer fb = GLAllocation.createDirectFloatBuffer(16 * totalInstances);
     Matrix4f mat;
     Vao vao;
-    private Vao2 vao2;
+
+    InstanceableModel item;
+    private ItemStackRenderToVAO vao2;
 
     public TileArmRenderer() {
         super();
@@ -57,12 +63,18 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     public void renderTileEntityFast(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
 
         if (vao == null) {
-            vao = Vao.setupVAO();
-            vao2 = Vao2.setupVAO();
+            vao = new Vao(armModelLocation);
         }
 
-        renderFirstArm(tileArmBasic, x, y, z, partialTicks);
-        //renderSecondArm(tileArmBasic, x, y, z, partialTicks);
+        // Get the current model view matrix and store it in the buffer
+        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
+
+        // Get the current projection matrix and store it in the buffer
+        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
+
+
+        //renderFirstArm(tileArmBasic, x, y, z, partialTicks);
+        renderItemInArm(tileArmBasic, x, y, z, partialTicks);
     }
 
     void renderFirstArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks) {
@@ -106,7 +118,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         base_vao.use();
 
-        GL30.glBindVertexArray(vao2.vaoId);
+        GL30.glBindVertexArray(vao.getVertexArrayBuffer());
 
         for (int i = 0; i < 1; i++) {
             fb.position(0);
@@ -114,12 +126,10 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         }
         fb.rewind();
 
-        FloatBuffer colorBuffer = GLAllocation.createDirectFloatBuffer(16);
-
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, Vao2.vboInstance);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vao.getModelTransformBuffer());
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, fb, GL15.GL_STATIC_DRAW);
 
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, Vao2.lightBuffer);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vao.getBlockLightBuffer());
         ByteBuffer byteBuffer = GLAllocation.createDirectByteBuffer(2);
         Chunk c = tileArmBasic.getWorld().getChunk(tileArmBasic.getPos());
         int s = c.getLightFor(EnumSkyBlock.SKY, tileArmBasic.getPos());
@@ -137,14 +147,99 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         GL20.glUniformMatrix4(projectionLoc, false, PROJECTION_MATRIX_BUFFER);
         GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
 
-        int t = Vao2.getTexGl();
+        int t = vao.getTexGl();
         if (t == 0) {
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         } else {
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, t);
         }
 
-        GL31.glDrawArraysInstanced(GL11.GL_TRIANGLES, 0, vao2.getVertexCount(), 1);
+        GL31.glDrawArraysInstanced(GL11.GL_TRIANGLES, 0, vao.getVertexCount(), 1);
+
+        GL30.glBindVertexArray(0);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+
+        base_vao.release();
+    }
+    void renderItemInArm(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks) {
+        InstanceRender ir = InstanceRender.INSTANCE;
+        if (item == null) {
+            item = new ItemStackRenderToVAO(new ItemStack(Blocks.CACTUS));
+        }
+
+        ir.schedule(item);
+
+        float[] firstArmCurrRot = tileArmBasic.getRotation(0);
+        float[] firstArmPrevRot = tileArmBasic.getAnimationRotation(0);
+
+        rot.setIndentity();
+        transformMatrix.setIdentity();
+        Quaternion rot = Quaternion.createIdentity();
+        translate(transformMatrix, (float) x, (float) y + 2, (float) z);
+
+
+//        rot.rotateY((float) (-Math.PI/2));
+//        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
+//        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
+//        Quaternion.rotateMatrix(transformMatrix, rot);
+
+        float[] fa = new float[]{
+                transformMatrix.m00,
+                transformMatrix.m10,
+                transformMatrix.m20,
+                transformMatrix.m30,
+                transformMatrix.m01,
+                transformMatrix.m11,
+                transformMatrix.m21,
+                transformMatrix.m31,
+                transformMatrix.m02,
+                transformMatrix.m12,
+                transformMatrix.m22,
+                transformMatrix.m32,
+                transformMatrix.m03,
+                transformMatrix.m13,
+                transformMatrix.m23,
+                transformMatrix.m33};
+
+        base_vao.use();
+
+        GL30.glBindVertexArray(item.getVertexArrayBuffer());
+
+        for (int i = 0; i < 1; i++) {
+            fb.position(0);
+            fb.put(fa, 0, 16);
+        }
+        fb.rewind();
+
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, item.getModelTransformBuffer());
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, fb, GL15.GL_STATIC_DRAW);
+
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, item.getBlockLightBuffer());
+        ByteBuffer byteBuffer = GLAllocation.createDirectByteBuffer(2);
+        Chunk c = tileArmBasic.getWorld().getChunk(tileArmBasic.getPos());
+        int s = c.getLightFor(EnumSkyBlock.SKY, tileArmBasic.getPos());
+        int b = c.getLightFor(EnumSkyBlock.BLOCK, tileArmBasic.getPos());
+
+        byteBuffer.put((byte) s);
+        byteBuffer.put((byte) b);
+        byteBuffer.rewind();
+
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, byteBuffer, GL15.GL_DYNAMIC_DRAW);
+
+        int projectionLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "projection");
+        int viewLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "view");
+
+        GL20.glUniformMatrix4(projectionLoc, false, PROJECTION_MATRIX_BUFFER);
+        GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
+
+        int t = item.getTexGl();
+        if (t == 0) {
+            Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        } else {
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, t);
+        }
+
+        GL31.glDrawArraysInstanced(GL11.GL_TRIANGLES, 0, item.getVertexCount(), 1);
 
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
@@ -162,7 +257,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         if (vao == null) {
-            vao = Vao.setupVAO();
+            vao = new Vao(armModelLocation);
         }
 
         renderFirstArm(tileArmBasic, x, y, z, partialTicks);
@@ -203,6 +298,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         matrix.m23 = z;
         return matrix;
     }
+
+
 
     public void translate(Matrix4f mat, float x, float y, float z) {
         mat.m03 += mat.m00 * x + mat.m01 * y + mat.m02 * z;

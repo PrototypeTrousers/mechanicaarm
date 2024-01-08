@@ -1,7 +1,12 @@
 package mechanicalarms.client.renderer;
 
 import mechanicalarms.MechanicalArms;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.texture.ITextureObject;
+import net.minecraft.client.renderer.texture.SimpleTexture;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.obj.OBJLoader;
@@ -9,72 +14,60 @@ import net.minecraftforge.client.model.obj.OBJModel;
 import org.lwjgl.opengl.*;
 
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Vao {
+public class Vao implements InstanceableModel{
 
-    public static int indirectBuffer;
-    public static int boneBuffer;
+    private int texGL;
     public static int lightBuffer;
-    public static int vboInstance;
-
+    public static int modelTransformBuffer;
     public static int posBuffer;
     public static int normalBuffer;
     public static int texBuffer;
-
-    public static ByteBuffer positionBuffer;
     public int vaoId;
     public int drawMode;
     public int vertexCount;
     public boolean useElements;
+    private int vertexArrayBuffer;
 
-    public Vao(int vao, int mode, int length, boolean b) {
-        this.vaoId = vao;
-        this.drawMode = mode;
-        this.vertexCount = length;
-        this.useElements = b;
-    }
+    IModel model;
 
-    public void draw() {
-        GL30.glBindVertexArray(vaoId);
-        if (useElements) {
-            //Unsigned int because usually elements are specified as unsigned integer values
-            GL11.glDrawElements(drawMode, vertexCount, GL11.GL_UNSIGNED_INT, 0);
-        } else {
-            GL11.glDrawArrays(drawMode, 0, vertexCount);
-        }
-        GL30.glBindVertexArray(0);
-    }
-
-    public static Vao setupVAO() {
-        int vao = GL30.glGenVertexArrays();
-        GL30.glBindVertexArray(vao);
-
-        IModel im;
+    public Vao(ResourceLocation resourceLocation) {
         try {
-            im = OBJLoader.INSTANCE.loadModel(new ResourceLocation(MechanicalArms.MODID, "models/block/completearm.obj"));
+            this.model = OBJLoader.INSTANCE.loadModel(resourceLocation);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        this.setupVAO(model);
+    }
+
+    public void setupVAO(IModel model) {
+        vertexArrayBuffer = GL30.glGenVertexArrays();
+        GL30.glBindVertexArray(vertexArrayBuffer);
         List<OBJModel.Face> fl = new ArrayList<>();
-        ((OBJModel) im).getMatLib().getGroups().values().forEach(g -> fl.addAll(g.getFaces()));
-        ByteBuffer pos = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
-        ByteBuffer norm = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
-        ByteBuffer tex = GLAllocation.createDirectByteBuffer(2400000 * Vertex.BYTES_PER_VERTEX);
+        ((OBJModel) model).getMatLib().getGroups().values().forEach(g -> fl.addAll(g.getFaces()));
+        int vertexAmount = fl.size() * 3;
+        FloatBuffer pos = GLAllocation.createDirectFloatBuffer(vertexAmount * 3);
+        FloatBuffer norm = GLAllocation.createDirectFloatBuffer(vertexAmount * 3);
+        FloatBuffer tex = GLAllocation.createDirectFloatBuffer(vertexAmount * 2);
         int v = 0;
         for (OBJModel.Face face : fl) {
-            for (OBJModel.Vertex vertex : face.getVertices()){
-                pos.putFloat(vertex.getPos().x);
-                pos.putFloat(vertex.getPos().y);
-                pos.putFloat(vertex.getPos().z);
+            OBJModel.Vertex[] vertices = face.getVertices();
+            for (int i = 0; i < 3; i++) {
+                OBJModel.Vertex vertex = vertices[i];
+                pos.put(vertex.getPos().x);
+                pos.put(vertex.getPos().y);
+                pos.put(vertex.getPos().z);
                 //U,V
-                tex.putFloat(vertex.getTextureCoordinate().u);
-                tex.putFloat(vertex.getTextureCoordinate().v);
-                //Normals don't need as much precision as tex coords or positions
-                norm.putFloat(vertex.getNormal().x);
-                norm.putFloat(vertex.getNormal().y);
-                norm.putFloat(vertex.getNormal().z);
+                tex.put(vertex.getTextureCoordinate().u);
+                tex.put(vertex.getTextureCoordinate().v);
+                //Normals
+                norm.put(vertex.getNormal().x);
+                norm.put(vertex.getNormal().y);
+                norm.put(vertex.getNormal().z);
                 v++;
             }
         }
@@ -115,8 +108,9 @@ public class Vao {
         GL20.glEnableVertexAttribArray(3);
         GL33.glVertexAttribDivisor(3, 1);
 
-        vboInstance = GL15.glGenBuffers();
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboInstance);
+        //Model Transform Matrix
+        modelTransformBuffer = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, modelTransformBuffer);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 64, GL15.GL_DYNAMIC_DRAW);
 
         for (int i = 0; i < 4; i++) {
@@ -126,11 +120,42 @@ public class Vao {
         }
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL30.glBindVertexArray(0);
-
-        return new Vao(vao, GL11.GL_QUADS, v, false);
+        this.vertexCount = v;
     }
 
+    @Override
     public int getVertexCount() {
         return vertexCount;
+    }
+
+    @Override
+    public int getVertexArrayBuffer() {
+        return vertexArrayBuffer;
+    }
+
+    @Override
+    public int getModelTransformBuffer() {
+        return modelTransformBuffer;
+    }
+
+    @Override
+    public int getBlockLightBuffer() {
+        return lightBuffer;
+    }
+
+    @Override
+    public int getTexGl() {
+        if (texGL == 0) {
+            ResourceLocation t = new ResourceLocation("mechanicalarms:textures/arm_arm.png");
+            ITextureObject itextureobject = Minecraft.getMinecraft().getTextureManager().getTexture(t);
+
+            if (itextureobject == null)
+            {
+                itextureobject = new SimpleTexture(t);
+                Minecraft.getMinecraft().getTextureManager().loadTexture(t, itextureobject);
+            }
+            texGL = Minecraft.getMinecraft().getTextureManager().getTexture(t).getGlTextureId();
+        }
+        return texGL;
     }
 }

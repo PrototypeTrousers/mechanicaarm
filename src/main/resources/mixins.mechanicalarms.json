@@ -1,5 +1,5 @@
 {
-  "package": ".mechanicalarms.client.mixin",
+  "package": "mechanicalarms.client.mixin",
   "refmap": "mixins.mechanicalarms.refmap.json",
   "target": "@env(DEFAULT)",
   "minVersion": "0.8",
