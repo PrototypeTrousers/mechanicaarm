@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = TileEntityRendererDispatcher.class, remap = false)
 public class TileEntityRendererDispatcherMixin {
 
-    @Inject(method = "drawBatch", at = @At("TAIL"))
+    @Inject(method = "drawBatch", at = @At("HEAD"))
     public void draw(int pass, CallbackInfo ci) {
         InstanceRender.draw();
     }

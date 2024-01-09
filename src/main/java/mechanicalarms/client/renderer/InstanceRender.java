@@ -5,9 +5,11 @@ import mechanicalarms.MechanicalArms;
 import mechanicalarms.client.renderer.shaders.Shader;
 import mechanicalarms.client.renderer.shaders.ShaderManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.MinecraftForgeClient;
 import org.lwjgl.opengl.*;
 
 import java.nio.ByteBuffer;
@@ -27,7 +29,19 @@ public class InstanceRender {
     static Map<InstanceableModel, InstanceData> modelInstanceData = new Object2ObjectOpenHashMap<>();
 
     public static void draw() {
+
+        if (modelInstanceData.isEmpty() || MinecraftForgeClient.getRenderPass() != 0) {
+            return;
+        }
+
+        ActiveRenderInfo.updateRenderInfo(Minecraft.getMinecraft().player, false);
         base_vao.use();
+
+        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
+
+        // Get the current projection matrix and store it in the buffer
+        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
+        GL11.glPushMatrix();
 
         int projectionLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "projection");
         int viewLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "view");
@@ -35,17 +49,21 @@ public class InstanceRender {
         GL20.glUniformMatrix4(projectionLoc, false, PROJECTION_MATRIX_BUFFER);
         GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
 
-        float[] a = new float[16];
-        PROJECTION_MATRIX_BUFFER.get(a);
-        PROJECTION_MATRIX_BUFFER.rewind();
-
         for (Map.Entry<InstanceableModel, InstanceData> entry : modelInstanceData.entrySet()) {
             InstanceableModel im = entry.getKey();
             InstanceData instanceData = entry.getValue();
             instanceData.rewindBuffers();
             GL30.glBindVertexArray(im.getVertexArrayBuffer());
+
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, im.getModelTransformBuffer());
             GL15.glBufferData(GL15.GL_ARRAY_BUFFER, instanceData.modelMatrixBuffer, GL15.GL_DYNAMIC_DRAW);
+            instanceData.modelMatrixBuffer.rewind();
+            float[] a = new float[instanceData.modelMatrixBuffer.capacity()];
+            instanceData.modelMatrixBuffer.get(a);
+
+            
+
+
 
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, im.getBlockLightBuffer());
             GL15.glBufferData(GL15.GL_ARRAY_BUFFER, instanceData.blockLightBuffer, GL15.GL_DYNAMIC_DRAW);
@@ -63,6 +81,7 @@ public class InstanceRender {
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         base_vao.release();
+        GL11.glPopMatrix();
 
     }
 
@@ -75,14 +94,14 @@ public class InstanceRender {
 
     }
 
-    public void bufferModelMatrixData(int glBufferID, float[] dataToBuffer) {
-        current.resizeModelMatrix(current.modelMatrixBuffer);
+    public void bufferModelMatrixData(float[] dataToBuffer) {
+        current.resizeModelMatrix();
         current.modelMatrixBuffer.put(dataToBuffer, 0, 16);
     }
 
     public void bufferLight(byte s, byte b) {
-        current.resizeLightBuffer(current.blockLightBuffer);
-        current.blockLightBuffer.put(new byte[]{s, b}, 0, 2);
+        current.resizeLightBuffer();
+        current.blockLightBuffer.put(new byte[]{s, b}, 0,  2);
     }
 
 
@@ -94,15 +113,25 @@ public class InstanceRender {
         private int instanceCount;
 
 
-        public void resizeModelMatrix(FloatBuffer floatBuffer) {
-            if (floatBuffer.remaining() < 16) {
-                modelMatrixBuffer = GLAllocation.createDirectFloatBuffer(floatBuffer.capacity() * 2).put(modelMatrixBuffer);
+        public void resizeModelMatrix() {
+            if (modelMatrixBuffer.remaining() < 16) {
+                FloatBuffer newBuffer = GLAllocation.createDirectFloatBuffer(modelMatrixBuffer.capacity() * 2);
+                int currentPos = modelMatrixBuffer.position();
+                modelMatrixBuffer.rewind();
+                newBuffer.put(modelMatrixBuffer);
+                newBuffer.position(currentPos);
+                modelMatrixBuffer = newBuffer;
             }
         }
 
-        public void resizeLightBuffer(ByteBuffer byteBuffer) {
+        public void resizeLightBuffer() {
             if (blockLightBuffer.remaining() < 2) {
-                blockLightBuffer = GLAllocation.createDirectByteBuffer(byteBuffer.capacity() * 2).put(blockLightBuffer);
+                ByteBuffer newBuffer = GLAllocation.createDirectByteBuffer(blockLightBuffer.capacity() * 2);
+                int currentPos = blockLightBuffer.position();
+                blockLightBuffer.rewind();
+                newBuffer.put(blockLightBuffer);
+                newBuffer.position(currentPos);
+                blockLightBuffer = newBuffer;
             }
         }
 

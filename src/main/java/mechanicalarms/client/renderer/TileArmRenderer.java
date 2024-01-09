@@ -105,7 +105,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
                 transformMatrix.m23,
                 transformMatrix.m33};
 
-        ir.bufferModelMatrixData(item.getModelTransformBuffer(), fa);
+        ir.bufferModelMatrixData(fa);
 
         Chunk c = tileArmBasic.getWorld().getChunk(tileArmBasic.getPos());
         int s = c.getLightFor(EnumSkyBlock.SKY, tileArmBasic.getPos());
@@ -117,8 +117,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
     @Override
     public void render(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
-        int currentProgram = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
-        GL20.glUseProgram(currentProgram);
     }
 
     Matrix4f fbToM4f(FloatBuffer fb, Matrix4f mat) {
