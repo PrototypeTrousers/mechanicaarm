@@ -34,14 +34,11 @@ public class InstanceRender {
             return;
         }
 
-        ActiveRenderInfo.updateRenderInfo(Minecraft.getMinecraft().player, false);
         base_vao.use();
 
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
-
         // Get the current projection matrix and store it in the buffer
         GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
-        GL11.glPushMatrix();
 
         int projectionLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "projection");
         int viewLoc = GL20.glGetUniformLocation(base_vao.getShaderId(), "view");
@@ -53,17 +50,12 @@ public class InstanceRender {
             InstanceableModel im = entry.getKey();
             InstanceData instanceData = entry.getValue();
             instanceData.rewindBuffers();
+
+
             GL30.glBindVertexArray(im.getVertexArrayBuffer());
 
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, im.getModelTransformBuffer());
             GL15.glBufferData(GL15.GL_ARRAY_BUFFER, instanceData.modelMatrixBuffer, GL15.GL_DYNAMIC_DRAW);
-            instanceData.modelMatrixBuffer.rewind();
-            float[] a = new float[instanceData.modelMatrixBuffer.capacity()];
-            instanceData.modelMatrixBuffer.get(a);
-
-            
-
-
 
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, im.getBlockLightBuffer());
             GL15.glBufferData(GL15.GL_ARRAY_BUFFER, instanceData.blockLightBuffer, GL15.GL_DYNAMIC_DRAW);
@@ -81,8 +73,6 @@ public class InstanceRender {
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         base_vao.release();
-        GL11.glPopMatrix();
-
     }
 
     public void schedule(InstanceableModel item) {

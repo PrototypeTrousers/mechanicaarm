@@ -9,6 +9,7 @@ import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumSkyBlock;
@@ -66,7 +67,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     void renderPart(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks) {
         InstanceRender ir = InstanceRender.INSTANCE;
         if (item == null) {
-            item = new ItemStackRenderToVAO(new ItemStack(Blocks.CACTUS));
+            item = new ItemStackRenderToVAO(new ItemStack(Items.STICK));
         }
 
         ir.schedule(item);

@@ -219,38 +219,36 @@ public class ItemStackRenderToVAO implements InstanceableModel {
                 3,
                 GL11.GL_FLOAT,
                 false,
-                0,
+                12,
                 0);
         GL20.glEnableVertexAttribArray(0);
 
         texBuffer = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, texBuffer);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, tex, GL15.GL_STATIC_DRAW);
-        GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, true, 0, 0);
+        GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, true, 8, 0);
         GL20.glEnableVertexAttribArray(1);
-
 
         normalBuffer = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, normalBuffer);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, norm, GL15.GL_STATIC_DRAW);
-        GL20.glVertexAttribPointer(2, 3, GL11.GL_FLOAT, true, 0, 0);
+        GL20.glVertexAttribPointer(2, 3, GL11.GL_FLOAT, true, 12, 0);
         GL20.glEnableVertexAttribArray(2);
 
         lightBuffer = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, lightBuffer);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 2, GL15.GL_DYNAMIC_DRAW);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 2, GL15.GL_STATIC_DRAW);
 
         //Light
-        GL20.glVertexAttribPointer(3, 2, GL11.GL_UNSIGNED_BYTE, false, 0, 0);
+        GL20.glVertexAttribPointer(3, 2, GL11.GL_UNSIGNED_BYTE, false, 2, 0);
         GL20.glEnableVertexAttribArray(3);
         GL33.glVertexAttribDivisor(3, 1);
 
         modelTransform = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, modelTransform);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 64, GL15.GL_DYNAMIC_DRAW);
 
         for (int k = 0; k < 4; k++) {
-            GL20.glVertexAttribPointer(4 + k, 4, GL11.GL_FLOAT, false, 0, k * 16);
+            GL20.glVertexAttribPointer(4 + k, 4, GL11.GL_FLOAT, false, 64, k * 16);
             GL20.glEnableVertexAttribArray(4 + k);
             GL33.glVertexAttribDivisor(4 + k, 1);
         }
