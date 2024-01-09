@@ -35,6 +35,10 @@ public class InstanceRender {
         GL20.glUniformMatrix4(projectionLoc, false, PROJECTION_MATRIX_BUFFER);
         GL20.glUniformMatrix4(viewLoc, false, MODELVIEW_MATRIX_BUFFER);
 
+        float[] a = new float[16];
+        PROJECTION_MATRIX_BUFFER.get(a);
+        PROJECTION_MATRIX_BUFFER.rewind();
+
         for (Map.Entry<InstanceableModel, InstanceData> entry : modelInstanceData.entrySet()) {
             InstanceableModel im = entry.getKey();
             InstanceData instanceData = entry.getValue();
