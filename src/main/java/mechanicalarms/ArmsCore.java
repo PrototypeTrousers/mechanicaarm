@@ -3,7 +3,7 @@ package mechanicalarms;
 import com.google.common.collect.Lists;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import zone.rong.mixinbooter.ILateMixinLoader;
+import zone.rong.mixinbooter.IEarlyMixinLoader;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.Map;
 
 @IFMLLoadingPlugin.Name("ArmsCore")
 @IFMLLoadingPlugin.MCVersion(ForgeVersion.mcVersion)
-public class ArmsCore implements IFMLLoadingPlugin, ILateMixinLoader {
+public class ArmsCore implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
     @Override
     public String[] getASMTransformerClass() {
@@ -41,6 +41,6 @@ public class ArmsCore implements IFMLLoadingPlugin, ILateMixinLoader {
     @Override
     public List<String> getMixinConfigs() {
         return Lists.newArrayList(
-                "mixins.bufferbuilder.json");
+                "mixins.renderer.json");
     }
 }
