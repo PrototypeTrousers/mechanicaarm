@@ -18,7 +18,7 @@ import java.util.List;
 
 public class ItemStackRenderToVAO implements InstanceableModel {
 
-    private final IntBuffer texGL = GLAllocation.createDirectByteBuffer(16).asIntBuffer();
+    private final IntBuffer texGL = GLAllocation.createDirectIntBuffer(16);
     private int posBuffer;
     private int texBuffer;
     private int normalBuffer;
@@ -64,25 +64,23 @@ public class ItemStackRenderToVAO implements InstanceableModel {
 
             // Allocate buffer for feedback data
 
-            boolean overflowed = false;
             int bufferMultiplier = 1;
-            FloatBuffer feedbackBuffer = GLAllocation.createDirectFloatBuffer(3000 * bufferMultiplier);
-
-            while (!overflowed) {
+            FloatBuffer feedbackBuffer = GLAllocation.createDirectFloatBuffer(7000 * bufferMultiplier);
+            GL11.glFeedbackBuffer(GL11.GL_3D_COLOR_TEXTURE, feedbackBuffer);
+            GL11.glRenderMode(GL11.GL_FEEDBACK);
 
                 // Retrieve feedback data
-                GL11.glFeedbackBuffer(GL11.GL_3D_COLOR_TEXTURE, feedbackBuffer);
-                GL11.glRenderMode(GL11.GL_FEEDBACK);
-
-                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-                GlStateManager.enableRescaleNormal();
-                stack.getItem().getTileEntityItemStackRenderer().renderByItem(stack);
-                overflowed = GL11.glGetError() == 0;
-                if (overflowed) {
-                    bufferMultiplier++;
-                    feedbackBuffer = GLAllocation.createDirectFloatBuffer(3000 * bufferMultiplier);
+                if (model.isBuiltInRenderer())
+                {
+                    GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                    GlStateManager.enableRescaleNormal();
+                    stack.getItem().getTileEntityItemStackRenderer().renderByItem(stack);
                 }
-            }
+                else
+                {
+                    Minecraft.getMinecraft().getRenderItem().renderModel(model, stack);
+                }
+
 
             //save the current bound texture for later.
             //maybe mixin to GlStateManager bindTexture
@@ -102,8 +100,9 @@ public class ItemStackRenderToVAO implements InstanceableModel {
             while (!end) {
                 float cur = feedbackBuffer.get();
                 if ((int) cur == GL11.GL_POLYGON_TOKEN) {
+                    feedbackBuffer.get();
                     // 3 floats for pos, 3 floats for normal and 2 floats for texture UV, per vertex. always.
-                    if (pos.remaining() == 0) {
+                    if (pos.remaining() < 33) {
                         pos = GLAllocation.createDirectFloatBuffer(pos.capacity() * 2).put(pos);
                         norm = GLAllocation.createDirectFloatBuffer(norm.capacity() * 2).put(norm);
                         tex = GLAllocation.createDirectFloatBuffer(tex.capacity() * 2).put(tex);
@@ -127,7 +126,6 @@ public class ItemStackRenderToVAO implements InstanceableModel {
                         feedbackBuffer.get(); // unused
                         feedbackBuffer.get(); // unused
                     }
-
                     //face normal:
                     pos.position(pos.position() - 9);
                     pos.get(posv);
@@ -155,6 +153,11 @@ public class ItemStackRenderToVAO implements InstanceableModel {
         else {
             for (BakedQuad bq : loq) {
                 int[] quadData = bq.getVertexData();
+                if (pos.remaining() < 18) {
+                    pos = GLAllocation.createDirectFloatBuffer(pos.capacity() * 2).put(pos);
+                    norm = GLAllocation.createDirectFloatBuffer(norm.capacity() * 2).put(norm);
+                    tex = GLAllocation.createDirectFloatBuffer(tex.capacity() * 2).put(tex);
+                }
                 for (int k = 0; k < 3; ++k) {
                     v++;
                     // Getting the offset for the current vertex.

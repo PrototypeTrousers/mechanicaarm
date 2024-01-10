@@ -17,6 +17,10 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class TileArmBasic extends TileArmBase {
 
+    AxisAlignedBB renderBB;
+
+
+
     protected ItemStackHandler itemHandler = new ItemStackHandler(1);
 
     public TileArmBasic() {
@@ -77,6 +81,9 @@ public class TileArmBasic extends TileArmBase {
 
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
-        return super.getRenderBoundingBox().expand(4,4,4);
+        if (renderBB == null) {
+            renderBB = super.getRenderBoundingBox().expand(4, 4, 4);
+        }
+        return renderBB;
     }
 }

@@ -14,7 +14,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
-import org.lwjgl.opengl.*;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Tuple4f;
@@ -63,11 +62,18 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         //renderFirstArm(tileArmBasic, x, y, z, partialTicks);
         renderPart(tileArmBasic, x, y, z, partialTicks);
+        renderPart(tileArmBasic, x + 0.1, y + 0.1 , z-0.1, partialTicks);
+        renderPart(tileArmBasic, x - 0.1, y + 0.1, z+0.1, partialTicks);
+        renderPart(tileArmBasic, x, y+0.1, z+0.2, partialTicks);
+
     }
     void renderPart(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks) {
         InstanceRender ir = InstanceRender.INSTANCE;
         if (item == null) {
-            item = new ItemStackRenderToVAO(new ItemStack(Items.STICK));
+            long start = System.nanoTime();
+            item = new ItemStackRenderToVAO(new ItemStack(Items.SKULL, 1,0));
+            long end = System.nanoTime() - start;
+            int i= 0;
         }
 
         ir.schedule(item);
