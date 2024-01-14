@@ -114,7 +114,7 @@ public class Vao implements InstanceableModel{
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, 64, GL15.GL_DYNAMIC_DRAW);
 
         for (int i = 0; i < 4; i++) {
-            GL20.glVertexAttribPointer(4 + i, 4, GL11.GL_FLOAT, false, 16, i * 16);
+            GL20.glVertexAttribPointer(4 + i, 4, GL11.GL_FLOAT, false, 64, i * 16);
             GL20.glEnableVertexAttribArray(4 + i);
             GL33.glVertexAttribDivisor(4 + i, 1);
         }

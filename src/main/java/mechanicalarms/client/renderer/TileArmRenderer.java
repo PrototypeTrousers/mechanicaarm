@@ -71,7 +71,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         InstanceRender ir = InstanceRender.INSTANCE;
         if (item == null) {
             long start = System.nanoTime();
-            item = new ItemStackRenderToVAO(new ItemStack(Items.SKULL, 1,0));
+            item = new Vao(new ResourceLocation(MechanicalArms.MODID, "models/block/completearm.obj"));
             long end = System.nanoTime() - start;
             int i= 0;
         }
