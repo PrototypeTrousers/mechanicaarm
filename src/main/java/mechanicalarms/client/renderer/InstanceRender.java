@@ -5,7 +5,6 @@ import mechanicalarms.MechanicalArms;
 import mechanicalarms.client.renderer.shaders.Shader;
 import mechanicalarms.client.renderer.shaders.ShaderManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.ResourceLocation;
@@ -33,6 +32,9 @@ public class InstanceRender {
         if (modelInstanceData.isEmpty() || MinecraftForgeClient.getRenderPass() != 0) {
             return;
         }
+
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         base_vao.use();
 

@@ -62,9 +62,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         //renderFirstArm(tileArmBasic, x, y, z, partialTicks);
         renderPart(tileArmBasic, x, y, z, partialTicks);
-        renderPart(tileArmBasic, x + 0.1, y + 0.1 , z-0.1, partialTicks);
-        renderPart(tileArmBasic, x - 0.1, y + 0.1, z+0.1, partialTicks);
-        renderPart(tileArmBasic, x, y+0.1, z+0.2, partialTicks);
 
     }
     void renderPart(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks) {
