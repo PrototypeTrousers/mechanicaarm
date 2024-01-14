@@ -55,7 +55,6 @@ public class InstanceRender {
             InstanceData instanceData = entry.getValue();
             instanceData.rewindBuffers();
 
-
             GL30.glBindVertexArray(im.getVertexArrayBuffer());
 
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, im.getModelTransformBuffer());
@@ -71,6 +70,7 @@ public class InstanceRender {
                 GL11.glBindTexture(GL11.GL_TEXTURE_2D, t);
             }
             GL31.glDrawArraysInstanced(GL11.GL_TRIANGLES, 0, im.getVertexCount(), instanceData.getInstanceCount());
+
             instanceData.rewindBuffers();
             instanceData.resetCount();
         }

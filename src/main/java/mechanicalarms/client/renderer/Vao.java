@@ -22,11 +22,11 @@ import java.util.List;
 public class Vao implements InstanceableModel{
 
     private int texGL;
-    public static int lightBuffer;
-    public static int modelTransformBuffer;
-    public static int posBuffer;
-    public static int normalBuffer;
-    public static int texBuffer;
+    public int lightBuffer;
+    public int modelTransformBuffer;
+    public int posBuffer;
+    public int normalBuffer;
+    public int texBuffer;
     public int vaoId;
     public int drawMode;
     public int vertexCount;

@@ -85,19 +85,17 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         baseMotorMatrix.setIdentity();
         rot.setIndentity();
 
-        matrix4ftofloatarray(translationMatrix, mtx2);
-        ir.bufferModelMatrixData(mtx2);
-        ir.bufferLight(s, b);
+        translate(baseMotorMatrix, new Vector3f(0.1f,0f,0.0f));
+        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
+        Quaternion.rotateMatrix(baseMotorMatrix, rot);
+        translate(translationMatrix, new Vector3f(-0.1f,0f,0f));
 
-//        translate(baseMotorMatrix, new Vector3f(-0.1f,0f,0f));
-//        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
-//        Quaternion.rotateMatrix(baseMotorMatrix, rot);
-//        translate(baseMotorMatrix, new Vector3f(0.1f,0f,0f));
-//        baseMotorMatrix.mul(translationMatrix);
-//
-//        matrix4ftofloatarray(baseMotorMatrix, mtx);
-//        ir.bufferModelMatrixData(mtx);
-//        ir.bufferLight(s, b);
+
+        baseMotorMatrix.mul(translationMatrix);
+
+        matrix4ftofloatarray(baseMotorMatrix, mtx);
+        ir.bufferModelMatrixData(mtx);
+        ir.bufferLight(s, b);
     }
 
     void matrix4ftofloatarray(Matrix4f matrix4f, float[] floats) {
