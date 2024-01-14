@@ -1,53 +1,44 @@
 package mechanicalarms.client.renderer;
 
 import mechanicalarms.MechanicalArms;
-import mechanicalarms.client.renderer.shaders.Shader;
-import mechanicalarms.client.renderer.shaders.ShaderManager;
 import mechanicalarms.client.renderer.util.ItemStackRenderToVAO;
 import mechanicalarms.client.renderer.util.Quaternion;
+import mechanicalarms.common.proxy.ClientProxy;
 import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 
 import javax.vecmath.Matrix4f;
-import javax.vecmath.Tuple4f;
 import javax.vecmath.Vector3f;
-import javax.vecmath.Vector4f;
-import java.lang.reflect.Field;
 import java.nio.FloatBuffer;
 
 
 public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
+    InstanceRender ir = InstanceRender.INSTANCE;
 
-    public static final Shader base_vao = ShaderManager.loadShader(new ResourceLocation(MechanicalArms.MODID, "shaders/arm_shader")).withUniforms(ShaderManager.LIGHTMAP).withUniforms();
-    private final ResourceLocation armModelLocation = new ResourceLocation(MechanicalArms.MODID, "models/block/completearm.obj");
+    float[] mtx = new float[16];
+    float[] mtx2 = new float[16];
 
-    private static final Vector3f V3F_ZERO = new Vector3f();
-    private static final int[][][] vertexArray = null;
+    Matrix4f baseMotorMatrix = new Matrix4f();
+
+
+
+    Vao base;
     private final Matrix4f tempModelMatrix = new Matrix4f();
-    private final Tuple4f vertexTransformingVec = new Vector4f();
-    private final Vector3f V3F_POS = new Vector3f();
-    private final Vector3f PIVOT_1 = new Vector3f(.5F, 1 + 7 / 16F, .5F);
-    private final Vector3f ANTI_PIVOT_1 = new Vector3f(-.5F, -(1 + 7 / 16F), -.5F);
-    private final Vector3f PIVOT_2 = new Vector3f(0.5F, 1 + 7 / 16F, .5F);
-    private final Vector3f ANTI_PIVOT_2 = new Vector3f(-0.5F, -(1 + 7 / 16F), -.5F);
-    private final Vector3f PIVOT_3 = new Vector3f(0.5F, 1 + 7 / 16F, 0);
-    private final Vector3f ANTI_PIVOT_3 = new Vector3f(-0.5F, -(1 + 7 / 16F), 0);
-    int totalInstances = 1000;
-    Field isShadowField = null;
     Matrix4f transformMatrix = new Matrix4f();
+    Matrix4f translationMatrix = new Matrix4f();
+    byte s;
+    byte b;
     Quaternion rot = Quaternion.createIdentity();
-    Matrix4f mat;
-    Vao vao;
+
+    float partialTicks;
 
     InstanceableModel item;
     private ItemStackRenderToVAO vao2;
+    private Vao baseMotor;
 
     public TileArmRenderer() {
         super();
@@ -56,21 +47,82 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     @Override
     public void renderTileEntityFast(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
 
-        if (vao == null) {
-            vao = new Vao(armModelLocation);
-        }
+        Chunk c = tileArmBasic.getWorld().getChunk(tileArmBasic.getPos());
+        s = (byte) c.getLightFor(EnumSkyBlock.SKY, tileArmBasic.getPos());
+        b = (byte) c.getLightFor(EnumSkyBlock.BLOCK, tileArmBasic.getPos());
+        this.partialTicks = partialTicks;
 
-        //renderFirstArm(tileArmBasic, x, y, z, partialTicks);
-        renderPart(tileArmBasic, x, y, z, partialTicks);
+        translationMatrix.setIdentity();
+        translate(translationMatrix, (float) x + 0.5f, (float) y, (float) z + 0.5f);
 
+        renderBase();
+        renderBaseMotor(tileArmBasic);
+        //renderPart(tileArmBasic, x, y, z, partialTicks, transformMatrix);
     }
-    void renderPart(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks) {
+
+    void renderBase() {
+        if (base == null) {
+            base = new Vao(ClientProxy.base);
+        }
+        ir.schedule(base);
+        matrix4ftofloatarray(translationMatrix, mtx);
+        ir.bufferModelMatrixData(mtx);
+        ir.bufferLight(s, b);
+    }
+
+    void renderBaseMotor(TileArmBasic tileArmBasic) {
+        if (baseMotor == null) {
+            baseMotor = new Vao(ClientProxy.baseMotor);
+        }
+        ir.schedule(baseMotor);
+
+
+        //upload model matrix, light
+
+        float[] firstArmCurrRot = tileArmBasic.getRotation(0);
+        float[] firstArmPrevRot = tileArmBasic.getAnimationRotation(0);
+
+        baseMotorMatrix.setIdentity();
+        rot.setIndentity();
+
+        matrix4ftofloatarray(translationMatrix, mtx2);
+        ir.bufferModelMatrixData(mtx2);
+        ir.bufferLight(s, b);
+
+//        translate(baseMotorMatrix, new Vector3f(-0.1f,0f,0f));
+//        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
+//        Quaternion.rotateMatrix(baseMotorMatrix, rot);
+//        translate(baseMotorMatrix, new Vector3f(0.1f,0f,0f));
+//        baseMotorMatrix.mul(translationMatrix);
+//
+//        matrix4ftofloatarray(baseMotorMatrix, mtx);
+//        ir.bufferModelMatrixData(mtx);
+//        ir.bufferLight(s, b);
+    }
+
+    void matrix4ftofloatarray(Matrix4f matrix4f, float[] floats) {
+        floats[0] = matrix4f.m00;
+        floats[1] = matrix4f.m10;
+        floats[2] = matrix4f.m20;
+        floats[3] = matrix4f.m30;
+        floats[4] = matrix4f.m01;
+        floats[5] = matrix4f.m11;
+        floats[6] = matrix4f.m21;
+        floats[7] = matrix4f.m31;
+        floats[8] = matrix4f.m02;
+        floats[9] = matrix4f.m12;
+        floats[10] = matrix4f.m22;
+        floats[11] = matrix4f.m32;
+        floats[12] = matrix4f.m03;
+        floats[13] = matrix4f.m13;
+        floats[14] = matrix4f.m23;
+        floats[15] = matrix4f.m33;
+    }
+
+    void renderPart(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, Matrix4f parentModelMatrix) {
         InstanceRender ir = InstanceRender.INSTANCE;
         if (item == null) {
-            long start = System.nanoTime();
             item = new Vao(new ResourceLocation(MechanicalArms.MODID, "models/block/completearm.obj"));
-            long end = System.nanoTime() - start;
-            int i= 0;
         }
 
         ir.schedule(item);
@@ -81,9 +133,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         float[] firstArmPrevRot = tileArmBasic.getAnimationRotation(0);
 
         rot.setIndentity();
-        transformMatrix.setIdentity();
         Quaternion rot = Quaternion.createIdentity();
-        translate(transformMatrix, (float) x, (float) y + 2, (float) z);
 
 
 //        rot.rotateY((float) (-Math.PI/2));

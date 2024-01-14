@@ -22,7 +22,8 @@ public class ClientProxy extends CommonProxy {
     public static final ModelResourceLocation base = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/base.obj"), "");
     public static final ModelResourceLocation baseMotor = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/basemotor.obj"), "");
     public static final ModelResourceLocation arm = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/firstarm.obj"), "");
-    public static final ModelResourceLocation hand = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/arm_hand.obj"), "");
+    public static final ModelResourceLocation secondArm = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/firstarm.obj"), "");
+    public static final ModelResourceLocation hand = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/claw.obj"), "");
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
         ModelLoader.setCustomModelResourceLocation(Items.ARM_BASE, 0, new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/completearm.obj"), "inventory"));
