@@ -23,6 +23,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     float[] mtx2 = new float[16];
 
     Matrix4f baseMotorMatrix = new Matrix4f();
+    Matrix4f firstArmMatrix = new Matrix4f();
+    Matrix4f secondArmMatrix = new Matrix4f();
 
 
 
@@ -39,6 +41,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     InstanceableModel item;
     private ItemStackRenderToVAO vao2;
     private Vao baseMotor;
+    private Vao firstArm;
+    private Vao secondArm;
 
     public TileArmRenderer() {
         super();
@@ -53,10 +57,12 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         this.partialTicks = partialTicks;
 
         translationMatrix.setIdentity();
-        translate(translationMatrix, (float) x + 0.5f, (float) y, (float) z + 0.5f);
+        translate(translationMatrix, (float) x, (float) y, (float) z);
 
         renderBase();
-        renderBaseMotor(tileArmBasic);
+        renderBaseMotor(tileArmBasic,x ,y, z);
+        renderFirstArmBaseMotor(tileArmBasic,x ,y, z);
+        renderSecondArmBaseMotor(tileArmBasic,x ,y, z);
         //renderPart(tileArmBasic, x, y, z, partialTicks, transformMatrix);
     }
 
@@ -70,7 +76,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         ir.bufferLight(s, b);
     }
 
-    void renderBaseMotor(TileArmBasic tileArmBasic) {
+    void renderBaseMotor(TileArmBasic tileArmBasic, double x, double y, double z) {
         if (baseMotor == null) {
             baseMotor = new Vao(ClientProxy.baseMotor);
         }
@@ -85,15 +91,88 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         baseMotorMatrix.setIdentity();
         rot.setIndentity();
 
-        translate(baseMotorMatrix, new Vector3f(0.1f,0f,0.0f));
-        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
-        Quaternion.rotateMatrix(baseMotorMatrix, rot);
-        translate(translationMatrix, new Vector3f(-0.1f,0f,0f));
-
-
         baseMotorMatrix.mul(translationMatrix);
 
+        Vector3f p = new Vector3f(0.4f,0,0.5f);
+        Vector3f ap = new Vector3f(p);
+        ap.negate();
+
+        translate(baseMotorMatrix, p);
+
+        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
+        Quaternion.rotateMatrix(baseMotorMatrix, rot);
+        translate(baseMotorMatrix, ap);
+
+
         matrix4ftofloatarray(baseMotorMatrix, mtx);
+        ir.bufferModelMatrixData(mtx);
+        ir.bufferLight(s, b);
+    }
+    void renderFirstArmBaseMotor(TileArmBasic tileArmBasic, double x, double y, double z) {
+        if (firstArm == null) {
+            firstArm = new Vao(ClientProxy.firstArm);
+        }
+        ir.schedule(firstArm);
+
+
+        //upload model matrix, light
+
+        float[] firstArmCurrRot = tileArmBasic.getRotation(0);
+        float[] firstArmPrevRot = tileArmBasic.getAnimationRotation(0);
+
+        firstArmMatrix.setIdentity();
+        rot.setIndentity();
+
+        firstArmMatrix.mul(translationMatrix);
+
+        Vector3f p = new Vector3f(0.4f,1.5f,0.5f);
+        Vector3f ap = new Vector3f(p);
+        ap.negate();
+
+        translate(firstArmMatrix, p);
+        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
+
+        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
+
+        Quaternion.rotateMatrix(firstArmMatrix, rot);
+        translate(firstArmMatrix, ap);
+
+
+        matrix4ftofloatarray(firstArmMatrix, mtx);
+        ir.bufferModelMatrixData(mtx);
+        ir.bufferLight(s, b);
+    }
+
+    void renderSecondArmBaseMotor(TileArmBasic tileArmBasic, double x, double y, double z) {
+        if (secondArm == null) {
+            secondArm = new Vao(ClientProxy.secondArm);
+        }
+        ir.schedule(secondArm);
+
+
+        //upload model matrix, light
+
+        float[] secondArmCurrRot = tileArmBasic.getRotation(1);
+        float[] secondArmPrevRot = tileArmBasic.getAnimationRotation(1);
+
+        secondArmMatrix.setIdentity();
+        rot.setIndentity();
+
+        secondArmMatrix.mul(translationMatrix);
+
+        Vector3f p = new Vector3f(0.4f,3.8f,0.5f);
+        Vector3f ap = new Vector3f(p);
+        ap.negate();
+
+        translate(secondArmMatrix, p);
+        //rot.rotateY(lerp(secondArmPrevRot[1], secondArmCurrRot[1], partialTicks));
+        //rot.rotateX(lerp(secondArmPrevRot[0], secondArmCurrRot[0], partialTicks));
+
+        Quaternion.rotateMatrix(secondArmMatrix, rot);
+        translate(secondArmMatrix, ap);
+
+
+        matrix4ftofloatarray(secondArmMatrix, mtx);
         ir.bufferModelMatrixData(mtx);
         ir.bufferLight(s, b);
     }
