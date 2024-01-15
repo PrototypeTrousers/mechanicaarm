@@ -1,12 +1,16 @@
 package mechanicalarms.client.renderer;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import mechanicalarms.MechanicalArms;
+import mechanicalarms.client.renderer.util.ItemStackHasher;
 import mechanicalarms.client.renderer.util.ItemStackRenderToVAO;
 import mechanicalarms.client.renderer.util.Quaternion;
 import mechanicalarms.common.proxy.ClientProxy;
 import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
@@ -25,6 +29,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     Matrix4f baseMotorMatrix = new Matrix4f();
     Matrix4f firstArmMatrix = new Matrix4f();
     Matrix4f secondArmMatrix = new Matrix4f();
+    Matrix4f itemArmMatrix = new Matrix4f();
 
 
 
@@ -38,11 +43,11 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
     float partialTicks;
 
-    InstanceableModel item;
-    private ItemStackRenderToVAO vao2;
     private Vao baseMotor;
     private Vao firstArm;
     private Vao secondArm;
+
+    private static Object2ObjectOpenCustomHashMap<ItemStack, ItemStackRenderToVAO> modelCache = new Object2ObjectOpenCustomHashMap<>(new ItemStackHasher());
 
     public TileArmRenderer() {
         super();
@@ -63,6 +68,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         renderBaseMotor(tileArmBasic,x ,y, z);
         renderFirstArmBaseMotor(tileArmBasic,x ,y, z);
         renderSecondArmBaseMotor(tileArmBasic,x ,y, z);
+        renderHoldingItem(tileArmBasic, x, y, z);
         //renderPart(tileArmBasic, x, y, z, partialTicks, transformMatrix);
     }
 
@@ -177,6 +183,47 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         ir.bufferLight(s, b);
     }
 
+    void renderHoldingItem(TileArmBasic tileArmBasic, double x, double y, double z) {
+        ItemStack curStack = tileArmBasic.getItemStack();
+
+        if (curStack.isEmpty()) {
+            return;
+        }
+
+        ItemStackRenderToVAO itemvao = modelCache.get(curStack);
+
+        if (itemvao == null) {
+            itemvao = new ItemStackRenderToVAO(curStack);
+            modelCache.put(curStack, itemvao);
+        }
+        ir.schedule(itemvao);
+
+
+        //upload model matrix, light
+
+        float[] secondArmCurrRot = tileArmBasic.getRotation(1);
+        float[] secondArmPrevRot = tileArmBasic.getAnimationRotation(1);
+
+        itemArmMatrix.setIdentity();
+        rot.setIndentity();
+
+        itemArmMatrix.mul(secondArmMatrix);
+
+        Vector3f p = new Vector3f(-0.5f,5.5f,0.0f);
+
+        translate(itemArmMatrix, p);
+        //itemArmMatrix.setScale(0.5f);
+        //rot.rotateY(lerp(secondArmPrevRot[1], secondArmCurrRot[1], partialTicks));
+        //rot.rotateX(lerp(secondArmPrevRot[0], secondArmCurrRot[0], partialTicks));
+
+        //Quaternion.rotateMatrix(itemArmMatrix, rot);
+
+
+        matrix4ftofloatarray(itemArmMatrix, mtx);
+        ir.bufferModelMatrixData(mtx);
+        ir.bufferLight(s, b);
+    }
+
     void matrix4ftofloatarray(Matrix4f matrix4f, float[] floats) {
         floats[0] = matrix4f.m00;
         floats[1] = matrix4f.m10;
@@ -194,56 +241,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         floats[13] = matrix4f.m13;
         floats[14] = matrix4f.m23;
         floats[15] = matrix4f.m33;
-    }
-
-    void renderPart(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, Matrix4f parentModelMatrix) {
-        InstanceRender ir = InstanceRender.INSTANCE;
-        if (item == null) {
-            item = new Vao(new ResourceLocation(MechanicalArms.MODID, "models/block/completearm.obj"));
-        }
-
-        ir.schedule(item);
-
-        //upload model matrix, light
-
-        float[] firstArmCurrRot = tileArmBasic.getRotation(0);
-        float[] firstArmPrevRot = tileArmBasic.getAnimationRotation(0);
-
-        rot.setIndentity();
-        Quaternion rot = Quaternion.createIdentity();
-
-
-//        rot.rotateY((float) (-Math.PI/2));
-//        rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
-//        rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
-//        Quaternion.rotateMatrix(transformMatrix, rot);
-
-        float[] fa = new float[]{
-                transformMatrix.m00,
-                transformMatrix.m10,
-                transformMatrix.m20,
-                transformMatrix.m30,
-                transformMatrix.m01,
-                transformMatrix.m11,
-                transformMatrix.m21,
-                transformMatrix.m31,
-                transformMatrix.m02,
-                transformMatrix.m12,
-                transformMatrix.m22,
-                transformMatrix.m32,
-                transformMatrix.m03,
-                transformMatrix.m13,
-                transformMatrix.m23,
-                transformMatrix.m33};
-
-        ir.bufferModelMatrixData(fa);
-
-        Chunk c = tileArmBasic.getWorld().getChunk(tileArmBasic.getPos());
-        int s = c.getLightFor(EnumSkyBlock.SKY, tileArmBasic.getPos());
-        int b = c.getLightFor(EnumSkyBlock.BLOCK, tileArmBasic.getPos());
-
-        ir.bufferLight((byte) s, (byte) b);
-
     }
 
     @Override

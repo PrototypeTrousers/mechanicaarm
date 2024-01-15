@@ -15,10 +15,11 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ItemStackRenderToVAO implements InstanceableModel {
 
-    private final IntBuffer texGL = GLAllocation.createDirectIntBuffer(16);
+    private int texGL;
     private int posBuffer;
     private int texBuffer;
     private int normalBuffer;
@@ -85,7 +86,7 @@ public class ItemStackRenderToVAO implements InstanceableModel {
             //save the current bound texture for later.
             //maybe mixin to GlStateManager bindTexture
 
-            GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D, texGL);
+            texGL = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
 
             // Return to normal rendering mode
             GL11.glRenderMode(GL11.GL_RENDER);
@@ -262,8 +263,7 @@ public class ItemStackRenderToVAO implements InstanceableModel {
 
     @Override
     public int getTexGl() {
-        texGL.rewind();
-        return texGL.get(0);
+        return texGL;
     }
 
     @Override
@@ -288,5 +288,18 @@ public class ItemStackRenderToVAO implements InstanceableModel {
 
     public ItemStack getStack() {
         return stack;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ItemStackRenderToVAO that = (ItemStackRenderToVAO) o;
+        return ItemStack.areItemsEqual(stack, that.stack);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(stack.getItem(), stack.getMetadata());
     }
 }

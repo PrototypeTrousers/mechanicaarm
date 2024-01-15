@@ -18,6 +18,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Vao implements InstanceableModel{
 
@@ -157,5 +158,18 @@ public class Vao implements InstanceableModel{
             texGL = Minecraft.getMinecraft().getTextureManager().getTexture(t).getGlTextureId();
         }
         return texGL;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Vao vao = (Vao) o;
+        return Objects.equals(model, vao.model);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(model);
     }
 }
