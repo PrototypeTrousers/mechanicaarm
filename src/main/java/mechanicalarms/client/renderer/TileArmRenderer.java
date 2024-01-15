@@ -93,7 +93,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         baseMotorMatrix.mul(translationMatrix);
 
-        Vector3f p = new Vector3f(0.4f,0,0.5f);
+        Vector3f p = new Vector3f(0.5f,0,0.6f);
         Vector3f ap = new Vector3f(p);
         ap.negate();
 
@@ -125,14 +125,14 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         firstArmMatrix.mul(translationMatrix);
 
-        Vector3f p = new Vector3f(0.4f,1.5f,0.5f);
+        Vector3f p = new Vector3f(0.5f,1.5f,0.6f);
         Vector3f ap = new Vector3f(p);
         ap.negate();
 
         translate(firstArmMatrix, p);
         rot.rotateY(lerp(firstArmPrevRot[1], firstArmCurrRot[1], partialTicks));
-
         rot.rotateX(lerp(firstArmPrevRot[0], firstArmCurrRot[0], partialTicks));
+
 
         Quaternion.rotateMatrix(firstArmMatrix, rot);
         translate(firstArmMatrix, ap);
@@ -158,7 +158,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         secondArmMatrix.setIdentity();
         rot.setIndentity();
 
-        secondArmMatrix.mul(translationMatrix);
+        secondArmMatrix.mul(firstArmMatrix);
 
         Vector3f p = new Vector3f(0.4f,3.8f,0.5f);
         Vector3f ap = new Vector3f(p);
@@ -166,7 +166,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         translate(secondArmMatrix, p);
         //rot.rotateY(lerp(secondArmPrevRot[1], secondArmCurrRot[1], partialTicks));
-        //rot.rotateX(lerp(secondArmPrevRot[0], secondArmCurrRot[0], partialTicks));
+        rot.rotateX(lerp(secondArmPrevRot[0], secondArmCurrRot[0], partialTicks));
 
         Quaternion.rotateMatrix(secondArmMatrix, rot);
         translate(secondArmMatrix, ap);

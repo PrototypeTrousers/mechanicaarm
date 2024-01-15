@@ -20,7 +20,7 @@ public class ClientProxy extends CommonProxy {
     public static final ModelResourceLocation base = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/base.obj"), "");
     public static final ModelResourceLocation baseMotor = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/basemotor.obj"), "");
     public static final ModelResourceLocation firstArm = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/firstarm.obj"), "");
-    public static final ModelResourceLocation secondArm = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/firstarm.obj"), "");
+    public static final ModelResourceLocation secondArm = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/secondarm.obj"), "");
     public static final ModelResourceLocation hand = new ModelResourceLocation(new ResourceLocation(MechanicalArms.MODID, "models/block/claw.obj"), "");
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {

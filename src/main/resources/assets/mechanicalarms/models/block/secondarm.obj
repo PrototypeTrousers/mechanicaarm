@@ -1,7 +1,7 @@
 # Blender 4.0.2
 # www.blender.org
 mtllib secondarm.mtl
-g SECONDARM_Mesh
+g SECONDARM_mesh.003
 v 0.300000 4.000000 0.300000
 v 0.300000 4.000000 0.700000
 v 0.300000 4.000000 0.500000

@@ -29,7 +29,10 @@ public class MotorCortex implements INBTSerializable<NBTTagList> {
     public ActionResult move(Vec3d armPoint, Vec3d target, EnumFacing facing) {
         Vec3d combinedVec = target.subtract(armPoint);
         float pitch = (float) Math.atan2(combinedVec.y, Math.sqrt(combinedVec.x * combinedVec.x + combinedVec.z * combinedVec.z));
+        pitch -= (float) (Math.PI/2);
+        //model initial angle is -90 degrees
         float yaw = (float) Math.atan2(-combinedVec.z, combinedVec.x);
+        yaw -= (float) (Math.PI/2);
 
         float dist = (float) combinedVec.length();
 
