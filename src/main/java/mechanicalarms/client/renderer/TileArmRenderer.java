@@ -1,8 +1,6 @@
 package mechanicalarms.client.renderer;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import mechanicalarms.MechanicalArms;
 import mechanicalarms.client.renderer.util.ItemStackHasher;
 import mechanicalarms.client.renderer.util.ItemStackRenderToVAO;
 import mechanicalarms.client.renderer.util.Quaternion;
@@ -11,7 +9,6 @@ import mechanicalarms.common.tile.TileArmBasic;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 
@@ -29,6 +26,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     Matrix4f baseMotorMatrix = new Matrix4f();
     Matrix4f firstArmMatrix = new Matrix4f();
     Matrix4f secondArmMatrix = new Matrix4f();
+
+    Matrix4f handMatrix = new Matrix4f();
     Matrix4f itemArmMatrix = new Matrix4f();
 
 
@@ -46,6 +45,8 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     private Vao baseMotor;
     private Vao firstArm;
     private Vao secondArm;
+    private Vao hand;
+
 
     private static Object2ObjectOpenCustomHashMap<ItemStack, ItemStackRenderToVAO> modelCache = new Object2ObjectOpenCustomHashMap<>(new ItemStackHasher());
 
@@ -66,8 +67,9 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
         renderBase();
         renderBaseMotor(tileArmBasic,x ,y, z);
-        renderFirstArmBaseMotor(tileArmBasic,x ,y, z);
-        renderSecondArmBaseMotor(tileArmBasic,x ,y, z);
+        renderFirstArm(tileArmBasic,x ,y, z);
+        renderSecondArm(tileArmBasic,x ,y, z);
+        renderHand(tileArmBasic,x ,y, z);
         renderHoldingItem(tileArmBasic, x, y, z);
         //renderPart(tileArmBasic, x, y, z, partialTicks, transformMatrix);
     }
@@ -114,7 +116,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         ir.bufferModelMatrixData(mtx);
         ir.bufferLight(s, b);
     }
-    void renderFirstArmBaseMotor(TileArmBasic tileArmBasic, double x, double y, double z) {
+    void renderFirstArm(TileArmBasic tileArmBasic, double x, double y, double z) {
         if (firstArm == null) {
             firstArm = new Vao(ClientProxy.firstArm);
         }
@@ -149,7 +151,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         ir.bufferLight(s, b);
     }
 
-    void renderSecondArmBaseMotor(TileArmBasic tileArmBasic, double x, double y, double z) {
+    void renderSecondArm(TileArmBasic tileArmBasic, double x, double y, double z) {
         if (secondArm == null) {
             secondArm = new Vao(ClientProxy.secondArm);
         }
@@ -183,6 +185,40 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         ir.bufferLight(s, b);
     }
 
+    void renderHand(TileArmBasic tileArmBasic, double x, double y, double z) {
+        if (hand == null) {
+            hand = new Vao(ClientProxy.hand);
+        }
+        ir.schedule(hand);
+
+
+        //upload model matrix, light
+
+        float[] handCurrRot = tileArmBasic.getRotation(2);
+        float[] handPrevRot = tileArmBasic.getAnimationRotation(2);
+
+        handMatrix.setIdentity();
+        rot.setIndentity();
+
+        handMatrix.mul(secondArmMatrix);
+
+        Vector3f p = new Vector3f(0.5f,6.1f,0.5f);
+        Vector3f ap = new Vector3f(p);
+        ap.negate();
+
+        translate(handMatrix, p);
+        //rot.rotateY(lerp(handPrevRot[1], handCurrRot[1], partialTicks));
+        //rot.rotateX(lerp(handPrevRot[0], handCurrRot[0], partialTicks));
+
+        Quaternion.rotateMatrix(handMatrix, rot);
+        translate(handMatrix, ap);
+
+
+        matrix4ftofloatarray(handMatrix, mtx);
+        ir.bufferModelMatrixData(mtx);
+        ir.bufferLight(s, b);
+    }
+
     void renderHoldingItem(TileArmBasic tileArmBasic, double x, double y, double z) {
         ItemStack curStack = tileArmBasic.getItemStack();
 
@@ -207,9 +243,9 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         itemArmMatrix.setIdentity();
         rot.setIndentity();
 
-        itemArmMatrix.mul(secondArmMatrix);
+        itemArmMatrix.mul(handMatrix);
 
-        Vector3f p = new Vector3f(-0.5f,5.5f,0.0f);
+        Vector3f p = new Vector3f(0.0f,6f,-0.2f);
 
         translate(itemArmMatrix, p);
         //itemArmMatrix.setScale(0.5f);
@@ -217,7 +253,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         //rot.rotateX(lerp(secondArmPrevRot[0], secondArmCurrRot[0], partialTicks));
 
         //Quaternion.rotateMatrix(itemArmMatrix, rot);
-
 
         matrix4ftofloatarray(itemArmMatrix, mtx);
         ir.bufferModelMatrixData(mtx);

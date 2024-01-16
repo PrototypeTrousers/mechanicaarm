@@ -39,6 +39,7 @@ public class InstanceRender {
         base_vao.use();
 
         int curTexId = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+        int swappedTexId = curTexId;
 
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
         // Get the current projection matrix and store it in the buffer
@@ -64,12 +65,13 @@ public class InstanceRender {
             GL15.glBufferData(GL15.GL_ARRAY_BUFFER, instanceData.blockLightBuffer, GL15.GL_DYNAMIC_DRAW);
 
             int t = im.getTexGl();
-            if (t != curTexId) {
+            if (t != swappedTexId) {
                 if (t == 0) {
                     Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
                 } else {
                     GL11.glBindTexture(GL11.GL_TEXTURE_2D, t);
                 }
+                swappedTexId = t;
             }
             GL31.glDrawArraysInstanced(GL11.GL_TRIANGLES, 0, im.getVertexCount(), instanceData.getInstanceCount());
 
