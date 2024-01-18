@@ -6,13 +6,13 @@ import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import org.lwjgl.opengl.*;
 import org.lwjgl.util.vector.Vector3f;
 
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -37,7 +37,7 @@ public class ItemStackRenderToVAO implements InstanceableModel {
     }
 
     public void setupVAO(ItemStack stack) {
-        IBakedModel model = Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getItemModel(stack);
+        IBakedModel model = Minecraft.getMinecraft().getRenderItem().getItemModelWithOverrides(stack, null, null);
 
         FloatBuffer pos = GLAllocation.createDirectFloatBuffer(3000);
         FloatBuffer norm = GLAllocation.createDirectFloatBuffer(3000);
@@ -53,7 +53,7 @@ public class ItemStackRenderToVAO implements InstanceableModel {
         //if an item model has no quads, attempt to capture its rendering
         //a missing item model has quads.
 
-        if (loq.isEmpty()) {
+        if (loq.isEmpty() || model == Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getModelManager().getMissingModel() ) {
             GL11.glDisable(GL11.GL_CULL_FACE);
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glPushMatrix();
@@ -65,33 +65,28 @@ public class ItemStackRenderToVAO implements InstanceableModel {
 
             // Allocate buffer for feedback data
 
-            int bufferMultiplier = 1;
-            FloatBuffer feedbackBuffer = GLAllocation.createDirectFloatBuffer(7000 * bufferMultiplier);
-            GL11.glFeedbackBuffer(GL11.GL_3D_COLOR_TEXTURE, feedbackBuffer);
-            GL11.glRenderMode(GL11.GL_FEEDBACK);
+            FloatBuffer feedbackBuffer = GLAllocation.createDirectFloatBuffer(875);
+            do {
+                feedbackBuffer = GLAllocation.createDirectFloatBuffer(feedbackBuffer.capacity() * 2);
+                GL11.glFeedbackBuffer(GL11.GL_3D_COLOR_TEXTURE, feedbackBuffer);
+                GL11.glRenderMode(GL11.GL_FEEDBACK);
 
                 // Retrieve feedback data
-                if (model.isBuiltInRenderer())
-                {
+                if (model.isBuiltInRenderer()) {
                     GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
                     GlStateManager.enableRescaleNormal();
                     stack.getItem().getTileEntityItemStackRenderer().renderByItem(stack);
-                }
-                else
-                {
+                } else {
                     Minecraft.getMinecraft().getRenderItem().renderModel(model, stack);
                 }
 
-
+                // Return to normal rendering mode
+            } while (GL11.glRenderMode(GL11.GL_RENDER) <= 0);
             //save the current bound texture for later.
             //maybe mixin to GlStateManager bindTexture
 
             texGL = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-
-            // Return to normal rendering mode
-            GL11.glRenderMode(GL11.GL_RENDER);
             GL11.glMatrixMode(GL11.GL_PROJECTION);
-
             GL11.glPopMatrix();
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glPopMatrix();
@@ -155,8 +150,11 @@ public class ItemStackRenderToVAO implements InstanceableModel {
             for (BakedQuad bq : loq) {
                 int[] quadData = bq.getVertexData();
                 if (pos.remaining() < 18) {
+                    pos.flip();
                     pos = GLAllocation.createDirectFloatBuffer(pos.capacity() * 2).put(pos);
+                    norm.flip();
                     norm = GLAllocation.createDirectFloatBuffer(norm.capacity() * 2).put(norm);
+                    tex.flip();
                     tex = GLAllocation.createDirectFloatBuffer(tex.capacity() * 2).put(tex);
                 }
                 for (int k = 0; k < 3; ++k) {
@@ -207,6 +205,7 @@ public class ItemStackRenderToVAO implements InstanceableModel {
                 norm.put(((packedNormal >> 8) & 255) / 127.0F);
                 norm.put(((packedNormal >> 16) & 255) / 127.0F);
             }
+            texGL = Minecraft.getMinecraft().renderEngine.getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).getGlTextureId();
         }
 
         vertexArrayBuffer = GL30.glGenVertexArrays();
