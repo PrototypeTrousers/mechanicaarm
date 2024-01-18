@@ -4,6 +4,7 @@ import mechanicalarms.MechanicalArms;
 import mechanicalarms.common.block.Blocks;
 import mechanicalarms.common.item.Items;
 import mechanicalarms.common.tile.TileArmBasic;
+import mechanicalarms.common.tile.TileBeltBasic;
 import mechanicalarms.common.tile.Tiles;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -21,18 +22,21 @@ public class CommonProxy
 	public static void registerBlocks( RegistryEvent.Register<Block> event )
 	{
 		event.getRegistry().registerAll( Blocks.ARM_BASE );
+		event.getRegistry().registerAll( Blocks.BELT_BASE );
 	}
 
 	@SubscribeEvent
 	public static void registerItems( RegistryEvent.Register<Item> event )
 	{
 		event.getRegistry().registerAll( Items.ARM_BASE );
+		event.getRegistry().registerAll( Items.BELT_BASE );
 	}
 
 	@SubscribeEvent
 	public static void onRegisterEntities(RegistryEvent.Register<EntityEntry> event)
 	{
 		GameRegistry.registerTileEntity( TileArmBasic.class, new ResourceLocation( MechanicalArms.MODID, "tilearm") );
+		GameRegistry.registerTileEntity( TileBeltBasic.class, new ResourceLocation( MechanicalArms.MODID, "tilebelt") );
 	}
 
 	public void preInit()
