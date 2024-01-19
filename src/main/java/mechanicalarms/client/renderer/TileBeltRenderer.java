@@ -9,6 +9,7 @@ import mechanicalarms.common.tile.TileArmBasic;
 import mechanicalarms.common.tile.TileBeltBasic;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
@@ -66,26 +67,23 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
         translationMatrix.setIdentity();
         translate(translationMatrix, (float) x, (float) y, (float) z);
 
-        renderBase();
-        renderHoldingItem(tileBeltBasic, x, y, z);
+        renderHoldingItem(tileBeltBasic, x - 0.5, y, z);
+        renderHoldingItem(tileBeltBasic, x + 0.5, y, z + 0.5);
+        renderHoldingItem(tileBeltBasic, x + 0.5, y, z);
+        renderHoldingItem(tileBeltBasic, x - 0.5, y, z + 0.5);
+
         //renderPart(tileArmBasic, x, y, z, partialTicks, transformMatrix);
     }
 
     void renderBase() {
-        if (base == null) {
-            base = new Vao(ClientProxy.base);
-        }
-        ir.schedule(base);
-        matrix4ftofloatarray(translationMatrix, mtx);
-        ir.bufferModelMatrixData(mtx);
-        ir.bufferLight(s, b);
+
     }
 
     void renderHoldingItem(TileBeltBasic tileBeltBasic, double x, double y, double z) {
         ItemStack curStack = tileBeltBasic.getItemStack();
 
         if (curStack.isEmpty()) {
-            return;
+            curStack = new ItemStack(Items.REEDS);
         }
 
         ItemStackRenderToVAO itemvao = modelCache.get(curStack);
@@ -102,11 +100,7 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
         itemArmMatrix.setIdentity();
         rot.setIndentity();
 
-        itemArmMatrix.mul(handMatrix);
-
-        Vector3f p = new Vector3f(0.0f,6f,-0.2f);
-
-        translate(itemArmMatrix, p);
+        translate(itemArmMatrix, new Vector3f((float) x, (float) (y), (float) z));
         //itemArmMatrix.setScale(0.5f);
         //rot.rotateY(lerp(secondArmPrevRot[1], secondArmCurrRot[1], partialTicks));
         //rot.rotateX(lerp(secondArmPrevRot[0], secondArmCurrRot[0], partialTicks));
