@@ -4,8 +4,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
 import mechanicalarms.client.renderer.util.ItemStackHasher;
 import mechanicalarms.client.renderer.util.ItemStackRenderToVAO;
 import mechanicalarms.client.renderer.util.Quaternion;
-import mechanicalarms.common.proxy.ClientProxy;
-import mechanicalarms.common.tile.TileArmBasic;
 import mechanicalarms.common.tile.TileBeltBasic;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -58,7 +56,6 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
 
     @Override
     public void renderTileEntityFast(TileBeltBasic tileBeltBasic, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
-
         Chunk c = tileBeltBasic.getWorld().getChunk(tileBeltBasic.getPos());
         s = (byte) c.getLightFor(EnumSkyBlock.SKY, tileBeltBasic.getPos());
         b = (byte) c.getLightFor(EnumSkyBlock.BLOCK, tileBeltBasic.getPos());
@@ -67,10 +64,10 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
         translationMatrix.setIdentity();
         translate(translationMatrix, (float) x, (float) y, (float) z);
 
-        renderHoldingItem(tileBeltBasic, x - 0.5, y, z);
+        renderHoldingItem(tileBeltBasic, x , y, z);
         renderHoldingItem(tileBeltBasic, x + 0.5, y, z + 0.5);
         renderHoldingItem(tileBeltBasic, x + 0.5, y, z);
-        renderHoldingItem(tileBeltBasic, x - 0.5, y, z + 0.5);
+        renderHoldingItem(tileBeltBasic, x , y, z + 0.5);
 
         //renderPart(tileArmBasic, x, y, z, partialTicks, transformMatrix);
     }
@@ -101,11 +98,21 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
         rot.setIndentity();
 
         translate(itemArmMatrix, new Vector3f((float) x, (float) (y), (float) z));
+
+        Vector3f p = new Vector3f(0f,0.125f,0.5f);
+        Vector3f ap = new Vector3f(p);
+        ap.negate();
+
+        translate(itemArmMatrix, p);
+
         //itemArmMatrix.setScale(0.5f);
         //rot.rotateY(lerp(secondArmPrevRot[1], secondArmCurrRot[1], partialTicks));
-        //rot.rotateX(lerp(secondArmPrevRot[0], secondArmCurrRot[0], partialTicks));
+        rot.rotateX((float) (-Math.PI/2));
+        itemArmMatrix.setScale(0.5f);
 
-        //Quaternion.rotateMatrix(itemArmMatrix, rot);
+        Quaternion.rotateMatrix(itemArmMatrix, rot);
+
+        translate(itemArmMatrix, ap);
 
         matrix4ftofloatarray(itemArmMatrix, mtx);
         ir.bufferModelMatrixData(mtx);

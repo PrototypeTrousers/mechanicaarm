@@ -1,7 +1,6 @@
 package mechanicalarms.common.block;
 
 import mechanicalarms.MechanicalArms;
-import mechanicalarms.common.tile.TileArmBasic;
 import mechanicalarms.common.tile.TileBeltBasic;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
