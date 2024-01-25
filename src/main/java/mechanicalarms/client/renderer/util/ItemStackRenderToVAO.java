@@ -143,6 +143,9 @@ public class ItemStackRenderToVAO implements InstanceableModel {
                 } else {
                     end = true;
                 }
+                if (feedbackBuffer.position() == feedbackBuffer.limit()) {
+                    end = true;
+                }
             }
             GL11.glEnable(GL11.GL_CULL_FACE);
         }

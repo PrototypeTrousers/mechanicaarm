@@ -77,10 +77,10 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
     }
 
     void renderHoldingItem(TileBeltBasic tileBeltBasic, double x, double y, double z) {
-        ItemStack curStack = tileBeltBasic.getItemStack();
+        ItemStack curStack = tileBeltBasic.getleftItemHandler().getStackInSlot(0);
 
         if (curStack.isEmpty()) {
-            curStack = new ItemStack(Items.REEDS);
+            return;
         }
 
         ItemStackRenderToVAO itemvao = modelCache.get(curStack);
