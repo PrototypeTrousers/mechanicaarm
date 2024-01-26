@@ -6,9 +6,11 @@ import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
+import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
+import net.minecraftforge.client.ForgeHooksClient;
 import org.lwjgl.opengl.*;
 import org.lwjgl.util.vector.Vector3f;
 
@@ -37,8 +39,9 @@ public class ItemStackRenderToVAO implements InstanceableModel {
     }
 
     public void setupVAO(ItemStack stack) {
-        IBakedModel model = Minecraft.getMinecraft().getRenderItem().getItemModelWithOverrides(stack, null, null);
-
+        IBakedModel mm = Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getItemModel(stack);
+        IBakedModel model = mm.getOverrides().handleItemState(mm, stack, null, null);
+        model = ForgeHooksClient.handleCameraTransforms(model, ItemCameraTransforms.TransformType.GROUND, false);
         FloatBuffer pos = GLAllocation.createDirectFloatBuffer(3000);
         FloatBuffer norm = GLAllocation.createDirectFloatBuffer(3000);
         FloatBuffer tex = GLAllocation.createDirectFloatBuffer(2000);
@@ -53,7 +56,6 @@ public class ItemStackRenderToVAO implements InstanceableModel {
         //if an item model has no quads, attempt to capture its rendering
         //a missing item model has quads.
 
-        if (loq.isEmpty() || model == Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getModelManager().getMissingModel() ) {
             GL11.glDisable(GL11.GL_CULL_FACE);
             GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glPushMatrix();
@@ -148,68 +150,6 @@ public class ItemStackRenderToVAO implements InstanceableModel {
                 }
             }
             GL11.glEnable(GL11.GL_CULL_FACE);
-        }
-        else {
-            for (BakedQuad bq : loq) {
-                int[] quadData = bq.getVertexData();
-                if (pos.remaining() < 18) {
-                    pos.flip();
-                    pos = GLAllocation.createDirectFloatBuffer(pos.capacity() * 2).put(pos);
-                    norm.flip();
-                    norm = GLAllocation.createDirectFloatBuffer(norm.capacity() * 2).put(norm);
-                    tex.flip();
-                    tex = GLAllocation.createDirectFloatBuffer(tex.capacity() * 2).put(tex);
-                }
-                for (int k = 0; k < 3; ++k) {
-                    v++;
-                    // Getting the offset for the current vertex.
-                    int vertexIndex = k * 7;
-                    pos.put(Float.intBitsToFloat(quadData[vertexIndex]));
-                    pos.put(Float.intBitsToFloat(quadData[vertexIndex + 1]));
-                    pos.put(Float.intBitsToFloat(quadData[vertexIndex + 2]));
-
-                    tex.put(Float.intBitsToFloat(quadData[vertexIndex + 4])); //texture
-                    tex.put(Float.intBitsToFloat(quadData[vertexIndex + 5])); //texture
-
-                    int packedNormal = quadData[vertexIndex + 6];
-                    norm.put(((packedNormal) & 255) / 127.0F);
-                    norm.put(((packedNormal >> 8) & 255) / 127.0F);
-                    norm.put(((packedNormal >> 16) & 255) / 127.0F);
-
-                }
-                for (int k = 2; k < 4; ++k) {
-                    v++;
-                    // Getting the offset for the current vertex.
-                    int vertexIndex = k * 7;
-                    pos.put(Float.intBitsToFloat(quadData[vertexIndex]));
-                    pos.put(Float.intBitsToFloat(quadData[vertexIndex + 1]));
-                    pos.put(Float.intBitsToFloat(quadData[vertexIndex + 2]));
-
-                    tex.put(Float.intBitsToFloat(quadData[vertexIndex + 4])); //texture
-                    tex.put(Float.intBitsToFloat(quadData[vertexIndex + 5])); //texture
-
-                    int packedNormal = quadData[vertexIndex + 6];
-                    norm.put(((packedNormal) & 255) / 127.0F);
-                    norm.put(((packedNormal >> 8) & 255) / 127.0F);
-                    norm.put(((packedNormal >> 16) & 255) / 127.0F);
-                }
-                v++;
-                // Getting the offset for the current vertex.
-                int vertexIndex = 0;
-                pos.put(Float.intBitsToFloat(quadData[vertexIndex]));
-                pos.put(Float.intBitsToFloat(quadData[vertexIndex + 1]));
-                pos.put(Float.intBitsToFloat(quadData[vertexIndex + 2]));
-
-                tex.put(Float.intBitsToFloat(quadData[vertexIndex + 4])); //texture
-                tex.put(Float.intBitsToFloat(quadData[vertexIndex + 5])); //texture
-
-                int packedNormal = quadData[vertexIndex + 6];
-                norm.put(((packedNormal) & 255) / 127.0F);
-                norm.put(((packedNormal >> 8) & 255) / 127.0F);
-                norm.put(((packedNormal >> 16) & 255) / 127.0F);
-            }
-            texGL = Minecraft.getMinecraft().renderEngine.getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).getGlTextureId();
-        }
 
         vertexArrayBuffer = GL30.glGenVertexArrays();
         GL30.glBindVertexArray(vertexArrayBuffer);
