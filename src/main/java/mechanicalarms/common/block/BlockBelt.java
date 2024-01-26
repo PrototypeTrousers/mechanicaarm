@@ -45,7 +45,7 @@ public class BlockBelt extends Block implements ITileEntityProvider {
 
     @Override
     public EnumBlockRenderType getRenderType(IBlockState state) {
-        return EnumBlockRenderType.MODEL;
+        return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;
     }
 
     public boolean isOpaqueCube(IBlockState state) {

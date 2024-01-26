@@ -8,6 +8,10 @@ public class ItemStackHasher implements Hash.Strategy<ItemStack> {
     public int hashCode(ItemStack o) {
         int hash = o.getItem().hashCode();
         hash += 31 * o.getMetadata();
+        hash += 31 * o.getItemDamage();
+        if (o.getTagCompound() != null) {
+            hash += 31 * o.getTagCompound().hashCode();
+        }
         return hash;
     }
 
@@ -18,6 +22,9 @@ public class ItemStackHasher implements Hash.Strategy<ItemStack> {
         } if (a == null || b == null) {
             return false;
         }
-        return ItemStack.areItemsEqual(a, b);
+        return (a.getItem() == b.getItem() &&
+                a.getMetadata() == b.getMetadata() &&
+                a.getItemDamage() == b.getItemDamage() &&
+                ItemStack.areItemStackTagsEqual(a,b));
     }
 }

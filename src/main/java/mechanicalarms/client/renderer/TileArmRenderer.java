@@ -54,26 +54,6 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
         super();
     }
 
-    @Override
-    public void renderTileEntityFast(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
-
-        Chunk c = tileArmBasic.getWorld().getChunk(tileArmBasic.getPos());
-        s = (byte) c.getLightFor(EnumSkyBlock.SKY, tileArmBasic.getPos());
-        b = (byte) c.getLightFor(EnumSkyBlock.BLOCK, tileArmBasic.getPos());
-        this.partialTicks = partialTicks;
-
-        translationMatrix.setIdentity();
-        translate(translationMatrix, (float) x, (float) y, (float) z);
-
-        renderBase();
-        renderBaseMotor(tileArmBasic,x ,y, z);
-        renderFirstArm(tileArmBasic,x ,y, z);
-        renderSecondArm(tileArmBasic,x ,y, z);
-        renderHand(tileArmBasic,x ,y, z);
-        renderHoldingItem(tileArmBasic, x, y, z);
-        //renderPart(tileArmBasic, x, y, z, partialTicks, transformMatrix);
-    }
-
     void renderBase() {
         if (base == null) {
             base = new Vao(ClientProxy.base);
@@ -280,6 +260,22 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
 
     @Override
     public void render(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+
+        Chunk c = tileArmBasic.getWorld().getChunk(tileArmBasic.getPos());
+        s = (byte) c.getLightFor(EnumSkyBlock.SKY, tileArmBasic.getPos());
+        b = (byte) c.getLightFor(EnumSkyBlock.BLOCK, tileArmBasic.getPos());
+        this.partialTicks = partialTicks;
+
+        translationMatrix.setIdentity();
+        translate(translationMatrix, (float) x, (float) y, (float) z);
+
+        renderBase();
+        renderBaseMotor(tileArmBasic,x ,y, z);
+        renderFirstArm(tileArmBasic,x ,y, z);
+        renderSecondArm(tileArmBasic,x ,y, z);
+        renderHand(tileArmBasic,x ,y, z);
+        renderHoldingItem(tileArmBasic, x, y, z);
+        //renderPart(tileArmBasic, x, y, z, partialTicks, transformMatrix);
     }
 
     Matrix4f fbToM4f(FloatBuffer fb, Matrix4f mat) {

@@ -6,6 +6,7 @@ in vec3 fragNorm;
 in vec3 fragPos;
 in vec3 lightPos0;
 in vec3 lightPos1;
+in vec4 col;
 
 out vec4 FragColor;
 
@@ -14,7 +15,7 @@ uniform sampler2D lightmap;
 
 void main(){
 
-    vec4 color = texture2D(texture, texCoord) * texture2D(lightmap, lightCoord);
+    vec4 color = vec4(col.rgb, 1) * texture2D(texture, texCoord) * texture2D(lightmap, lightCoord);
     // ambient
     vec3 ambient = vec3(0.2, 0.2, 0.2);
     // diffuse

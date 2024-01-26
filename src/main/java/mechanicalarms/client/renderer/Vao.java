@@ -11,6 +11,7 @@ import net.minecraftforge.client.model.obj.OBJModel;
 import org.lwjgl.opengl.*;
 
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -30,6 +31,7 @@ public class Vao implements InstanceableModel{
     private int vertexArrayBuffer;
 
     IModel model;
+    private int colorBuffer;
 
     public Vao(ResourceLocation resourceLocation) {
         try {
@@ -49,6 +51,8 @@ public class Vao implements InstanceableModel{
         FloatBuffer pos = GLAllocation.createDirectFloatBuffer(vertexAmount * 3);
         FloatBuffer norm = GLAllocation.createDirectFloatBuffer(vertexAmount * 3);
         FloatBuffer tex = GLAllocation.createDirectFloatBuffer(vertexAmount * 2);
+        FloatBuffer color = GLAllocation.createDirectFloatBuffer(vertexAmount * 4);
+
         int v = 0;
         for (OBJModel.Face face : fl) {
             OBJModel.Vertex[] vertices = face.getVertices();
@@ -64,12 +68,17 @@ public class Vao implements InstanceableModel{
                 norm.put(vertex.getNormal().x);
                 norm.put(vertex.getNormal().y);
                 norm.put(vertex.getNormal().z);
+                color.put(1);
+                color.put(1);
+                color.put(1);
+                color.put(1);
                 v++;
             }
         }
         pos.rewind();
         norm.rewind();
         tex.rewind();
+        color.rewind();
 
         posBuffer = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, posBuffer);
@@ -103,6 +112,12 @@ public class Vao implements InstanceableModel{
         GL20.glVertexAttribPointer(3, 2, GL11.GL_UNSIGNED_BYTE, false, 2, 0);
         GL20.glEnableVertexAttribArray(3);
         GL33.glVertexAttribDivisor(3, 1);
+
+        colorBuffer = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, colorBuffer);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, color, GL15.GL_STATIC_DRAW);
+        GL20.glVertexAttribPointer(8, 4, GL11.GL_FLOAT, true, 16, 0);
+        GL20.glEnableVertexAttribArray(8);
 
         //Model Transform Matrix
         modelTransformBuffer = GL15.glGenBuffers();

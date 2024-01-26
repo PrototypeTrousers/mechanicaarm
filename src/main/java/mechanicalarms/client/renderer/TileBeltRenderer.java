@@ -54,24 +54,6 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
         super();
     }
 
-    @Override
-    public void renderTileEntityFast(TileBeltBasic tileBeltBasic, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
-        Chunk c = tileBeltBasic.getWorld().getChunk(tileBeltBasic.getPos());
-        s = (byte) c.getLightFor(EnumSkyBlock.SKY, tileBeltBasic.getPos());
-        b = (byte) c.getLightFor(EnumSkyBlock.BLOCK, tileBeltBasic.getPos());
-        this.partialTicks = partialTicks;
-
-        translationMatrix.setIdentity();
-        translate(translationMatrix, (float) x, (float) y, (float) z);
-
-        renderHoldingItem(tileBeltBasic, x , y, z);
-        renderHoldingItem(tileBeltBasic, x + 0.5, y, z + 0.5);
-        renderHoldingItem(tileBeltBasic, x + 0.5, y, z);
-        renderHoldingItem(tileBeltBasic, x , y, z + 0.5);
-
-        //renderPart(tileArmBasic, x, y, z, partialTicks, transformMatrix);
-    }
-
     void renderBase() {
 
     }
@@ -99,7 +81,7 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
 
         translate(itemArmMatrix, new Vector3f((float) x, (float) (y), (float) z));
 
-        Vector3f p = new Vector3f(0f,0.125f,0.5f);
+        Vector3f p = new Vector3f(-0.25f,0.50f,0.25f);
         Vector3f ap = new Vector3f(p);
         ap.negate();
 
@@ -140,6 +122,20 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
 
     @Override
     public void render(TileBeltBasic tileBeltBasic, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+        Chunk c = tileBeltBasic.getWorld().getChunk(tileBeltBasic.getPos());
+        s = (byte) c.getLightFor(EnumSkyBlock.SKY, tileBeltBasic.getPos());
+        b = (byte) c.getLightFor(EnumSkyBlock.BLOCK, tileBeltBasic.getPos());
+        this.partialTicks = partialTicks;
+
+        translationMatrix.setIdentity();
+        translate(translationMatrix, (float) x, (float) y, (float) z);
+
+        renderHoldingItem(tileBeltBasic, x , y, z);
+        renderHoldingItem(tileBeltBasic, x + 0.5, y, z + 0.5);
+        renderHoldingItem(tileBeltBasic, x + 0.5, y, z);
+        renderHoldingItem(tileBeltBasic, x , y, z + 0.5);
+
+        //renderPart(tileArmBasic, x, y, z, partialTicks, transformMatrix);
     }
 
     Matrix4f fbToM4f(FloatBuffer fb, Matrix4f mat) {
