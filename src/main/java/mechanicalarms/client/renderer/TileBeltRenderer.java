@@ -89,7 +89,7 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
 
         //itemArmMatrix.setScale(0.5f);
         //rot.rotateY(lerp(secondArmPrevRot[1], secondArmCurrRot[1], partialTicks));
-        rot.rotateX((float) (Math.PI/2));
+        rot.rotateX((float) (-Math.PI/2));
         itemArmMatrix.setScale(0.5f);
 
         Quaternion.rotateMatrix(itemArmMatrix, rot);

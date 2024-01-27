@@ -46,7 +46,7 @@ public class ItemStackRenderToVAO implements InstanceableModel {
     public synchronized void setupVAO(ItemStack stack) {
         IBakedModel mm = Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getItemModel(stack);
         IBakedModel model = mm.getOverrides().handleItemState(mm, stack, null, null);
-        model = ForgeHooksClient.handleCameraTransforms(model, ItemCameraTransforms.TransformType.GROUND, false);
+        model = ForgeHooksClient.handleCameraTransforms(model, ItemCameraTransforms.TransformType.GUI, false);
         FloatBuffer pos = GLAllocation.createDirectFloatBuffer(3000);
         FloatBuffer norm = GLAllocation.createDirectFloatBuffer(3000);
         FloatBuffer tex = GLAllocation.createDirectFloatBuffer(2000);
