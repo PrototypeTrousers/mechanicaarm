@@ -43,4 +43,8 @@ public class TileBeltBasic extends TileEntity {
         return renderBB;
     }
 
+    @Override
+    public boolean hasFastRenderer() {
+        return true;
+    }
 }

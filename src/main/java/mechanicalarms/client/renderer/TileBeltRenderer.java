@@ -11,13 +11,14 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.client.model.animation.FastTESR;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
 import java.nio.FloatBuffer;
 
 
-public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
+public class TileBeltRenderer extends FastTESR<TileBeltBasic> {
     InstanceRender ir = InstanceRender.INSTANCE;
 
     float[] mtx = new float[16];
@@ -47,6 +48,8 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
     private Vao secondArm;
     private Vao hand;
 
+    ItemStack fakeStack = new ItemStack(Items.END_CRYSTAL);
+
 
     private static Object2ObjectOpenCustomHashMap<ItemStack, ItemStackRenderToVAO> modelCache = new Object2ObjectOpenCustomHashMap<>(new ItemStackHasher());
 
@@ -62,7 +65,7 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
         ItemStack curStack = tileBeltBasic.getleftItemHandler().getStackInSlot(0);
 
         if (curStack.isEmpty()) {
-            return;
+            curStack = fakeStack;
         }
 
         ItemStackRenderToVAO itemvao = modelCache.get(curStack);
@@ -90,7 +93,7 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
         //itemArmMatrix.setScale(0.5f);
         //rot.rotateY(lerp(secondArmPrevRot[1], secondArmCurrRot[1], partialTicks));
         rot.rotateX((float) (-Math.PI/2));
-        itemArmMatrix.setScale(0.5f);
+        scale(itemArmMatrix, 0.5f, 0.5f,0.5f);
 
         Quaternion.rotateMatrix(itemArmMatrix, rot);
 
@@ -121,7 +124,7 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
     }
 
     @Override
-    public void render(TileBeltBasic tileBeltBasic, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+    public void renderTileEntityFast(TileBeltBasic tileBeltBasic, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
         Chunk c = tileBeltBasic.getWorld().getChunk(tileBeltBasic.getPos());
         s = (byte) c.getLightFor(EnumSkyBlock.SKY, tileBeltBasic.getPos());
         b = (byte) c.getLightFor(EnumSkyBlock.BLOCK, tileBeltBasic.getPos());
@@ -210,6 +213,22 @@ public class TileBeltRenderer extends TileEntitySpecialRenderer<TileBeltBasic> {
         this.tempModelMatrix.setM11(1F);
         this.tempModelMatrix.setM22(1F);
         matrix.mul(this.tempModelMatrix);
+    }
+
+
+    public void scale(Matrix4f matrix, float x, float y, float z) {
+        matrix.m00 *= x;
+        matrix.m10 *= x;
+        matrix.m20 *= x;
+        matrix.m30 *= x;
+        matrix.m01 *= y;
+        matrix.m11 *= y;
+        matrix.m21 *= y;
+        matrix.m31 *= y;
+        matrix.m02 *= z;
+        matrix.m12 *= z;
+        matrix.m22 *= z;
+        matrix.m32 *= z;
     }
 
     void moveToPivot(Matrix4f matrix, Vector3f pivot) {

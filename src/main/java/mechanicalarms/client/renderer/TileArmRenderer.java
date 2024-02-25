@@ -11,13 +11,14 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.client.model.animation.FastTESR;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
 import java.nio.FloatBuffer;
 
 
-public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
+public class TileArmRenderer extends FastTESR<TileArmBasic> {
     InstanceRender ir = InstanceRender.INSTANCE;
 
     float[] mtx = new float[16];
@@ -259,7 +260,7 @@ public class TileArmRenderer extends TileEntitySpecialRenderer<TileArmBasic> {
     }
 
     @Override
-    public void render(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+    public void renderTileEntityFast(TileArmBasic tileArmBasic, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
 
         Chunk c = tileArmBasic.getWorld().getChunk(tileArmBasic.getPos());
         s = (byte) c.getLightFor(EnumSkyBlock.SKY, tileArmBasic.getPos());

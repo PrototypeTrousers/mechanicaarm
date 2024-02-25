@@ -86,4 +86,9 @@ public class TileArmBasic extends TileArmBase {
         }
         return renderBB;
     }
+
+    @Override
+    public boolean hasFastRenderer() {
+        return true;
+    }
 }
