@@ -1,5 +1,5 @@
 {
-  "package": "mechanicalarms.client.mixin.renderer",
+  "package": "proto.mechanicalarms.client.mixin.renderer",
   "refmap": "mixins.armscore.refmap.json",
   "target": "@env(DEFAULT)",
   "minVersion": "0.8",
